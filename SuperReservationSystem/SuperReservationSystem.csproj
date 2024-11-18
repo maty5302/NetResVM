@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>c5b208c9-4528-4dfb-896d-bc35c749a2e2</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ApiCisco\ApiCisco.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\Reservation\" />
+  </ItemGroup>
+
+</Project>

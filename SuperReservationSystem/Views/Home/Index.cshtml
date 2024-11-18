@@ -1,0 +1,60 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model ServerModel
+
+<div class="text-center">
+    @if(TempData["ErrorMessage"] != null)
+	{
+		<div class="alert alert-danger" role="alert">
+			@TempData["ErrorMessage"]
+		</div>
+	}
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            @TempData["SuccessMessage"]
+        </div>   
+    }
+    <h1 class="display-4">Server selection</h1>
+    <p>Sorry, this page is not ready yet.</p>
+    <p>In future this will be for selecting your existing server list from database</p>
+    <p>Meanwhile, you can select from example CML servers <!--and EVE--> servers.</p>
+
+	<div class="d-flex justify-content-center gap-2 mb-4">
+    <!--Hardcoded test of connection to CML and EVE servers-->
+    @* <form asp-area="" asp-controller="CML" asp-action="Index" method="post">
+        <button class="btn btn-primary" type="submit" name="servername" value="Example">Test of connection to CML</button>
+    </form> *@
+    
+    <form asp-area="" asp-controller="" asp-action="" method="post">
+    <button class="btn btn-primary" type="submit" disabled>Test of connection to EVE coming soon</button>
+    </form>
+@*     <form asp-area="" asp-controller="Home" asp-action="AddServer" method="post">
+    <button class="btn btn-primary" type="submit">Add new server - to be moved</button>
+    </form> *@
+    </div>
+
+    @if (ViewBag.Servers != null)
+    {
+        <div class="row justify-content-center">
+        @for (int i = 0; i < ((List<ServerModel>)ViewBag.Servers).Count; i++)
+        {
+            <div class="col-md-3 mb-4">
+                <div class="card">
+					<div class="card-body">
+                            <h5 class="card-title">@ViewBag.Servers[i].Name - @ViewBag.Servers[i].ServerType</h5><hr />
+                        <span>Number of labs: #count</span> <br/>
+                        <span>Currently "Running lab name"</span> <br/>
+                        <form asp-area="" asp-controller="CML" asp-action="Index" method="post">
+                            <button class="btn btn-primary" type="submit" name="servername" value="@ViewBag.Servers[i].Name">Connect to server</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        } 
+        </div>
+    }
+
+</div>

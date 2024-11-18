@@ -1,0 +1,56 @@
+
+@model ApiCisco.Model.LabModel
+
+
+@{
+    var serverName = ViewBag.ServerName as string;
+    var lab = ViewBag.Lab as ApiCisco.Model.LabModel;
+    if(lab!=null)
+    {
+        ViewData["Title"] = "Lab Info of " + lab.Name;
+    }
+}
+
+<h1>Information about @lab.Name</h1>
+
+<p>Lab ID: @lab.Id</p>
+<p>Lab Name: @lab.Name</p>  
+<p>Lab Description: @lab.Description</p>
+@if(lab.State.ToLower()=="started"){
+    <span>Lab state:</span>
+
+    <span style="color: green; font-weight: bold;">@lab.State.ToLower()</span> <br />
+}
+else
+{
+    <p>Lab state: @lab.State.ToLower()</p>
+}
+<p>Lab Node Count: @lab.Node_count</p>
+<p>Lab Link count: @lab.Link_count</p>
+<p>Last modified: @lab.Last_modified</p>
+
+<form method="post">
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabList","CML", new {serverName})">Back to Lab List</button> <br />
+
+
+    <button class="btn btn-primary" type="submit" name="id_lab" value="@lab.Id">Download lab</button>
+    <button class="btn btn-primary" type="submit" name="id_lab" value="@lab.Id">Reserve this lab</button>
+    <button class="btn btn-primary" type="submit" name="id_lab" value="@lab.Id" formaction="@Url.Action("IDK","IDK","post")">Own a lab</button><br />
+
+    <button class="btn btn-danger" type="submit" name="id_lab" value="@lab.Id">Delete this lab</button>
+    <button class="btn btn-primary" type="submit" name="id_lab" value="@lab.Id">Edit this lab</button><br />
+
+    <button class="btn btn-primary" type="submit" name="id_lab" value="@lab.Id">Start this lab</button>
+    <button class="btn btn-primary" type="submit" name="id_lab" value="@lab.Id" formaction="@Url.Action("StopLab","CML","post")">Stop the lab</button> 
+    
+
+</form>
+
+<form asp-area="" asp-controller="CML" asp-action="DeleteLab" method="post">
+    
+</form>
+
+<form asp-area="" asp-controller="CML" asp-action="EditLab" method="post">
+    
+</form>
+
