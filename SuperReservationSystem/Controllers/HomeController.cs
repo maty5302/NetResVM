@@ -5,12 +5,16 @@ using ApiCisco;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
+using BusinessLayer;
+using BusinessLayer.Services;
+using BusinessLayer.Models;
 
 namespace SuperReservationSystem.Controllers
 {
     public class HomeController : Controller
 	{
 		private readonly ILogger<HomeController> _logger;
+		private ServerService serverService = new ServerService();
 
         public HomeController(ILogger<HomeController> logger)
 		{
@@ -20,15 +24,15 @@ namespace SuperReservationSystem.Controllers
 		public IActionResult Index()
 		{			
 			if (!User.Identity.IsAuthenticated)
-				return RedirectToAction("Login");
-            ViewBag.Servers = TempFakeDatabase.Servers;
+				return RedirectToAction("Index","Login");			
+            ViewBag.Servers = serverService.GetAllServers();
             return View();
 		}
 
 		public IActionResult Privacy()
 		{
             if (!User.Identity.IsAuthenticated)
-                return RedirectToAction("Login");
+                return RedirectToAction("Index","Login");
             return View();
 		}
 
@@ -36,46 +40,11 @@ namespace SuperReservationSystem.Controllers
         public IActionResult AddServer()
 		{
             if (!User.Identity.IsAuthenticated)
-                return RedirectToAction("Login");
+                return RedirectToAction("Index","Login");
 			if (!User.IsInRole("Admin"))
 				return RedirectToAction("Index");
             //only admin
             return View();
-		}
-
-		public IActionResult Login()
-		{
-			return View();
-		}
-
-		[HttpPost]
-		public async Task<IActionResult> LoginAsync(LoginModel user/*string username, string password*/)
-		{
-			if (ModelState.IsValid)
-			{
-				if ((user.Username == null || user.Password == null) /*a zaroven platny login*/ )
-				{
-
-					var claims = new List<Claim>
-					{
-					new Claim(ClaimTypes.Name, "admin"),
-					new Claim(ClaimTypes.Role, "Admin") // Assuming "admin" has Admin role
-					};
-					var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-					await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
-
-					return RedirectToAction("Index", "Home");
-				}
-			}
-			TempData["ErrorMessage"] = "Invalid credentials";
-            return View();
-        }
-		
-		public async Task<IActionResult> Logout()
-		{
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Login", "Home");
 		}
 
 		public async Task<IActionResult> TestConnection(ServerModel server)
@@ -88,8 +57,7 @@ namespace SuperReservationSystem.Controllers
 			var res = await Authentication.Authenticate(client, server.Username, server.Password);
 			if (res != null && res.IsSuccessStatusCode)
 			{
-				TempData["SuccessMessage"] = "Connection successful";
-				//enable button for Add Server
+				TempData["SuccessMessage"] = "Connection successful";				
 				ViewBag.Tested = true;
 				return View("AddServer", server);
 			}
@@ -117,9 +85,8 @@ namespace SuperReservationSystem.Controllers
                 var res = await Authentication.Authenticate(client, server.Username, server.Password);
                 if (res != null && res.IsSuccessStatusCode)
 				{
-                    //TODO: Save to database
-                    TempFakeDatabase.Servers.Add(server);
-                    ViewBag.Servers = TempFakeDatabase.Servers;
+					var ok = serverService.InsertServer(server);
+                    ViewBag.Servers = serverService.GetAllServers();
                     TempData["SuccessMessage"] = "Server added successfully";
                     return RedirectToAction("Index", "Home");
                 }

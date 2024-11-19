@@ -1,0 +1,32 @@
+﻿@model SuperReservationSystem.Models.LoginModel
+@{
+    ViewData["Title"] = "Log in";
+}
+<div class="container mt-5">
+    <h2 class="mb-4">Login Page</h2>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <form asp-action="LoginASync" asp-controller="Login" method="post" class="p-4 border rounded">
+
+        <div class="form-group">
+			<label class="form-label" for="Username">Username:</label>
+			<input type="text" class="form-control" asp-for="Username" required>
+        </div>
+
+        <div class="form-group">
+            <label for="Password" class="form-label">Password:</label>
+            <input asp-for="Password" class="form-control" type="password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>    
+
+
+</div>
+

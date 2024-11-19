@@ -1,8 +1,13 @@
-﻿namespace SuperReservationSystem.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SuperReservationSystem.Models
 {
     public class LoginModel
     {
-        public required string Username;
-        public required string Password;
+        [Required]
+        public string Username { get; set; }
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
     }
 }

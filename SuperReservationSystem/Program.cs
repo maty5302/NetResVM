@@ -22,7 +22,8 @@ namespace SuperReservationSystem
 				options.Cookie.Name = "AuthCookies";
 				options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
 				options.SlidingExpiration = true;
-                options.LoginPath = "/Home/Login";
+                options.LoginPath = "/Login/Index";
+                options.LogoutPath = "/Login/Logout";
             });
             var app = builder.Build();
 
@@ -46,7 +47,18 @@ namespace SuperReservationSystem
 				name: "default",
 				pattern: "{controller=Home}/{action=Index}/{id?}");
 
-			app.Run();
+            // Catch-all route for non-existent routes
+            app.MapFallback(context =>
+            {
+                // Log the fallback route if necessary
+                Console.WriteLine($"Fallback triggered for: {context.Request.Path}");
+
+                // Redirect to the Home/Index route with status code 302 (Found)
+                context.Response.Redirect("/", permanent: false);
+                return Task.CompletedTask;
+            });
+
+            app.Run();
 
 		}
 	}
