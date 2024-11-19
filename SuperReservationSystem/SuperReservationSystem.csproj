@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ApiCisco\ApiCisco.csproj" />
+    <ProjectReference Include="..\BusinessLayer\BusinessLayer.csproj" />
   </ItemGroup>
 
   <ItemGroup>
