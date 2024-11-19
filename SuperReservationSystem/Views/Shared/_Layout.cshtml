@@ -46,11 +46,11 @@
                         <form>
                                 @if (User.Identity != null && !User.Identity.IsAuthenticated)
                                 {
-                                    <button class="btn btn-primary" type="submit" formaction="@Url.Action("Login","Home")">Log in</button>
+                                    <button class="btn btn-primary" type="submit" formaction="@Url.Action("Index","Login")">Log in</button>
                                 }
                                 else
                                 {
-                                    <button class="btn btn-danger" type="submit" formaction="@Url.Action("Logout","Home")">Log out</button>
+                                    <button class="btn btn-danger" type="submit" formaction="@Url.Action("Logout","Login")">Log out</button>
                                 }
                             </form>
                         </li>
