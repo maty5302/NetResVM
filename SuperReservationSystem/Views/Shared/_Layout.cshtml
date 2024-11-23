@@ -1,6 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -28,13 +28,21 @@
                             <a class="nav-link text-body" asp-area="" asp-controller="Home" asp-action="Privacy">Reservation</a>
                         </li>
                     </ul>
-                    <ul class="navbar-nav">
+                    <div class="nav-item me-3">
+                        <div class="form-check form-switch" id="btnSwitch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+                            <label class="form-check-label" for="flexSwitchCheckDefault">Mode</label>
+                        </div>
+                    </div>
+                    <div class="nav-item me-3">
                         @if(User.Identity != null && User.Identity.IsAuthenticated)
                         {
-                            <li class="nav-link text-body me-3">
+                            <div class="text-body">
                                @User.Identity.Name
-                            </li>
-                        }
+                            </div>
+                        }</div>
+                    <ul class="navbar-nav">
+                        
                         @if(User.IsInRole("Admin"))
                         {
                             <li class="nav-item me-3">
@@ -55,10 +63,10 @@
                                 }
                             </form>
                         </li>
-                        <li class="nav-item">
-                            <button id="btnSwitch">Dark/Light</button>
-                        </li>
+                        
+                        
                     </ul>
+                    
                 </div>
             </div>
         </nav>
