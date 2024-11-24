@@ -67,6 +67,29 @@ namespace ApiCisco
             }
         }
         
-        
+        public static async Task<string> DownloadLab(UserHttpClient user, string labId)
+        {
+            var url = user.Url + "labs/" + labId.Trim() + "/download";
+            try
+            {
+                var response = user.Client.GetAsync(url.Trim()).Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = response.Content.ReadAsStringAsync().Result;
+                    return await Task.FromResult<string>(data);
+                }
+                else if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine("Lab not found");
+                    return await Task.FromResult<string>("Lab not found");
+                }
+                return await Task.FromResult<string>("An error occurred");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return await Task.FromResult<string>("An error occurred");
+            }
+        }
     }
 }

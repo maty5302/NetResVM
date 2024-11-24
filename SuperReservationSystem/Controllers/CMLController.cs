@@ -1,6 +1,7 @@
 ﻿using ApiCisco;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace SuperReservationSystem.Controllers
 {
@@ -8,8 +9,8 @@ namespace SuperReservationSystem.Controllers
     {
         //make api connectionn library
         //Testing phase
-        //rework to get url to server from file / from database 
         public required UserHttpClient client;
+        private int server_id;
         private ServerService serverService = new ServerService();
 
         public IActionResult Index(int id,string servername)
@@ -24,8 +25,8 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
                 return RedirectToAction("Login", "Home");
             }
-
-            return RedirectToAction("LabList", "CML", new { servername = servername, id= id });
+            server_id = id;
+            return RedirectToAction("LabList", "CML", new { servername = servername, id=id });
         }
 
         public async Task<IActionResult> LabList(int id, string servername)
@@ -93,6 +94,36 @@ namespace SuperReservationSystem.Controllers
                 }
                 TempData["ErrorMessage"] = $"Lab not found.";
                 return RedirectToAction("LabList","CML", new {id=id,servername=servername } );
+            }
+            return View();
+        }
+
+        public async Task<IActionResult> DownloadLab(int id, string servername, string id_lab)
+        {
+            var server = serverService.GetServerById(id);
+            if (server == null)
+            {
+                TempData["ErrorMessage"] = "Server not found";
+                return RedirectToAction("Index", "Home");
+            }
+            if (id_lab == null)
+            {
+                TempData["ErrorMessage"] = "Lab not found.";
+                return RedirectToAction("LabList", "CML", new { id = id, servername = servername });
+            }
+            ViewBag.ServerID = id;
+            ViewBag.ServerName = servername;
+            client = new UserHttpClient(server.IpAddress);
+            var res = await Authentication.Authenticate(client, server.Username, server.Password);
+            if (res != null && res.IsSuccessStatusCode)
+            {
+                var lab = Lab.DownloadLab(client, id_lab);
+                if (lab.Result != null)
+                {
+                    return File(Encoding.UTF8.GetBytes(lab.Result), "text/plain", "lab.yaml");
+                }
+                TempData["ErrorMessage"] = $"Lab not found.";
+                return RedirectToAction("LabList", "CML", new { id = id, servername = servername });
             }
             return View();
         }
