@@ -13,15 +13,16 @@
     <form asp-area="" asp-controller="Home" asp-action="AddTestedConnection" method="post">
     <div>
     <label type="form-label">Server type:</label>
-    <select name="ServerType">
+    <select name="ServerType" class="form-select me-2">
         <option value="CML">CML</option>
 	    <option value="EVE">EVE</option>
     </select>
     </div>
 
-    <label type="form-label" asp-for="IpAddress">Server ip:</label>
+    
+    <label type="form-label" asp-for="IpAddress">Server ip:</label>       
     <input type="text" class="form-control" value="https://158.196.145.30" asp-for="IpAddress"  required/>
-
+ 
     <label type="form-label" asp-for="Name">Name:</label>
     <input type="text" class="form-control" asp-for="Name" required/>
 

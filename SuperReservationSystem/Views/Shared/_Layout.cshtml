@@ -23,10 +23,10 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-body" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link text-body" asp-area="" asp-controller="Home" asp-action="Index"> <i class="bi bi-house-door"></i> Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-body" asp-area="" asp-controller="Home" asp-action="Privacy">Reservation</a>
+                            <a class="nav-link text-body" asp-area="" asp-controller="Home" asp-action="Privacy"> <i class="bi bi-calendar"></i> Reservation</a>
                         </li>
                     </ul>
                     
@@ -48,24 +48,11 @@
                         </div>
                     </div>
                     <ul class="navbar-nav">
-                        
-                        @if(User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item me-3">
-                                <form method="post" class="d-inline">
-                                    <button class="btn btn-primary" type="submit" formaction="@Url.Action("AddServer","Home")">Add server</button>
-                                </form>
-                            </li>
-                        }
                         <li class="nav-item">
                         <form>
-                                @if (User.Identity != null && !User.Identity.IsAuthenticated)
+                                @if (User.Identity != null && User.Identity.IsAuthenticated)
                                 {
-                                    <button class="btn btn-primary" type="submit" formaction="@Url.Action("Index","Login")">Log in</button>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-danger" type="submit" formaction="@Url.Action("Logout","Login")">Log out</button>
+                                    <button class="btn btn-danger" type="submit" formaction="@Url.Action("Logout","Login")">Log out <i class="bi bi-box-arrow-in-right"></i></button>
                                 }
                             </form>
                         </li>
