@@ -43,8 +43,20 @@ namespace BusinessLayer.Services
                 }
             }
 
+            
             string ip = new Uri(server.IpAddress).Host;
             _gateway.InsertServer(server.ServerType, server.Name, ip, server.Username, server.Password);
+            return true;
+        }
+
+        public bool RemoveServer(int id)
+        {
+            var server = GetServerById(id);
+            if (server == null)
+            {
+                return false;
+            }
+            _gateway.RemoveServer(id);
             return true;
         }
     }

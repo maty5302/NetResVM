@@ -47,13 +47,28 @@ namespace SuperReservationSystem.Controllers
             return View();
 		}
 
-		public async Task<IActionResult> TestConnection(ServerModel server)
+		public IActionResult RemoveServer(int id)
+        {
+            if (!User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "Login");
+            if (!User.IsInRole("Admin"))
+                return RedirectToAction("Index");
+            //only admin
+            serverService.RemoveServer(id);
+            return RedirectToAction("Index");
+        }
+
+        public async Task<IActionResult> TestConnection(ServerModel server)
 		{
 			if(!ModelState.IsValid)
 			{
 				return View("Error");
 			}
-			var client = new UserHttpClient(server.IpAddress);
+            if (server.IpAddress.Contains("http://"))
+                server.IpAddress = server.IpAddress.Replace("http://", "https://");
+            else if (!server.IpAddress.StartsWith("http"))
+                server.IpAddress = "https://" + server.IpAddress;
+            var client = new UserHttpClient(server.IpAddress);
 			var res = await Authentication.Authenticate(client, server.Username, server.Password);
 			if (res != null && res.IsSuccessStatusCode)
 			{
@@ -81,7 +96,11 @@ namespace SuperReservationSystem.Controllers
 
 			if (server.ServerType == "CML")
 			{
-                var client = new UserHttpClient(server.IpAddress);
+                if (server.IpAddress.Contains("http://"))
+                    server.IpAddress = server.IpAddress.Replace("http://", "https://");
+                else if (!server.IpAddress.StartsWith("http"))
+                    server.IpAddress = "https://" + server.IpAddress;
+                var client = new UserHttpClient(server.IpAddress);				
                 var res = await Authentication.Authenticate(client, server.Username, server.Password);
                 if (res != null && res.IsSuccessStatusCode)
 				{

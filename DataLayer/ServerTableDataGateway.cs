@@ -19,7 +19,7 @@ namespace DataLayer
             using (SqlConnection connection = new SqlConnection(builder.ConnectionString))
             {
                 connection.Open();
-                
+
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
                     using (SqlDataReader reader = command.ExecuteReader())
@@ -66,6 +66,21 @@ namespace DataLayer
                     command.Parameters.AddWithValue("@IpAddress", ipAddress);
                     command.Parameters.AddWithValue("@Username", username);
                     command.Parameters.AddWithValue("@Password", password);
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void RemoveServer(int id)
+        {
+            string query = "DELETE FROM Server WHERE ServerID = @Id";
+            SqlConnectionStringBuilder builder = DBConnector.GetBuilder();
+            using (SqlConnection connection = new SqlConnection(builder.ConnectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", id);
                     command.ExecuteNonQuery();
                 }
             }
