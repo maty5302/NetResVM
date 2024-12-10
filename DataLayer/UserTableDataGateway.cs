@@ -29,5 +29,24 @@ namespace DataLayer
             }
             return result;
         }
+
+        public DataTable GetUserById(int id)
+        {
+            string query = "SELECT * FROM \"User\" WHERE UserID = @Id";
+            var result = new DataTable();
+            using (var connection = DBConnector.GetConnection())
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", id);
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        result.Load(reader);
+                    }
+                }
+            }
+            return result;
+        }
     }
 }
