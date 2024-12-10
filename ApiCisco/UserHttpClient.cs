@@ -13,10 +13,10 @@ namespace ApiCisco
 
         public UserHttpClient(string url)
         {
-            if(url.Last() != '/')
+            if(url.StartsWith("http://") || url.StartsWith("https://"))
                 this.Url = url + "/api/v0/";
             else
-                this.Url = url + "api/v0/";
+                this.Url = "https://" + url + "/api/v0/";
             HttpClientHandler handler = new HttpClientHandler
             {
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator

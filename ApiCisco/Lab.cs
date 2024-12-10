@@ -12,12 +12,12 @@ namespace ApiCisco
 {
     public static class Lab
     {
-        public static async Task<string[]?> GetLabs(UserHttpClient user,string token)
+        public static async Task<string[]?> GetLabs(UserHttpClient user)
         {
             var url = user.Url + "labs";
             try
             { 
-                    var response = user.Client.GetAsync(url).Result;
+                    var response = await user.Client.GetAsync(url);
                     if (response.IsSuccessStatusCode)
                     {
                         var data = response.Content.ReadAsStringAsync().Result.Split(",");
@@ -29,15 +29,15 @@ namespace ApiCisco
                                 data[i] = data[i].Replace(item, string.Empty);
                             }
                         }
-                        return await Task.FromResult<string[]?>(data);
+                        return data;
                     }
-                    return await Task.FromResult<string[]?>(null);
+               return null;
 
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                return await Task.FromResult<string[]?>(null);
+                return null;
             }
         }
 
@@ -89,6 +89,40 @@ namespace ApiCisco
             {
                 Console.WriteLine(e);
                 return await Task.FromResult<string>("An error occurred");
+            }
+        }
+
+        public static async Task<bool> StartLab(UserHttpClient user, string labId)
+        {
+            var url = user.Url + "labs/" + labId.Trim() + "/start";
+            try
+            {
+                var response = await user.Client.PutAsync(url.Trim(),null);
+                if (response.StatusCode == HttpStatusCode.NoContent)
+                    return true;
+                else
+                    return false;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to start the lab with ID {labId}.", ex);
+            }
+        }
+
+        public static async Task<bool> StopLab(UserHttpClient user, string labId)
+        {
+            var url = user.Url + "labs/" + labId.Trim() + "/stop";
+            try
+            {
+                var response = await user.Client.PutAsync(url.Trim(), null);
+                if (response.StatusCode == HttpStatusCode.NoContent)
+                    return true;
+                else
+                    return false;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to stop the lab with ID {labId}.", ex);
             }
         }
     }
