@@ -15,8 +15,7 @@ namespace DataLayer
             string query = "SELECT * FROM Server";
             var result = new DataTable();
 
-            SqlConnectionStringBuilder builder = DBConnector.GetBuilder();
-            using (SqlConnection connection = new SqlConnection(builder.ConnectionString))
+            using (var connection = DBConnector.GetConnection())
             {
                 connection.Open();
 
@@ -35,8 +34,7 @@ namespace DataLayer
         {
             string query = "SELECT * FROM Server WHERE ServerID = @Id";
             var result = new DataTable();
-            SqlConnectionStringBuilder builder = DBConnector.GetBuilder();
-            using (SqlConnection connection = new SqlConnection(builder.ConnectionString))
+            using (var connection = DBConnector.GetConnection())
             {
                 connection.Open();
 
@@ -55,8 +53,8 @@ namespace DataLayer
         public void InsertServer(string serverType, string name, string ipAddress, string username, string password)
         {
             string query = "INSERT INTO Server (ServerType, Name, IpAddress, Username, Password) VALUES (@ServerType, @Name, @IpAddress, @Username, @Password)";
-            SqlConnectionStringBuilder builder = DBConnector.GetBuilder();
-            using (SqlConnection connection = new SqlConnection(builder.ConnectionString))
+           
+            using (var connection = DBConnector.GetConnection())
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
@@ -74,8 +72,7 @@ namespace DataLayer
         public void RemoveServer(int id)
         {
             string query = "DELETE FROM Server WHERE ServerID = @Id";
-            SqlConnectionStringBuilder builder = DBConnector.GetBuilder();
-            using (SqlConnection connection = new SqlConnection(builder.ConnectionString))
+            using (var connection = DBConnector.GetConnection())
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))

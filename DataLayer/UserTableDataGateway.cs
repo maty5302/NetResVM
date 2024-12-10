@@ -14,13 +14,12 @@ namespace DataLayer
         {
             string query = "SELECT * FROM \"User\" WHERE Username=@username";
             var result = new DataTable();
-            SqlConnectionStringBuilder builder = DBConnector.GetBuilder();
-            using (SqlConnection connection = new SqlConnection(builder.ConnectionString))
+           
+            using (var connection = DBConnector.GetConnection())
             {
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    //command.Parameters.Add("@username", SqlDbType.NVarChar, 50).Value = Username;
                     command.Parameters.AddWithValue("@username", Username);
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
