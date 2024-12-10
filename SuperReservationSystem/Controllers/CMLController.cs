@@ -1,4 +1,5 @@
 ﻿using ApiCisco;
+using BusinessLayer.Models;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
@@ -7,125 +8,171 @@ namespace SuperReservationSystem.Controllers
 {
     public class CMLController : Controller
     {
-        //make api connectionn library
         //Testing phase
-        public required UserHttpClient client;
-        private int server_id;
         private ServerService serverService = new ServerService();
 
-        public IActionResult Index(int id,string servername)
+        public async Task<UserHttpClient?> SetClientAndAuth(ServerModel? server)
         {
-            if (servername == null)
+            if (server == null)
             {
-                TempData["ErrorMessage"] = "Server not specified";
-                return RedirectToAction("Index", "Home");
+                TempData["ErrorMessage"] = "Server not found.";
+                return null;
             }
+
+            UserHttpClient client = new UserHttpClient(server.IpAddress);
+            var res = await Authentication.Authenticate(client, server.Username, server.Password);
+            if (res != null && res.IsSuccessStatusCode)
+            {
+                return client;
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Authentication failed.";
+                return null;
+            }
+        }
+
+        public IActionResult Index(int id)
+        {
             if(User.Identity != null && !User.Identity.IsAuthenticated)
             {
                 TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
                 return RedirectToAction("Login", "Home");
-            }
-            server_id = id;
-            return RedirectToAction("LabList", "CML", new { servername = servername, id=id });
+            }            
+            return RedirectToAction("LabList", "CML", new { id=id });
         }
 
-        public async Task<IActionResult> LabList(int id, string servername)
+        public async Task<IActionResult> LabList(int id)
         {
-            if(servername==null)
-            {
-                TempData["ErrorMessage"] = "Server not specified";
-                return RedirectToAction("Index", "Home");
-            }
             var server = serverService.GetServerById(id);         
-            if(server == null)
+            
+            var client = await SetClientAndAuth(server);
+            if(client==null)
             {
-                TempData["ErrorMessage"] = "Server not found";
                 return RedirectToAction("Index", "Home");
             }
-            ViewBag.ServerName = servername;
-            ViewBag.ServerID = id;
-            client = new UserHttpClient(server.IpAddress);
-            var res = await Authentication.Authenticate(client, server.Username, server.Password);
-            if (res != null && res.IsSuccessStatusCode)
-            {
-                var labs = Lab.GetLabs(client, res.Content.ReadAsStringAsync().Result);
-                if (labs.Result != null)
-                {
-                    ViewBag.Labs2 = labs.Result; // CAREFUL! This is not a good practice, it's just for testing purposes
-                    return View();
-                }
 
-                TempData["ErrorMessage"] = $"An error occurred. ";
-                return RedirectToAction("Index", "Home");
-            }
-            else if(res != null)
+            ViewBag.ServerName = server.Name;
+            ViewBag.ServerID = id;
+
+            var labs = Lab.GetLabs(client);
+            if (labs.Result != null)
             {
-                TempData["ErrorMessage"] = $"An error occurred. {res.ReasonPhrase}";
-                return RedirectToAction("Index", "Home");
+                ViewBag.Labs2 = labs.Result; // CAREFUL! This is not a good practice, it's just for testing purposes
+                return View();
             }
+
             TempData["ErrorMessage"] = "An error occurred. Please try again.";
             return RedirectToAction("Index", "Home");
         }
 
         public async Task<IActionResult> LabInfo(int id, string servername, string id_lab)
         {
+            //also search if lab is already owned
             var server = serverService.GetServerById(id);
-            if (server == null)
-            {
-                TempData["ErrorMessage"] = "Server not found";
-                return RedirectToAction("Index", "Home");
-            }
+
             if(id_lab == null)
             {
                 TempData["ErrorMessage"] = "Lab not found.";
                 return RedirectToAction("LabList","CML", new {id=id, servername=servername } );
             }
-            ViewBag.ServerID = id;
-            ViewBag.ServerName = servername;
-            client = new UserHttpClient(server.IpAddress);
-            var res = await Authentication.Authenticate(client, server.Username, server.Password); 
-            if (res != null && res.IsSuccessStatusCode)
+
+            var client = await SetClientAndAuth(server);
+            if(client==null)
             {
-                var lab = Lab.GetLabInfo(client, id_lab);
-                if (lab.Result != null)
-                {
-                    ViewBag.Lab = lab.Result;
-                    return View();
-                }
-                TempData["ErrorMessage"] = $"Lab not found.";
-                return RedirectToAction("LabList","CML", new {id=id,servername=servername } );
+                return RedirectToAction("Index", "Home");
             }
+
+            ViewBag.ServerID = id;
+            ViewBag.ServerName = server.Name;
+
+            var lab = Lab.GetLabInfo(client, id_lab);
+            if (lab.Result == null)
+            {
+                return RedirectToAction("LabList", "CML", new { id = id, servername = server.Name });
+            }
+            ViewBag.Lab = lab.Result;
             return View();
         }
 
         public async Task<IActionResult> DownloadLab(int id, string servername, string id_lab)
         {
             var server = serverService.GetServerById(id);
+            
+            if (id_lab == null)
+            {
+                TempData["ErrorMessage"] = "Lab not found.";
+                return RedirectToAction("LabList", "CML", new { id = id, servername = server.Name });
+            }
+
+            var client = await SetClientAndAuth(server);
+            if(client==null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            ViewBag.ServerID = id;
+            ViewBag.ServerName = server.Name;
+                        
+            var lab = Lab.DownloadLab(client, id_lab);
+            if (lab.Result == null)
+            {
+                TempData["ErrorMessage"] = $"Lab not found.";
+                return RedirectToAction("LabList", "CML", new { id = id, servername = servername });
+            }
+            return File(Encoding.UTF8.GetBytes(lab.Result), "text/plain", "lab.yaml");
+        }
+
+        public async Task<IActionResult> StartLab(int id, string lab_id)
+        {
+            if (lab_id == null)
+            {
+                TempData["ErrorMessage"] = "Lab not found.";
+                return RedirectToAction("Index", "Home");
+            }
+            var server = serverService.GetServerById(id);
+
+            var client = await SetClientAndAuth(server);
+            if(client==null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            var lab = Lab.StartLab(client, lab_id);
+            if (lab.Result)
+            {
+                TempData["SuccessMessage"] = "Lab started successfully.";
+                return RedirectToAction("LabInfo", "CML", new { id = id, servername = server.Name,id_lab=lab_id });
+            }
+            TempData["ErrorMessage"] = "Lab not found.";
+            return RedirectToAction("LabList", "CML", new { id = id, servername = server.Name });
+        }
+
+        public async Task<IActionResult> StopLab(int id, string lab_id)
+        {
+            if (lab_id == null)
+            {
+                TempData["ErrorMessage"] = "Lab not found.";
+                return RedirectToAction("Index", "Home");
+            }
+            var server = serverService.GetServerById(id);
             if (server == null)
             {
                 TempData["ErrorMessage"] = "Server not found";
                 return RedirectToAction("Index", "Home");
             }
-            if (id_lab == null)
+            var client = await SetClientAndAuth(server);
+
+            if (client == null)
+                return RedirectToAction("Index", "Home");
+           
+            var lab = Lab.StopLab(client, lab_id);
+            if (lab.Result)
             {
-                TempData["ErrorMessage"] = "Lab not found.";
-                return RedirectToAction("LabList", "CML", new { id = id, servername = servername });
+                TempData["SuccessMessage"] = "Lab stopped successfully.";
+                return RedirectToAction("LabInfo", "CML", new { id = id, servername = server.Name, id_lab = lab_id });
             }
-            ViewBag.ServerID = id;
-            ViewBag.ServerName = servername;
-            client = new UserHttpClient(server.IpAddress);
-            var res = await Authentication.Authenticate(client, server.Username, server.Password);
-            if (res != null && res.IsSuccessStatusCode)
-            {
-                var lab = Lab.DownloadLab(client, id_lab);
-                if (lab.Result != null)
-                {
-                    return File(Encoding.UTF8.GetBytes(lab.Result), "text/plain", "lab.yaml");
-                }
-                TempData["ErrorMessage"] = $"Lab not found.";
-                return RedirectToAction("LabList", "CML", new { id = id, servername = servername });
-            }
-            return View();
+            TempData["ErrorMessage"] = "Lab not found.";
+            return RedirectToAction("LabList", "CML", new { id = id, servername = server.Name });            
         }
     }
 }
