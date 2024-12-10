@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "Edit server";
+}
+@model BusinessLayer.Models.ServerModel
+
+<div>
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+    <form method="post">
+        <label type="form-label" asp-for="Id">Server ID:</label>
+        <input type="text" class="form-control" asp-for="Id" readonly />
+
+        <div>
+            <label type="form-label">Server type:</label>
+            <select name="ServerType" class="form-select me-2">
+                <option value="CML">CML</option>
+                <option value="EVE">EVE</option>
+            </select>
+        </div>
+
+
+        <label type="form-label" asp-for="IpAddress">Server ip:</label>
+        <input type="text" class="form-control" asp-for="IpAddress" required />
+
+        <label type="form-label" asp-for="Name">Name:</label>
+        <input type="text" class="form-control" asp-for="Name" required />
+
+        <label type="form-label" asp-for="Username">Login:</label>
+        <input type="text" class="form-control" asp-for="Username" required />
+
+        <label type="form-label" asp-for="Password">Password:</label>
+        <input type="password" class="form-control" asp-for="Password" placeholder="(not changed)" />
+
+        <button class="btn btn-primary" type="submit" formaction="@Url.Action("SaveChanges","Server")">Save changes</button>
+        <button class="btn btn-primary" type="submit" formaction="@Url.Action("TestConnection","Server")">Test of connection</button>
+    </form>
+</div>

@@ -10,7 +10,7 @@
             @TempData["ErrorMessage"]
         </div>
     }
-    <form asp-area="" asp-controller="Home" asp-action="AddTestedConnection" method="post">
+    <form method="post">
     <div>
     <label type="form-label">Server type:</label>
     <select name="ServerType" class="form-select me-2">
@@ -32,7 +32,7 @@
     <label type="form-label" asp-for="Password">Password:</label>
     <input type="password" class="form-control" asp-for="Password" required/>
 
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("AddTestedConnection","Home")">Add server</button>
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("TestConnection","Home")">Test of connection to CML</button>
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("AddTestedConnection","Server")">Add server</button>
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("TestConnection","Server")">Test of connection to CML</button>
 </form>
 </div>
