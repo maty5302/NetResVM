@@ -79,13 +79,13 @@ namespace SuperReservationSystem.Controllers
             {
                 TempData["SuccessMessage"] = "Connection successful";
                 ViewBag.Tested = true;
-                return View("AddServer", server);
+                return View("Add", server);
             }
             else
             {
                 if (res != null)
                     TempData["ErrorMessage"] = "Connection failed. " + res.Content.ReadAsStringAsync().Result;
-                return View("AddServer", server);
+                return View("Add", server);
             }
         }
 
@@ -94,7 +94,7 @@ namespace SuperReservationSystem.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return RedirectToAction("AddServer", "Home");
+                return RedirectToAction("Add", "Server");
             }
 
             if (server.ServerType == "CML")
@@ -112,7 +112,7 @@ namespace SuperReservationSystem.Controllers
                 {
                     if (res != null)
                         TempData["ErrorMessage"] = "Connection failed. " + res.Content.ReadAsStringAsync().Result;
-                    return View("AddServer", server);
+                    return View("Add", server);
                 }
 
             }
