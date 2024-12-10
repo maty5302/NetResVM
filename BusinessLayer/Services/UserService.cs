@@ -41,6 +41,26 @@ namespace BusinessLayer.Services
             return false;
         }
 
+        public string GetUsername(int id)
+        {
+            var user = _userTableDataGateway.GetUserById(id);
+            if (user.Rows.Count > 0)
+            {
+                return (string)user.Rows[0]["Username"];
+            }
+            return "";
+        }
+
+        public int GetUserId(string Username)
+        {
+            var user = GetUser(Username);
+            if (user != null)
+            {
+                return user.Id;
+            }
+            return -1;
+        }
+
         public string GetRole(string Username)
         {
             var user = GetUser(Username);
