@@ -28,10 +28,17 @@ namespace BusinessLayer.Services
             }
             return servers;
         }
-        public ServerModel GetServerById(int id)
+        public ServerModel? GetServerById(int id)
         {
-            var table = _gateway.GetServerById(id);
-            return ServerMapper.Map(table.Rows[0]);
+            try
+            {
+                var table = _gateway.GetServerById(id);
+                return ServerMapper.Map(table.Rows[0]);
+            }
+            catch
+            {
+                return null;
+            }
         }
         public bool InsertServer(ServerModel server)
         {
@@ -42,10 +49,25 @@ namespace BusinessLayer.Services
                     return false;
                 }
             }
-
             
             string ip = new Uri(server.IpAddress).Host;
             _gateway.InsertServer(server.ServerType, server.Name, ip, server.Username, server.Password);
+            return true;
+        }
+
+        public bool UpdateServer(ServerModel server)
+        {
+            var serverToUpdate = GetServerById(server.Id);
+            if (serverToUpdate == null)
+            {
+                return false;
+            }
+
+            if(server.Password == null)
+            {
+                server.Password = serverToUpdate.Password;
+            }
+            _gateway.UpdateServer(server.Id, server.ServerType, server.Name, server.IpAddress, server.Username, server.Password);
             return true;
         }
 
