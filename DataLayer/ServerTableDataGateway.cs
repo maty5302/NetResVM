@@ -69,6 +69,25 @@ namespace DataLayer
             }
         }
 
+        public void UpdateServer(int id, string serverType, string name, string ipAddress, string username, string password)
+        {
+            string query = "UPDATE Server SET ServerType = @ServerType, Name = @Name, IpAddress = @IpAddress, Username = @Username, Password = @Password WHERE ServerID = @Id";
+            using(var connection=DBConnector.GetConnection())
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@ServerType", serverType);
+                    command.Parameters.AddWithValue("@Name", name);
+                    command.Parameters.AddWithValue("@IpAddress", ipAddress);
+                    command.Parameters.AddWithValue("@Username", username);
+                    command.Parameters.AddWithValue("@Password", password);
+                    command.Parameters.AddWithValue("@Id", id);
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
         public void RemoveServer(int id)
         {
             string query = "DELETE FROM Server WHERE ServerID = @Id";
