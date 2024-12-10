@@ -1,0 +1,49 @@
+﻿@{
+	
+}
+@if (TempData["ErrorMessage"] != null)
+{
+	<div class="alert alert-danger" role="alert">
+		@TempData["ErrorMessage"]
+	</div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+	<div class="alert alert-success" role="alert">
+		@TempData["SuccessMessage"]
+	</div>
+}
+<form>
+	<button class="btn btn-primary" formaction="@Url.Action("Create","Reservation")">Create new reservation</button>
+	<button class="btn btn-primary" formaction="@Url.Action("MyReservation","Reservation")">My reservations</button>
+</form>
+<br />
+<!--Show other planned reservation with time, user and wwhich server and lab-->
+<div>
+	<h3>Planned reservations</h3>
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Server</th>
+				<th>Lab</th>
+				<th>From</th>
+				<th>To</th>
+				<th>User</th>				
+			</tr>
+		</thead>
+		<tbody>
+			@if(ViewBag.Reservations!=null){
+				@for (int i = 0; i < ((List<ReservationInformationModel>)ViewBag.Reservations).Count; i++)
+				{
+					<tr>
+						<td>@ViewBag.Reservations[i].ServerName - @ViewBag.Reservations[i].ServerType </td>
+						<td>@ViewBag.Reservations[i].LabId</td>
+						<td>@ViewBag.Reservations[i].ReservationStart</td>
+						<td>@ViewBag.Reservations[i].ReservationEnd</td>
+						<td>@ViewBag.Reservations[i].UserName</td>
+					</tr>
+				}
+			}
+		</tbody>
+	</table>
+</div>

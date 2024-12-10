@@ -1,8 +1,7 @@
 @{
-    ViewData["Title"] = "CML debugging";
+    ViewData["Title"] = @ViewBag.ServerName;
 }
-<h1>DEBUGGING PAGE</h1>
-<p>Server Name: @ViewBag.ServerName</p>
+<h2>Server Name: @ViewBag.ServerName</h2>
 
 <h5>Labs ID:</h5>
 @for (int i = 0; i < ((object[])ViewBag.Labs2).Length; i++)

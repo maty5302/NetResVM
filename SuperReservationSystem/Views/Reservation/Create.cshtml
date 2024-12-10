@@ -1,0 +1,44 @@
+﻿@{
+}
+@model BusinessLayer.Models.ReservationModel
+@if (TempData["ErrorMessage"] != null)
+{
+	<div class="alert alert-danger" role="alert">
+		@TempData["ErrorMessage"]
+	</div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+	<div class="alert alert-success" role="alert">
+		@TempData["SuccessMessage"]
+	</div>
+}
+<div>
+	<h3>Create reservation</h3>
+	<form method="post" asp-action="Create">
+	<label>Server:</label>
+		<select id="server" name="selectedServer" asp-for="ServerId" class="form-select me-2" onchange="this.form.submit()">
+		<option value="">Select server...</option>
+		@for (int i = 0; i < ((List<BusinessLayer.Models.ServerModel>)ViewBag.Servers).Count; i++)
+		{
+			<option value="@ViewBag.Servers[i].Id">@ViewBag.Servers[i].Name</option>
+		})
+	</select>
+	<label>Lab:</label>
+	<select id="lab" asp-for="LabId" class="form-select me-2">
+			<option value="">Select lab...</option>
+			@if (ViewBag.Labs3 != null){
+				@for (int i = 0; i < ((string[])ViewBag.Labs3).Length; i++)
+				{
+					<option value="@ViewBag.Labs3[i]">@ViewBag.Labs3[i]</option>
+				}
+
+			}
+	</select>
+	<label>From:</label>
+	<input type="datetime-local" id="date" asp-for="ReservationStart" class="form-control" />	
+	<label>To:</label>
+	<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" />
+	<button class="btn btn-primary" formaction="@Url.Action("MakeReservation","Reservation")">Make reservation</button>
+	</form>
+</div>
