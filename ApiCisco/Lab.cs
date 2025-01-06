@@ -16,22 +16,22 @@ namespace ApiCisco
         {
             var url = user.Url + "labs";
             try
-            { 
-                    var response = await user.Client.GetAsync(url);
-                    if (response.IsSuccessStatusCode)
+            {
+                var response = await user.Client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = response.Content.ReadAsStringAsync().Result.Split(",");
+                    string[] charactersToRemove = { "\n", "\"", "[", "]" };
+                    for (int i = 0; i < data.Length; i++)
                     {
-                        var data = response.Content.ReadAsStringAsync().Result.Split(",");
-                        string[] charactersToRemove = { "\n", "\"", "[", "]" };
-                        for (int i = 0; i < data.Length; i++)
+                        foreach (string item in charactersToRemove)
                         {
-                            foreach (string item in charactersToRemove)
-                            {
-                                data[i] = data[i].Replace(item, string.Empty);
-                            }
+                            data[i] = data[i].Replace(item, string.Empty);
                         }
-                        return data;
                     }
-               return null;
+                    return data;
+                }
+                return null;
 
             }
             catch (Exception e)
@@ -66,7 +66,7 @@ namespace ApiCisco
                 return await Task.FromResult<LabModel?>(null);
             }
         }
-        
+
         public static async Task<string> DownloadLab(UserHttpClient user, string labId)
         {
             var url = user.Url + "labs/" + labId.Trim() + "/download";
@@ -97,7 +97,7 @@ namespace ApiCisco
             var url = user.Url + "labs/" + labId.Trim() + "/start";
             try
             {
-                var response = await user.Client.PutAsync(url.Trim(),null);
+                var response = await user.Client.PutAsync(url.Trim(), null);
                 if (response.StatusCode == HttpStatusCode.NoContent)
                     return true;
                 else
@@ -123,6 +123,24 @@ namespace ApiCisco
             catch (Exception ex)
             {
                 throw new Exception($"Failed to stop the lab with ID {labId}.", ex);
+            }
+        }
+
+        public static async Task<bool> ImportLab(UserHttpClient user, string file)
+        {
+            var url = user.Url + "import";
+            try
+            {
+                var content = new StringContent(file, Encoding.UTF8, "application/json");
+                var response = await user.Client.PostAsync(url.Trim(), content);
+                if (response.StatusCode == HttpStatusCode.OK)
+                    return true;
+                else
+                    return false;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Failed to import the lab.", ex);
             }
         }
     }
