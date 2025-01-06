@@ -1,18 +1,7 @@
 ﻿@{
 	
 }
-@if (TempData["ErrorMessage"] != null)
-{
-	<div class="alert alert-danger" role="alert">
-		@TempData["ErrorMessage"]
-	</div>
-}
-@if (TempData["SuccessMessage"] != null)
-{
-	<div class="alert alert-success" role="alert">
-		@TempData["SuccessMessage"]
-	</div>
-}
+
 <form>
 	<button class="btn btn-primary" formaction="@Url.Action("Create","Reservation")">Create new reservation</button>
 	<button class="btn btn-primary" formaction="@Url.Action("MyReservation","Reservation")">My reservations</button>

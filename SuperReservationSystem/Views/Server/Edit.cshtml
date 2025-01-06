@@ -4,12 +4,7 @@
 @model BusinessLayer.Models.ServerModel
 
 <div>
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger" role="alert">
-            @TempData["ErrorMessage"]
-        </div>
-    }
+    
     <form method="post">
         <label type="form-label" asp-for="Id">Server ID:</label>
         <input type="text" class="form-control" asp-for="Id" readonly />

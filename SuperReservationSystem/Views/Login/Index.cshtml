@@ -5,13 +5,6 @@
 <div class="container mt-5">
     <h2 class="mb-4">Login Page</h2>
 
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger" role="alert">
-            @TempData["ErrorMessage"]
-        </div>
-    }
-
     <form asp-action="LoginASync" asp-controller="Login" method="post" class="p-4 border rounded">
 
         <div class="form-group">

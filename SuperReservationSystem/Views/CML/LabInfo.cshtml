@@ -11,23 +11,8 @@
         ViewData["Title"] = "Lab Info of " + lab.Name;
     }
 }
-<div class="text-center">
-@if(TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger" role="alert">
-            @TempData["ErrorMessage"]
-        </div>
-    }
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success" role="alert">
-            @TempData["SuccessMessage"]
-        </div>   
-    }
-</div>
-
-<h1>Information about @lab.Name</h1>
-
+<h1>@lab.Name</h1>
+<hr />
 <p>Lab ID: @lab.Id</p>
 <p>Lab Name: @lab.Name</p>  
 <p>Lab Description: @lab.Description</p>

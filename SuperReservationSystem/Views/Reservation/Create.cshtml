@@ -1,18 +1,7 @@
 ﻿@{
 }
 @model BusinessLayer.Models.ReservationModel
-@if (TempData["ErrorMessage"] != null)
-{
-	<div class="alert alert-danger" role="alert">
-		@TempData["ErrorMessage"]
-	</div>
-}
-@if (TempData["SuccessMessage"] != null)
-{
-	<div class="alert alert-success" role="alert">
-		@TempData["SuccessMessage"]
-	</div>
-}
+
 <div>
 	<h3>Create reservation</h3>
 	<form method="post" asp-action="Create">

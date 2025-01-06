@@ -73,6 +73,21 @@
         </nav>
     </header>
     <div class="container">
+        <div class="text-center">
+        <!--Displaying error or success messages-->
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger" role="alert">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success" role="alert">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+        </div>
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
