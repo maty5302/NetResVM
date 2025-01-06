@@ -19,12 +19,13 @@ namespace SuperReservationSystem.Controllers
 
             var reservations = reservationService.GetAllReservations();
 
-            List<ReservationInformationModel> list = new List<ReservationInformationModel>();
+            List<ReservationInformationModel> plannedReservations = new List<ReservationInformationModel>();
             foreach (var reservation in reservations)
             {
                 var server = serverService.GetServerById(reservation.ServerId);
                 var user = userService.GetUsername(reservation.UserId);
-                list.Add(new ReservationInformationModel
+                if(reservation.ReservationEnd>DateTime.Now)
+                plannedReservations.Add(new ReservationInformationModel
                 {
                     Id = reservation.Id,
                     ServerName = server.Name,
@@ -38,7 +39,7 @@ namespace SuperReservationSystem.Controllers
                 });
             }
 
-            ViewBag.Reservations = list;
+            ViewBag.Reservations = plannedReservations;
 
             return View();
         }
@@ -58,13 +59,17 @@ namespace SuperReservationSystem.Controllers
                 var selectedServerModel = serverService.GetServerById(selectedServer.Value);
                 var userHttpClient = new UserHttpClient(selectedServerModel.IpAddress);
                 var res = await Authentication.Authenticate(userHttpClient, selectedServerModel.Username, selectedServerModel.Password);
-                if (res.IsSuccessStatusCode) {
+                if (res!=null && res.IsSuccessStatusCode) {
                     var labs = await Lab.GetLabs(userHttpClient);
 
                     if (labs != null && labs.Length > 0)
                     {
                         ViewBag.Labs3 = labs;
                     }
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Cannot connect to server. Try again..";
                 }
             }
 
@@ -78,16 +83,6 @@ namespace SuperReservationSystem.Controllers
             if (!User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
             var UserId = userService.GetUserId(User.Identity.Name);
-            if (reserve.ReservationStart >= reserve.ReservationEnd)
-            {
-                TempData["ErrorMessage"] = "Invalid reservation time.";
-                return RedirectToAction("Create");
-            }
-            if (reserve.ReservationStart < DateTime.Now)
-            {
-                TempData["ErrorMessage"] = "Invalid reservation time.";
-                return RedirectToAction("Create");
-            }
             if (!selectedServer.HasValue && selectedServer == 0)
             {
                 TempData["ErrorMessage"] = "Server not selected.";
@@ -96,6 +91,16 @@ namespace SuperReservationSystem.Controllers
             if (reserve.LabId == null)
             {
                 TempData["ErrorMessage"] = "Lab not selected.";
+                return RedirectToAction("Create");
+            }
+            if (reserve.ReservationStart >= reserve.ReservationEnd)
+            {
+                TempData["ErrorMessage"] = "Invalid reservation time.";
+                return RedirectToAction("Create");
+            }
+            if (reserve.ReservationStart < DateTime.Now)
+            {
+                TempData["ErrorMessage"] = "Invalid reservation time.";
                 return RedirectToAction("Create");
             }
             if (reserve.UserId == -1)
