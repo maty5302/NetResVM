@@ -2,23 +2,37 @@
     ViewData["Title"] = @ViewBag.ServerName;
 }
 @model ApiCisco.Model.LabModel
-<h2>Server Name: @ViewBag.ServerName</h2>
+<h1>@ViewBag.ServerName</h1>
+<hr />
+<form method="post" enctype="multipart/form-data" action="@Url.Action("ImportLab", "CML", new {serverID=ViewBag.ServerID })">
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <input type="file" class="form-control form-control-file" id="fileUpload" name="file" accept=".yaml, .yml" />
+        </div>
+        <div class="col-md-8">
+            <button type="submit" class="btn btn-primary">Import lab</button>
+        </div>
+    </div>
+</form>
+<br />
+<div class="row ">
  @if (ViewBag.Labs != null){
     @for (int i = 0; i < ((List<ApiCisco.Model.LabModel>)ViewBag.Labs).Count; i++)
-    {
-        <a href="@Url.Action("LabInfo","CML",new {id=ViewBag.ServerID, servername=ViewBag.ServerName, id_lab=ViewBag.Labs[i].Id})" class="card-link">
-            <div class="col-md-3 mb-4 d-flex">
-                <div class="card flex-fill">
+    {        
+        <div class="col-md-3 mb-4 d-flex">   
+            <div class="card flex-fill">
+                <a href="@Url.Action("LabInfo","CML",new {id=ViewBag.ServerID, servername=ViewBag.ServerName, id_lab=ViewBag.Labs[i].Id})" class="card-link">
                     <div class="card-body" sstyle="height: 175px;">
                         <h5 class="card-title">@ViewBag.Labs[i].Name</h5><hr />
                         <span>@ViewBag.Labs[i].State</span><br />
                         <span>Last modified: @ViewBag.Labs[i].Last_modified</span><br />                    
                     </div>
-                </div>
-		    </div>
-        </a>
+                </a>
+            </div>           
+		</div>
     }
  }
+ </div>
 
 <h5>DEBUG THING Labs ID:</h5>
 @for (int i = 0; i < ((object[])ViewBag.Labs2).Length; i++)

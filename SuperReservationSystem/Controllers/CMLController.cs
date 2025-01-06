@@ -184,5 +184,35 @@ namespace SuperReservationSystem.Controllers
             TempData["ErrorMessage"] = "Lab not found.";
             return RedirectToAction("LabList", "CML", new { id = id, servername = server.Name });            
         }
+
+        [HttpPost]
+        public async Task<IActionResult> ImportLab(IFormFile file, int serverId)
+        {
+            if (file == null)
+            {
+                TempData["ErrorMessage"] = "File not found.";
+                return RedirectToAction("LabList", "CML" , new { id = serverId });
+            }
+            var server = serverService.GetServerById(serverId);
+            var client = await SetClientAndAuth(server);
+            if (client == null)
+            {
+                return RedirectToAction("LabList", "CML", new { id = serverId });
+            }
+            string fileContent;
+            using(var reader=new StreamReader(file.OpenReadStream()))
+            {
+                fileContent = await reader.ReadToEndAsync();
+            }
+            var lab = Lab.ImportLab(client, fileContent);
+            if (lab.Result)
+            {
+                TempData["SuccessMessage"] = "Lab imported successfully.";
+                return RedirectToAction("LabList", "CML", new { id = serverId });
+            }
+            TempData["ErrorMessage"] = "An error occurred.";
+            return RedirectToAction("LabList", "CML", new { id = serverId });
+
+        }
     }
 }
