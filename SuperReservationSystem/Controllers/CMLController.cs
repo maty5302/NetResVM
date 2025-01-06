@@ -1,4 +1,5 @@
 ﻿using ApiCisco;
+using ApiCisco.Model;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -55,10 +56,19 @@ namespace SuperReservationSystem.Controllers
             ViewBag.ServerName = server.Name;
             ViewBag.ServerID = id;
 
-            var labs = Lab.GetLabs(client);
-            if (labs.Result != null)
+            var labsID = Lab.GetLabs(client);
+
+            List<LabModel> labs = new List<LabModel>();
+            if (labsID.Result != null)
             {
-                ViewBag.Labs2 = labs.Result; // CAREFUL! This is not a good practice, it's just for testing purposes
+                foreach (var lab in labsID.Result)
+                {
+                    var labInfo = Lab.GetLabInfo(client, lab);
+                    labs.Add(labInfo.Result);
+                }
+                ViewBag.Labs = labs;
+
+                ViewBag.Labs2 = labsID.Result; // CAREFUL! This is not a good practice, it's just for testing purposes
                 return View();
             }
 
