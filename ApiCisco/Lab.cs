@@ -21,7 +21,7 @@ namespace ApiCisco
                 if (response.IsSuccessStatusCode)
                 {
                     var data = response.Content.ReadAsStringAsync().Result.Split(",");
-                    string[] charactersToRemove = { "\n", "\"", "[", "]" };
+                    string[] charactersToRemove = { "\n", "\"", "[", "]", " " };
                     for (int i = 0; i < data.Length; i++)
                     {
                         foreach (string item in charactersToRemove)
