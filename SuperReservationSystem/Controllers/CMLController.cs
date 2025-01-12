@@ -9,7 +9,6 @@ namespace SuperReservationSystem.Controllers
 {
     public class CMLController : Controller
     {
-        //Testing phase
         private ServerService serverService = new ServerService();
 
         public async Task<UserHttpClient?> SetClientAndAuth(ServerModel? server)
@@ -76,15 +75,15 @@ namespace SuperReservationSystem.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        public async Task<IActionResult> LabInfo(int id, string servername, string id_lab)
+        public async Task<IActionResult> LabInfo(int id, string labId)
         {
             //also search if lab is already owned
             var server = serverService.GetServerById(id);
 
-            if(id_lab == null)
+            if(labId == null)
             {
                 TempData["ErrorMessage"] = "Lab not found.";
-                return RedirectToAction("LabList","CML", new {id=id, servername=servername } );
+                return RedirectToAction("LabList","CML", new {id=id } );
             }
 
             var client = await SetClientAndAuth(server);
@@ -94,25 +93,24 @@ namespace SuperReservationSystem.Controllers
             }
 
             ViewBag.ServerID = id;
-            ViewBag.ServerName = server.Name;
 
-            var lab = Lab.GetLabInfo(client, id_lab);
+            var lab = Lab.GetLabInfo(client, labId);
             if (lab.Result == null)
             {
-                return RedirectToAction("LabList", "CML", new { id = id, servername = server.Name });
+                return RedirectToAction("LabList", "CML", new { id = id });
             }
             ViewBag.Lab = lab.Result;
             return View();
         }
 
-        public async Task<IActionResult> DownloadLab(int id, string servername, string id_lab)
+        public async Task<IActionResult> DownloadLab(int id, string labId)
         {
             var server = serverService.GetServerById(id);
             
-            if (id_lab == null)
+            if (labId == null)
             {
                 TempData["ErrorMessage"] = "Lab not found.";
-                return RedirectToAction("LabList", "CML", new { id = id, servername = server.Name });
+                return RedirectToAction("LabList", "CML", new { id = id });
             }
 
             var client = await SetClientAndAuth(server);
@@ -122,20 +120,19 @@ namespace SuperReservationSystem.Controllers
             }
 
             ViewBag.ServerID = id;
-            ViewBag.ServerName = server.Name;
                         
-            var lab = Lab.DownloadLab(client, id_lab);
+            var lab = Lab.DownloadLab(client, labId);
             if (lab.Result == null)
             {
                 TempData["ErrorMessage"] = $"Lab not found.";
-                return RedirectToAction("LabList", "CML", new { id = id, servername = servername });
+                return RedirectToAction("LabList", "CML", new { id = id });
             }
             return File(Encoding.UTF8.GetBytes(lab.Result), "text/plain", "lab.yaml");
         }
 
-        public async Task<IActionResult> StartLab(int id, string lab_id)
+        public async Task<IActionResult> StartLab(int id, string labId)
         {
-            if (lab_id == null)
+            if (labId == null)
             {
                 TempData["ErrorMessage"] = "Lab not found.";
                 return RedirectToAction("Index", "Home");
@@ -147,19 +144,19 @@ namespace SuperReservationSystem.Controllers
             {
                 return RedirectToAction("Index", "Home");
             }
-            var lab = Lab.StartLab(client, lab_id);
+            var lab = Lab.StartLab(client, labId);
             if (lab.Result)
             {
                 TempData["SuccessMessage"] = "Lab started successfully.";
-                return RedirectToAction("LabInfo", "CML", new { id = id, servername = server.Name,id_lab=lab_id });
+                return RedirectToAction("LabInfo", "CML", new { id = id,labId= labId });
             }
             TempData["ErrorMessage"] = "Lab not found.";
-            return RedirectToAction("LabList", "CML", new { id = id, servername = server.Name });
+            return RedirectToAction("LabList", "CML", new { id = id });
         }
 
-        public async Task<IActionResult> StopLab(int id, string lab_id)
+        public async Task<IActionResult> StopLab(int id, string labId)
         {
-            if (lab_id == null)
+            if (labId == null)
             {
                 TempData["ErrorMessage"] = "Lab not found.";
                 return RedirectToAction("Index", "Home");
@@ -175,14 +172,14 @@ namespace SuperReservationSystem.Controllers
             if (client == null)
                 return RedirectToAction("Index", "Home");
            
-            var lab = Lab.StopLab(client, lab_id);
+            var lab = Lab.StopLab(client, labId);
             if (lab.Result)
             {
                 TempData["SuccessMessage"] = "Lab stopped successfully.";
-                return RedirectToAction("LabInfo", "CML", new { id = id, servername = server.Name, id_lab = lab_id });
+                return RedirectToAction("LabInfo", "CML", new { id = id, labId = labId });
             }
             TempData["ErrorMessage"] = "Lab not found.";
-            return RedirectToAction("LabList", "CML", new { id = id, servername = server.Name });            
+            return RedirectToAction("LabList", "CML", new { id = id });            
         }
 
         [HttpPost]
@@ -214,5 +211,6 @@ namespace SuperReservationSystem.Controllers
             return RedirectToAction("LabList", "CML", new { id = serverId });
 
         }
+
     }
 }
