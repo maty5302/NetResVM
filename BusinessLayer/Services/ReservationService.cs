@@ -1,9 +1,11 @@
 ﻿using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
 using DataLayer;
+using SimpleLogger;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,6 +14,7 @@ namespace BusinessLayer.Services
     public class ReservationService
     {
         private readonly ReservationTableDataGateway _reservationTableDataGateway;
+        private static ILogger logger = FileLogger.Instance;
 
         public ReservationService()
         {
@@ -20,49 +23,96 @@ namespace BusinessLayer.Services
 
         public List<ReservationModel> GetAllReservations()
         {
-            var rows = _reservationTableDataGateway.GetAllReservations();
-            var reservations = new List<ReservationModel>();
-            foreach (System.Data.DataRow row in rows.Rows)
-            {
-                reservations.Add(ReservationMapper.Map(row));
-            }
-            return reservations;
+            try {
+                var rows = _reservationTableDataGateway.GetAllReservations();
+                var reservations = new List<ReservationModel>();
+                foreach (System.Data.DataRow row in rows.Rows)
+                {
+                    reservations.Add(ReservationMapper.Map(row));
+                }
+                logger.Log("All reservations have been retrieved.");
+                return reservations;
 
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+                return null;
+            }
         }
+
 
         public List<ReservationModel> GetReservationsByUserId(int userId)
         {
-            var rows = _reservationTableDataGateway.GetReservationsByUserId(userId);
-            var reservations = new List<ReservationModel>();
-            foreach (System.Data.DataRow row in rows.Rows)
+            try
             {
-                reservations.Add(ReservationMapper.Map(row));
+                var rows = _reservationTableDataGateway.GetReservationsByUserId(userId);
+                var reservations = new List<ReservationModel>();
+                foreach (System.Data.DataRow row in rows.Rows)
+                {
+                    reservations.Add(ReservationMapper.Map(row));
+                }
+
+                logger.Log($"Reservations for user ID:{userId} have been retrieved.");
+                return reservations;
+
             }
-            return reservations;
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+                return null;
+            }
         }
 
         public List<ReservationModel> GetReservationsByServerId(int serverId)
         {
-            var rows = _reservationTableDataGateway.GetReservationsByServerId(serverId);
-            var reservations = new List<ReservationModel>();
-            foreach (System.Data.DataRow row in rows.Rows)
+            try
             {
-                reservations.Add(ReservationMapper.Map(row));
+                var rows = _reservationTableDataGateway.GetReservationsByServerId(serverId);
+                var reservations = new List<ReservationModel>();
+                foreach (System.Data.DataRow row in rows.Rows)
+                {
+                    reservations.Add(ReservationMapper.Map(row));
+                }
+                logger.Log($"Reservations for server ID:{serverId} have been retrieved.");
+                return reservations;
             }
-            return reservations;
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+                return null;
+            }
         }
 
         public bool MakeReservation(ReservationModel reservation)
         {
-            foreach (var item in GetAllReservations())
+            try
             {
-                if (item.ServerId == reservation.ServerId && item.ReservationStart == reservation.ReservationEnd)
+                foreach (var item in GetAllReservations())
                 {
-                    return false;
+                    if (item.ServerId == reservation.ServerId && item.ReservationStart == reservation.ReservationEnd)
+                    {
+                        logger.LogWarning("Reservation already exists..Cannot make reservation.");
+                        return false;
+                    }
                 }
             }
-            _reservationTableDataGateway.InsertReservation(reservation.ServerId, reservation.UserId, reservation.ReservationStart, reservation.ReservationEnd,reservation.LabId);
-            return true;
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+                return false;
+            }
+            try
+            {
+                _reservationTableDataGateway.InsertReservation(reservation.ServerId, reservation.UserId, reservation.ReservationStart, reservation.ReservationEnd, reservation.LabId);
+                logger.Log($"Reservation has been made. ServerID:{reservation.ServerId}, UserID:{reservation.UserId}, StartDate:{reservation.ReservationStart}, EndDate:{reservation.ReservationEnd}, LabID:{reservation.LabId}");
+                return true;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+                return false;
+            }
         }
 
         public bool DeleteReservation(int id)
@@ -70,10 +120,12 @@ namespace BusinessLayer.Services
             try
             {
                 _reservationTableDataGateway.RemoveReservation(id);
+                logger.Log($"Reservation has been deleted. ID:{id}");
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
+                logger.LogError($"Error deleting reservation ID:{id}");
                 return false;
             }
         }

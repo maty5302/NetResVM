@@ -7,26 +7,36 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SimpleLogger;
 
 namespace BusinessLayer.Services
 {
     public class ServerService
     {
         private readonly ServerTableDataGateway _gateway;
+        private static ILogger _logger = FileLogger.Instance;
 
         public ServerService()
         {
             _gateway = new ServerTableDataGateway();
         }
-        public List<ServerModel> GetAllServers()
+        public List<ServerModel>? GetAllServers()
         {
-            var servers = new List<ServerModel>();
-            var table = _gateway.GetAllServers();
-            foreach (System.Data.DataRow row in table.Rows)
+            try
             {
-                servers.Add(ServerMapper.Map(row));
+                var servers = new List<ServerModel>();
+                var table = _gateway.GetAllServers();
+                foreach (System.Data.DataRow row in table.Rows)
+                {
+                    servers.Add(ServerMapper.Map(row));
+                }
+                return servers;
             }
-            return servers;
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return null;
+            }
         }
         public ServerModel? GetServerById(int id)
         {
@@ -37,22 +47,39 @@ namespace BusinessLayer.Services
             }
             catch
             {
+                _logger.LogError($"Server with id {id} not found.");
                 return null;
             }
         }
         public bool InsertServer(ServerModel server)
         {
-            foreach(var item in GetAllServers())
+            try
             {
-                if (item.Name == server.Name)
+                foreach (var item in GetAllServers())
                 {
-                    return false;
+                    if (item.Name == server.Name)
+                    {
+                        _logger.LogWarning($"Server with name {server.Name} already exists.");
+                        return false;
+                    }
                 }
             }
-            
-            string ip = new Uri(server.IpAddress).Host;
-            _gateway.InsertServer(server.ServerType, server.Name, ip, server.Username, server.Password);
-            return true;
+            catch
+            {
+                return false;
+            }
+            try
+            {
+                string ip = new Uri(server.IpAddress).Host;
+                _gateway.InsertServer(server.ServerType, server.Name, ip, server.Username, server.Password);
+                _logger.Log($"Server with name {server.Name} has been inserted.");
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Server with name {server.Name} couldn't be inserted. {e.Message}");
+                return false;
+            }
         }
 
         public bool UpdateServer(ServerModel server)
@@ -62,13 +89,21 @@ namespace BusinessLayer.Services
             {
                 return false;
             }
-
-            if(server.Password == null)
+            if (server.Password == null)
             {
                 server.Password = serverToUpdate.Password;
             }
-            _gateway.UpdateServer(server.Id, server.ServerType, server.Name, server.IpAddress, server.Username, server.Password);
-            return true;
+            try
+            {
+                _gateway.UpdateServer(server.Id, server.ServerType, server.Name, server.IpAddress, server.Username, server.Password);
+                _logger.Log($"Server with id {server.Id} has been updated.");
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Server with id {server.Id} couldn't be updated. {e.Message}" );
+                return false;
+            }
         }
 
         public bool RemoveServer(int id)
@@ -78,8 +113,17 @@ namespace BusinessLayer.Services
             {
                 return false;
             }
-            _gateway.RemoveServer(id);
-            return true;
+            try
+            {
+                _gateway.RemoveServer(id);
+                _logger.Log($"Server with id {id} has been removed.");
+                return true;
+            }
+            catch(Exception e)
+            {
+                _logger.LogError($"Server with id {id} couldn't be removed. {e.Message}");
+                return false;
+            }
         }
     }
 }

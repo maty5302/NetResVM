@@ -6,12 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessLayer.MapperDT;
+using SimpleLogger;
 
 namespace BusinessLayer.Services
 {
     public class UserService
     {
         private readonly UserTableDataGateway _userTableDataGateway;
+        private static ILogger logger = FileLogger.Instance;
 
         public UserService()
         {
@@ -20,13 +22,22 @@ namespace BusinessLayer.Services
 
         private UserModel? GetUser(string Username)
         {
-            var row = _userTableDataGateway.GetUserByUsername(Username);
-            if(row.Rows.Count>0)
+            try
             {
-                return UserMapper.Map(row.Rows[0]);
+                var row = _userTableDataGateway.GetUserByUsername(Username);
+                if (row.Rows.Count > 0)
+                {
+                    return UserMapper.Map(row.Rows[0]);
+                }
+                else
+                {
+                    logger.LogWarning($"User with username {Username} not found.");
+                    return null;
+                }
             }
-            else
+            catch (Exception ex)
             {
+                logger.LogError(ex.Message);
                 return null;
             }
         }
@@ -36,19 +47,34 @@ namespace BusinessLayer.Services
             var user = GetUser(Username);
             if (user != null)
             {
-                return user.Password == Password;
+                if(user.Password == Password)
+                {
+                    return true;
+                }
+                logger.LogWarning($"Invalid password for user with username {Username}.");
+                return false;
             }
+            logger.LogWarning($"User with username {Username} not found.");
             return false;
         }
 
         public string GetUsername(int id)
         {
-            var user = _userTableDataGateway.GetUserById(id);
-            if (user.Rows.Count > 0)
+            try
             {
-                return (string)user.Rows[0]["Username"];
+                var user = _userTableDataGateway.GetUserById(id);
+                if (user.Rows.Count > 0)
+                {
+                    return (string)user.Rows[0]["Username"];
+                }
+                logger.LogWarning($"User with ID {id} not found.");
+                return "";
             }
-            return "";
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+                return "";
+            }
         }
 
         public int GetUserId(string Username)
@@ -58,6 +84,7 @@ namespace BusinessLayer.Services
             {
                 return user.Id;
             }
+            logger.LogWarning($"User with username {Username} not found.");
             return -1;
         }
 
@@ -68,6 +95,7 @@ namespace BusinessLayer.Services
             {
                 return user.Role;
             }
+            logger.LogWarning($"User with username {Username} not found.");
             return "";
         }
     }
