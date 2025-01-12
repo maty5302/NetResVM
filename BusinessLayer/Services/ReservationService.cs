@@ -30,7 +30,6 @@ namespace BusinessLayer.Services
                 {
                     reservations.Add(ReservationMapper.Map(row));
                 }
-                logger.Log("All reservations have been retrieved.");
                 return reservations;
 
             }

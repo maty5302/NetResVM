@@ -39,26 +39,27 @@ namespace BusinessLayer.Services
             }
         }
 
-        public bool InsertUserLabOwnership(UserLabOwnershipModel userLabOwnership)
+        public (bool,string) InsertUserLabOwnership(UserLabOwnershipModel userLabOwnership)
         {
             try
             {
                 foreach (var item in GetAllUserLabsByUserID(userLabOwnership.UserId))
                 {
                     if (item.LabId == userLabOwnership.LabId)
-                    {
-                        logger.LogWarning($"User with ID {userLabOwnership.UserId} already owns lab with ID {userLabOwnership.LabId}.");
-                        return false;
+                    { 
+                        var message = $"User with ID {userLabOwnership.UserId} already owns lab with ID {userLabOwnership.LabId}.";
+                        logger.LogWarning(message);
+                        return (false,"You already own this lab.");
                     }
                 }
                 _gateway.InsertUserLabOwnership(userLabOwnership.UserId,userLabOwnership.LabId, userLabOwnership.ServerId);
                 logger.Log($"User with ID {userLabOwnership.UserId} has been assigned ownership of lab with ID {userLabOwnership.LabId}.");
-                return true;
+                return (true,"");
             }
             catch (Exception e)
             {
                 logger.LogError(e.Message);
-                return false;
+                return (false,e.Message);
             }
         }
 
