@@ -14,20 +14,28 @@
 		})
 	</select>
 	<label>Lab:</label>
-	<select id="lab" asp-for="LabId" class="form-select me-2">
+	<select id="lab" name="labId" asp-for="LabId" class="form-select me-2" >
 			<option value="">Select lab...</option>
 			@if (ViewBag.Labs3 != null){
-				@for (int i = 0; i < ((string[])ViewBag.Labs3).Length; i++)
+				var labs = (string[])ViewBag.Labs3;
+				foreach (var lab in labs)
 				{
-					<option value="@ViewBag.Labs3[i]">@ViewBag.Labs3[i]</option>
+					@if (Model.LabId == lab)
+					{
+						<option value="@lab" selected>@lab</option>
+					}
+					else
+					{
+						<option value="@lab">@lab</option>
+					}
 				}
 
 			}
 	</select>
 	<label>From:</label>
-	<input type="datetime-local" id="date" asp-for="ReservationStart" class="form-control" />	
+	<input type="datetime-local" id="date" asp-for="ReservationStart" class="form-control" value="" />	
 	<label>To:</label>
-	<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" />
+	<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" value=""/>
 	<button class="btn btn-primary" formaction="@Url.Action("MakeReservation","Reservation")">Make reservation</button>
 	</form>
 </div>

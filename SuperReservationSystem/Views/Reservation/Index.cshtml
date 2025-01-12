@@ -1,10 +1,10 @@
 ﻿@{
-	
+	ViewBag.Title = "Reservations";
 }
 
 <form>
 	<button class="btn btn-primary" formaction="@Url.Action("Create","Reservation")">Create new reservation</button>
-	<button class="btn btn-primary" formaction="@Url.Action("MyReservation","Reservation")">My reservations</button>
+	<button class="btn btn-primary" formaction="@Url.Action("UserReservation","Reservation")">My reservations</button>
 </form>
 <br />
 <!--Show other planned reservation with time, user and wwhich server and lab-->

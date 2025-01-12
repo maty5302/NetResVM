@@ -1,0 +1,65 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+	ViewData["Title"] = "My reservations";    
+}
+<h1>@ViewData["Title"]</h1>
+<hr />
+<div>
+	<h3>Planned reservations</h3>
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Server</th>
+				<th>Lab</th>
+				<th>From</th>
+				<th>To</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@if (ViewBag.PlannedReservations != null)
+			{
+				@for (int i = 0; i < ((List<ReservationInformationModel>)ViewBag.PlannedReservations).Count; i++)
+				{
+					<tr>
+						<td>@ViewBag.PlannedReservations[i].ServerName - @ViewBag.PlannedReservations[i].ServerType </td>
+						<td>@ViewBag.PlannedReservations[i].LabId</td>
+						<td>@ViewBag.PlannedReservations[i].ReservationStart</td>
+						<td>@ViewBag.PlannedReservations[i].ReservationEnd</td>
+						<td><form method="post"><button class="btn btn-danger" formaction="@Url.Action("DeleteReservation","Reservation" , new {reservationId=@ViewBag.PlannedReservations[i].Id})"> <i class="bi bi-trash"></i> </button></form></td>
+					</tr>
+				}
+			}
+		</tbody>
+	</table>
+	<h3>Expired reservations</h3>
+	<p>Expired reservations are deleted automatically after 6 months</p>
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Server</th>
+				<th>Lab</th>
+				<th>From</th>
+				<th>To</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@if (ViewBag.ExpiredReservations != null)
+			{
+				@for (int i = 0; i < ((List<ReservationInformationModel>)ViewBag.ExpiredReservations).Count; i++)
+				{
+					<tr>
+						<td>@ViewBag.ExpiredReservations[i].ServerName - @ViewBag.ExpiredReservations[i].ServerType </td>
+						<td>@ViewBag.ExpiredReservations[i].LabId</td>
+						<td>@ViewBag.ExpiredReservations[i].ReservationStart</td>
+						<td>@ViewBag.ExpiredReservations[i].ReservationEnd</td>
+						<td><form method="post"><button class="btn btn-danger" formaction="@Url.Action("DeleteReservation","Reservation" , new {reservationId=@ViewBag.ExpiredReservations[i].Id})"> <i class="bi bi-trash"></i> </button></form></td>
+					</tr>
+				}
+			}
+		</tbody>
+	</table>
+</div>

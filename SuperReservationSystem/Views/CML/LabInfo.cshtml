@@ -32,9 +32,8 @@ else
 <form method="post">
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabList","CML", new {id=ViewBag.ServerID,serverName})">Back to Lab List</button> <br />
 
-
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("DownloadLab","CML",new{id=ViewBag.ServerID,serverName,id_lab=lab.Id})">Download lab</button>
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("New","Reservation",new{id=ViewBag.ServerID,lab_id=lab.Id})">Reserve this lab</button>
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("Create","Reservation",new{selectedServer=ViewBag.ServerID,labId=lab.Id})">Reserve this lab</button>
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("OwnLab","CML",new{id=ViewBag.ServerID,lab_id=lab.Id})">Own a lab</button><br />
 
     <button class="btn btn-danger" type="submit" >Delete this lab</button>
