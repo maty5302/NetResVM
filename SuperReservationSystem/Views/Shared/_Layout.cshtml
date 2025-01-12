@@ -31,7 +31,7 @@
                             <a class="nav-link text-body" asp-area="" asp-controller="Reservation" asp-action="Index"> <i class="bi bi-calendar"></i> Reservation</a>
                         </li>
                         <li class="nav-item">
-                                <a class="nav-link text-body" asp-area="" asp-controller="" asp-action=""> <i class="bi bi-diagram-3"></i> My labs</a>
+                                <a class="nav-link text-body" asp-area="" asp-controller="User" asp-action="UserLab"> <i class="bi bi-diagram-3"></i> My labs</a>
                         </li>
                         
                             
@@ -42,8 +42,10 @@
                         @if(User.Identity != null && User.Identity.IsAuthenticated)
                         {
                             <div class="text-body">
-                               @User.Identity.Name
-                               <i class="bi bi-person"></i>
+                                <a href="@Url.Action("Settings","User")" class="card-link">
+                                   @User.Identity.Name
+                                   <i class="bi bi-person"></i>
+                               </a>
                             </div>
                         }</div>
                     <div class="nav-item me-3">

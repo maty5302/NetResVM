@@ -1,9 +1,10 @@
 ﻿@{
+	ViewBag.Title = "Create reservation";
 }
 @model BusinessLayer.Models.ReservationModel
 
 <div>
-	<h3>Create reservation</h3>
+	<h3>@ViewBag.Title</h3>
 	<form method="post" asp-action="Create">
 	<label>Server:</label>
 		<select id="server" name="selectedServer" asp-for="ServerId" class="form-select me-2" onchange="this.form.submit()">

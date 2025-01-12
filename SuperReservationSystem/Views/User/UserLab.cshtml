@@ -1,0 +1,34 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+	ViewData["Title"] = "My labs";
+}
+<h1>My labs</h1>
+<hr />
+<div class="row ">
+    @if (ViewBag.Labs != null)
+    {
+        @for (int i = 0; i < ((List<(int,ApiCisco.Model.LabModel)>)ViewBag.Labs).Count; i++)
+        {
+            var labTuple = ((List<(int, ApiCisco.Model.LabModel)>)ViewBag.Labs)[i];
+            int serverID = labTuple.Item1; // Access the integer (first part of the tuple)
+            var labModel = labTuple.Item2; // Access the LabModel (second part of the tuple)
+
+            <div class="col-md-3 mb-4 d-flex">
+                <div class="card flex-fill">
+                    
+                        <div class="card-body" sstyle="height: 175px;">
+                        <a href="@Url.Action("LabInfo","CML",new {id=serverID, id_lab=labModel.Id})" class="card-link">
+                            <h5 class="card-title">@labModel.Name</h5><hr />
+                            <span>@labModel.State</span><br />
+                            <span>Last modified: @labModel.Last_modified</span><br />
+                        </a>
+                            <button class="btn btn-danger">Remove ownership</button>
+                        </div>
+                    
+                </div>
+            </div>
+        }
+    }
+</div>
