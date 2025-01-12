@@ -4,24 +4,27 @@
 @model ApiCisco.Model.LabModel
 <h1>@ViewBag.ServerName</h1>
 <hr />
-<form method="post" enctype="multipart/form-data" action="@Url.Action("ImportLab", "CML", new {serverID=ViewBag.ServerID })">
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <input type="file" class="form-control form-control-file" id="fileUpload" name="file" accept=".yaml, .yml" />
+@if (User.Identity!=null && User.Identity.Name == "admin")
+{
+    <form method="post" enctype="multipart/form-data" action="@Url.Action("ImportLab", "CML", new {serverID=ViewBag.ServerID })">
+        <div class="row mb-3">
+            <div class="col-md-12 d-flex align-items-center">
+                <div class="flex-grow-1 me-3">
+                    <input type="file" class="form-control" id="fileUpload" name="file" accept=".yaml, .yml" />
+                </div>
+                <button type="submit" class="btn btn-primary">Import lab</button>
+            </div>
         </div>
-        <div class="col-md-8">
-            <button type="submit" class="btn btn-primary">Import lab</button>
-        </div>
-    </div>
-</form>
+    </form>
+}
 <br />
 <div class="row ">
  @if (ViewBag.Labs != null){
     @for (int i = 0; i < ((List<ApiCisco.Model.LabModel>)ViewBag.Labs).Count; i++)
-    {        
-        <div class="col-md-3 mb-4 d-flex">   
-            <div class="card flex-fill">
-                <a href="@Url.Action("LabInfo","CML",new {id=ViewBag.ServerID, servername=ViewBag.ServerName, id_lab=ViewBag.Labs[i].Id})" class="card-link">
+    {
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
+                <div class="card flex-fill d-flex flex-column">
+                    <a href="@Url.Action("LabInfo","CML",new {id=ViewBag.ServerID, labId=ViewBag.Labs[i].Id})" class="card-link">
                     <div class="card-body" sstyle="height: 175px;">
                         <h5 class="card-title">@ViewBag.Labs[i].Name</h5><hr />
                         <span>@ViewBag.Labs[i].State</span><br />
@@ -30,6 +33,10 @@
                 </a>
             </div>           
 		</div>
+            @if ((i + 1) % 4 == 0)
+            {
+                <div class="w-100"></div>
+            }
     }
  }
  </div>
@@ -37,5 +44,5 @@
 <h5>DEBUG THING Labs ID:</h5>
 @for (int i = 0; i < ((object[])ViewBag.Labs2).Length; i++)
 {
-    <a href="@Url.Action("LabInfo","CML",new {id=ViewBag.ServerID, servername=ViewBag.ServerName, id_lab=ViewBag.Labs2[i]})"><p>@ViewBag.Labs2[i]</p> </a>
+    <a href="@Url.Action("LabInfo","CML",new {id=ViewBag.ServerID, labId=ViewBag.Labs2[i]})"><p>@ViewBag.Labs2[i]</p> </a>
 }

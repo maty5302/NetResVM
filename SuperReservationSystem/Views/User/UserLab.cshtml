@@ -6,29 +6,35 @@
 }
 <h1>My labs</h1>
 <hr />
-<div class="row ">
+<div class="row">
     @if (ViewBag.Labs != null)
     {
-        @for (int i = 0; i < ((List<(int,ApiCisco.Model.LabModel)>)ViewBag.Labs).Count; i++)
+        var labs = (List<(int, ApiCisco.Model.LabModel)>)ViewBag.Labs;
+        for (int i = 0; i < labs.Count; i++)
         {
-            var labTuple = ((List<(int, ApiCisco.Model.LabModel)>)ViewBag.Labs)[i];
-            int serverID = labTuple.Item1; // Access the integer (first part of the tuple)
-            var labModel = labTuple.Item2; // Access the LabModel (second part of the tuple)
+            var labTuple = labs[i];
+            int serverID = labTuple.Item1;
+            var labModel = labTuple.Item2;
 
-            <div class="col-md-3 mb-4 d-flex">
-                <div class="card flex-fill">
-                    
-                        <div class="card-body" sstyle="height: 175px;">
-                        <a href="@Url.Action("LabInfo","CML",new {id=serverID, id_lab=labModel.Id})" class="card-link">
-                            <h5 class="card-title">@labModel.Name</h5><hr />
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
+                <div class="card flex-fill d-flex flex-column">
+                    <div class="card-body d-flex flex-column justify-content-between">
+                        <a href="@Url.Action("LabInfo", "CML", new { id = serverID, id_lab = labModel.Id })" class="card-link">
+                            <h5 class="card-title">@labModel.Name</h5>
+                            <hr />
                             <span>@labModel.State</span><br />
-                            <span>Last modified: @labModel.Last_modified</span><br />
+                            <span>Last modified: @labModel.Last_modified</span>
                         </a>
-                            <button class="btn btn-danger">Remove ownership</button>
-                        </div>
-                    
+                        <button class="btn btn-danger mt-3 align-self-start">Remove ownership</button>
+                    </div>
                 </div>
             </div>
+
+            @* Add clearfix for rows dynamically *@
+            @if ((i + 1) % 4 == 0)
+            {
+                <div class="w-100"></div>
+            }
         }
     }
 </div>

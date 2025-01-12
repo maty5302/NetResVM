@@ -30,16 +30,16 @@ else
 <p>Last modified: @lab.Last_modified</p>
 
 <form method="post">
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabList","CML", new {id=ViewBag.ServerID,serverName})">Back to Lab List</button> <br />
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabList","CML", new {id=ViewBag.ServerID})">Back to Lab List</button> <br />
 
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("DownloadLab","CML",new{id=ViewBag.ServerID,serverName,id_lab=lab.Id})">Download lab</button>
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("DownloadLab","CML",new{id=ViewBag.ServerID,serverName,labId=lab.Id})">Download lab</button>
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("Create","Reservation",new{selectedServer=ViewBag.ServerID,labId=lab.Id})">Reserve this lab</button>
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("OwnLab","User",new{serverID=ViewBag.ServerID,labID=lab.Id})">Own a lab</button><br />
 
     <button class="btn btn-danger" type="submit" >Delete this lab</button>
     <button class="btn btn-primary" type="submit">Edit this lab</button><br />
 
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("StartLab","CML",new{id=ViewBag.ServerID,lab_id=lab.Id})">Start this lab</button>
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("StopLab","CML",new{id=ViewBag.ServerID,lab_id=lab.Id})">Stop the lab</button> 
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("StartLab","CML",new{id=ViewBag.ServerID,labId=lab.Id})">Start this lab</button>
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("StopLab","CML",new{id=ViewBag.ServerID,labId=lab.Id})">Stop the lab</button> 
     
 </form>
