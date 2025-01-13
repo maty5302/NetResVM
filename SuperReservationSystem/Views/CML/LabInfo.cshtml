@@ -37,7 +37,7 @@ else
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("OwnLab","User",new{serverID=ViewBag.ServerID,labID=lab.Id})">Own a lab</button><br />
 
     <button class="btn btn-danger" type="submit" >Delete this lab</button>
-    <button class="btn btn-primary" type="submit">Edit this lab</button><br />
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabNodeList","CML",new{serverID=ViewBag.ServerID, labId=lab.Id})">Show nodes</button><br />
 
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("StartLab","CML",new{id=ViewBag.ServerID,labId=lab.Id})">Start this lab</button>
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("StopLab","CML",new{id=ViewBag.ServerID,labId=lab.Id})">Stop the lab</button> 
