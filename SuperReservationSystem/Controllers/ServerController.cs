@@ -11,7 +11,7 @@ namespace SuperReservationSystem.Controllers
 
         public IActionResult Add()
         {
-            if (!User.Identity.IsAuthenticated)
+            if (User.Identity!=null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
             if (!User.IsInRole("Admin"))
                 return RedirectToAction("Index", "Home");
@@ -21,7 +21,7 @@ namespace SuperReservationSystem.Controllers
 
         public IActionResult Edit(int id)
         {
-            if (!User.Identity.IsAuthenticated)
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
             if (!User.IsInRole("Admin"))
                 return RedirectToAction("Index", "Home");
@@ -37,7 +37,7 @@ namespace SuperReservationSystem.Controllers
 
         public IActionResult Remove(int id)
         {
-            if (!User.Identity.IsAuthenticated)
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
             if (!User.IsInRole("Admin"))
                 return RedirectToAction("Index","Home");
@@ -53,7 +53,7 @@ namespace SuperReservationSystem.Controllers
         [HttpPost]
         public IActionResult SaveChanges(ServerModel server)
         {
-            if(!User.Identity.IsAuthenticated)
+            if(User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
             if (!User.IsInRole("Admin"))
                 return RedirectToAction("Index", "Home");

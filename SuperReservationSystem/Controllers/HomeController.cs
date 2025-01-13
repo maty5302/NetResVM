@@ -23,7 +23,7 @@ namespace SuperReservationSystem.Controllers
 
 		public IActionResult Index()
 		{			
-			if (!User.Identity.IsAuthenticated)
+			if (User.Identity != null && !User.Identity.IsAuthenticated)
 				return RedirectToAction("Index","Login");			
             ViewBag.Servers = serverService.GetAllServers();
             return View();
@@ -31,7 +31,7 @@ namespace SuperReservationSystem.Controllers
 
 		public IActionResult Privacy()
 		{
-            if (!User.Identity.IsAuthenticated)
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index","Login");
             return View();
 		}
@@ -39,7 +39,7 @@ namespace SuperReservationSystem.Controllers
         //[Authorize(Roles = "Admin")]
         public IActionResult AddServer()
 		{
-            if (!User.Identity.IsAuthenticated)
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index","Login");
 			if (!User.IsInRole("Admin"))
 				return RedirectToAction("Index");
