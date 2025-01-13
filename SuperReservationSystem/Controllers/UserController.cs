@@ -24,19 +24,26 @@ namespace SuperReservationSystem.Controllers
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
 
-            var allUserLabs = userLabOwnershipService.GetAllUserLabsByUserID(userService.GetUserId(User.Identity.Name));
-            
-            var labsInfo = new List<(int, LabModel)>(); // Tuple of server id and lab model
-            foreach (var item in allUserLabs)
+            var userId = userService.GetUserId(User.Identity?.Name ?? string.Empty);
+            var allUserLabs = userLabOwnershipService.GetAllUserLabsByUserID(userId);
+
+            if (allUserLabs != null)
             {
-                var server = serverService.GetServerById(item.ServerId);
-                var client = new UserHttpClient(server.IpAddress);
-                var auth = await Authentication.Authenticate(client, server.Username, server.Password);
-                var lab = await Lab.GetLabInfo(client, item.LabId);
-                if(lab != null)
-                    labsInfo.Add((server.Id,lab));
+                var labsInfo = new List<(int, LabModel)>(); // Tuple of server id and lab model
+                foreach (var item in allUserLabs)
+                {
+                    var server = serverService.GetServerById(item.ServerId);
+                    if (server != null)
+                    {
+                        var client = new UserHttpClient(server.IpAddress);
+                        var auth = await Authentication.Authenticate(client, server.Username, server.Password);
+                        var lab = await Lab.GetLabInfo(client, item.LabId);
+                        if (lab != null)
+                            labsInfo.Add((server.Id, lab));
+                    }
+                }
+                ViewBag.Labs = labsInfo;
             }
-            ViewBag.Labs = labsInfo;
 
             return View();
         }
@@ -62,12 +69,12 @@ namespace SuperReservationSystem.Controllers
                 UserId = userService.GetUserId(User.Identity.Name)
             };
             var lab = userLabOwnershipService.InsertUserLabOwnership(model);
-            if (lab)
+            if (lab.Item1)
             {
                 TempData["SuccessMessage"] = "Lab owned successfully.";
                 return RedirectToAction("LabInfo", "CML", new { id = serverID, id_lab=labID });
             }
-            TempData["ErrorMessage"] = "An error occurred.";
+            TempData["ErrorMessage"] = lab.Item2;
             return RedirectToAction("LabList", "CML", new { id = serverID });
         }
     }
