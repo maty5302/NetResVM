@@ -3,6 +3,7 @@ using ApiCisco.Model;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
+using SuperReservationSystem.Models;
 
 namespace SuperReservationSystem.Controllers
 {
@@ -14,7 +15,7 @@ namespace SuperReservationSystem.Controllers
 
         public IActionResult Settings()
         {
-            if(User.Identity != null && !User.Identity.IsAuthenticated)
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
             return View();
         }
@@ -72,10 +73,135 @@ namespace SuperReservationSystem.Controllers
             if (lab.Item1)
             {
                 TempData["SuccessMessage"] = "Lab owned successfully.";
-                return RedirectToAction("LabInfo", "CML", new { id = serverID, id_lab=labID });
+                return RedirectToAction("LabInfo", "CML", new { id = serverID, id_lab = labID });
             }
             TempData["ErrorMessage"] = lab.Item2;
             return RedirectToAction("LabList", "CML", new { id = serverID });
+        }
+
+        public IActionResult ChangePassword(ChangePasswordModel PassModel)
+        {
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                return RedirectToAction("Login", "Home");
+            }
+            if (!userService.ValidateCredentials(User.Identity.Name, PassModel.oldPassword))
+            {
+                TempData["ErrorMessage"] = "Old password is incorrect.";
+                return RedirectToAction("Settings", "User");
+            }
+            if (PassModel.newPassword != PassModel.confirmPassword)
+            {
+                TempData["ErrorMessage"] = "Passwords do not match.";
+                return RedirectToAction("Settings", "User");
+            }
+            if (userService.UpdateUser(userService.GetUserId(User.Identity.Name), PassModel.newPassword))
+            {
+                TempData["SuccessMessage"] = "Password changed successfully.";
+                return RedirectToAction("Settings", "User");
+            }
+            TempData["ErrorMessage"] = "Password could not be changed.";
+            return RedirectToAction("Settings", "User");
+        }
+
+        public IActionResult AddUser(UserModel model)
+        {
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                return RedirectToAction("Login", "Home");
+            }
+            if (userService.AddUser(model.Username, model.Password, "student", model.Active))
+            {
+                TempData["SuccessMessage"] = "User added successfully.";
+                return RedirectToAction("Settings", "User");
+            }
+            TempData["ErrorMessage"] = "User could not be added.";
+            return RedirectToAction("Settings", "User");
+        }
+
+        public IActionResult ManageUser()
+        {
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                return RedirectToAction("Login", "Home");
+            }
+            if(!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Access denied. Admin role required.";
+                return RedirectToAction("Index", "Home");
+            }
+            var users = userService.GetAllUsersInfo();
+            if (users != null)
+            {
+                ViewBag.Users = users;
+            }
+            return View();
+        }
+
+        public IActionResult DeactivateUser(int UserId)
+        {
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                return RedirectToAction("Login", "Home");
+            }
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Access denied. Admin role required.";
+                return RedirectToAction("Index", "Home");
+            }
+            if (userService.UpdateUser(UserId,false))
+            {
+                TempData["SuccessMessage"] = "User deactivated successfully.";
+                return RedirectToAction("ManageUser", "User");
+            }
+            TempData["ErrorMessage"] = "User could not be deactivated.";
+            return RedirectToAction("ManageUser", "User");
+        }
+
+        public IActionResult ActivateUser(int UserId)
+        {
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                return RedirectToAction("Login", "Home");
+            }
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Access denied. Admin role required.";
+                return RedirectToAction("Index", "Home");
+            }
+            if (userService.UpdateUser(UserId, true))
+            {
+                TempData["SuccessMessage"] = "User activated successfully.";
+                return RedirectToAction("ManageUser", "User");
+            }
+            TempData["ErrorMessage"] = "User could not be deactivated.";
+            return RedirectToAction("ManageUser", "User");
+        }
+
+        public IActionResult RemoveUser(int UserId)
+        {
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                return RedirectToAction("Login", "Home");
+            }
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = "Access denied. Admin role required.";
+                return RedirectToAction("Index", "Home");
+            }
+            if (userService.RemoveUser(UserId))
+            {
+                TempData["SuccessMessage"] = "User removed successfully.";
+                return RedirectToAction("ManageUser", "User");
+            }
+            TempData["ErrorMessage"] = "User could not be removed. See log..";
+            return RedirectToAction("ManageUser", "User");
         }
     }
 }
