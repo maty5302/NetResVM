@@ -1,0 +1,40 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@model BusinessLayer.Models.UserModel
+<h3>Manage users</h3>
+<form method="post" class="p-3 border rounded mb-4">
+	<button class="btn btn-primary" formaction="@Url.Action("ManageUser", "User")">Manage users</button>
+</form>
+<h3>Add user</h3>
+<form method="post" class="p-3 border rounded">
+	<div class="form-group">
+		<label for="Username">Username</label>
+		<input type="text" class="form-control" id="Username" asp-for="Username" required>
+	</div>
+	<div class="form-group">
+		<label for="Password">Password</label>
+		<input type="password" class="form-control" id="Password" asp-for="Password" required>
+	</div>
+	<div class="row">
+		<div class="form-group col-md-10">
+			<label for="AuthorizationType">Authorization type - not works for now...</label>
+			<select class="form-control" id="AuthorizationType" required>
+				<option value="localhost">localhost</option>
+				<option value="vsb">VŠB server</option>
+			</select>
+		</div>
+		<div class="form-check col-md-2 d-md-flex align-items-center justify-content-center">
+			<div class="text-center justify-content-center">
+				<input type="checkbox" class="form-check-input" id="Active" asp-for="Active">
+				<label for="Active" class="form-check-label">
+					Active
+				</label>
+			</div>
+		</div>
+	</div>
+	<button type="submit" formaction="@Url.Action("AddUser","User")" class="btn btn-primary mt-3">Add user</button>
+</form>

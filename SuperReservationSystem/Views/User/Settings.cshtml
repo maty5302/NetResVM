@@ -1,0 +1,17 @@
+﻿@{
+	ViewBag.Title = "Settings";
+}
+<h1>@ViewBag.Title</h1>
+<hr />
+
+<div class="row">
+	<div class="col-12 col-md-6 mb-4">
+		@Html.Partial("PartialSettings/ChangePasswordPartial", new ChangePasswordModel())
+	</div>
+	@if (User.IsInRole("Admin"))
+	{		
+		<div class="col-12 col-md-6">
+			@Html.Partial("PartialSettings/AddManageUserPartial")
+		</div>
+	}
+</div>
