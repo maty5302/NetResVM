@@ -14,11 +14,18 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Testovaci_Konzole", "Testovaci_Konzole\Testovaci_Konzole.csproj", "{A90FB548-3292-4D9D-BF31-8B8932B7F556}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataLayer", "DataLayer\DataLayer.csproj", "{2AB516A1-6391-4F6F-95F4-7C0A7206C01D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{851EDB4B-AAED-4528-A3F9-EB52C4F57BBB} = {851EDB4B-AAED-4528-A3F9-EB52C4F57BBB}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BusinessLayer", "BusinessLayer\BusinessLayer.csproj", "{9CFC388B-3E65-4E80-BFBD-7DE59101ECB8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2AB516A1-6391-4F6F-95F4-7C0A7206C01D} = {2AB516A1-6391-4F6F-95F4-7C0A7206C01D}
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiEVE", "ApiEVE\ApiEVE.csproj", "{E63E2440-80E9-4129-944D-5AE57FFD373B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleLogger", "SimpleLogger\SimpleLogger.csproj", "{851EDB4B-AAED-4528-A3F9-EB52C4F57BBB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,6 +53,14 @@ Global
 		{9CFC388B-3E65-4E80-BFBD-7DE59101ECB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9CFC388B-3E65-4E80-BFBD-7DE59101ECB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9CFC388B-3E65-4E80-BFBD-7DE59101ECB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E63E2440-80E9-4129-944D-5AE57FFD373B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E63E2440-80E9-4129-944D-5AE57FFD373B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E63E2440-80E9-4129-944D-5AE57FFD373B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E63E2440-80E9-4129-944D-5AE57FFD373B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{851EDB4B-AAED-4528-A3F9-EB52C4F57BBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{851EDB4B-AAED-4528-A3F9-EB52C4F57BBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{851EDB4B-AAED-4528-A3F9-EB52C4F57BBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{851EDB4B-AAED-4528-A3F9-EB52C4F57BBB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
