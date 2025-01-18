@@ -4,8 +4,9 @@
 @model BusinessLayer.Models.ReservationModel
 
 <div>
-	<h3>@ViewBag.Title</h3>
-	<form method="post" asp-action="Create">
+	<h1>@ViewBag.Title</h1>
+	<hr />
+	<form method="post" class="p-3 border rounded" asp-action="Create">
 	<label>Server:</label>
 		<select id="server" name="selectedServer" asp-for="ServerId" class="form-select me-2" onchange="this.form.submit()">
 		<option value="">Select server...</option>
@@ -37,6 +38,7 @@
 	<input type="datetime-local" id="date" asp-for="ReservationStart" class="form-control" value="" />	
 	<label>To:</label>
 	<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" value=""/>
+	<br />
 	<button class="btn btn-primary" formaction="@Url.Action("MakeReservation","Reservation")">Make reservation</button>
 	</form>
 </div>

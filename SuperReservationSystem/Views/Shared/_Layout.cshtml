@@ -101,27 +101,6 @@
         </div>
     </footer>
 
-    <script type="text/javascript">
-        // Check and apply the stored theme on page load
-        document.addEventListener("DOMContentLoaded", function () {
-            var storedTheme = localStorage.getItem("theme");
-            if (storedTheme) {
-                document.documentElement.setAttribute("data-bs-theme", storedTheme);
-                document.getElementById("flexSwitchCheckDefault").checked = storedTheme === "dark";
-            }
-        });
-
-        // Add an event listener for the theme toggle switch
-        document.getElementById("btnSwitch").addEventListener("click", function () {
-            var currentTheme = document.documentElement.getAttribute("data-bs-theme");
-            var newTheme = currentTheme === "light" ? "dark" : "light";
-            document.documentElement.setAttribute("data-bs-theme", newTheme);
-            localStorage.setItem("theme", newTheme);
-            document.getElementById("flexSwitchCheckDefault").checked = newTheme === "dark";
-            			
-        });
-	</script>
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
