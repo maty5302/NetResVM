@@ -26,3 +26,62 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: 0.3s;
 }
+
+/* Calendar related css */
+
+.calendar {
+    font-family: Arial, sans-serif;
+    height: 800px;
+    margin: auto;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* Seven columns of equal width */
+    gap: 5px; /* Space between cells */
+}
+
+.date {
+    text-align: left;
+    font-size: 10px;
+}
+
+.day-header {
+    font-weight: bold;
+    text-align: center;
+}
+
+.day {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    min-width: 60px;
+    min-height: 60px; /* Ensures all cells have the same height */
+    height: 120px;
+    display: flex; /* Flexbox for alignment */
+    flex-direction: column; /* Stack content vertically */
+    overflow: auto;
+}
+
+    .day.empty {
+        background-color: #f9f9f9; /* Placeholder style for empty cells */
+        border: none;
+    }
+
+    .day.today {
+        background-color: #ffa500; /* Highlight the current day */
+        font-weight: bold;
+    }
+
+.event {
+    margin-top: 5px;
+    font-size: 0.7em;
+    background-color: #007bff;
+    color: white;
+    border-radius: 3px;
+    padding: 2px 5px;
+    text-align: center;
+    word-wrap: break-word;
+    max-width: 100%; /* Prevent overflow of event text */
+}
