@@ -1,6 +1,6 @@
 ﻿@{
 	// Parameters for the current month and year
-	int currentMonth = DateTime.Now.Month;
+	int currentMonth = DateTime.Now.Month + 3;
 	int currentYear = DateTime.Now.Year;
 	// Get the first and last days of the current month
 	var firstDayOfMonth = new DateTime(currentYear, currentMonth, 1);
@@ -11,17 +11,17 @@
 <div id="month-view" hidden>
 	<div class="calendar">		
 		<div class="calendar-grid">
-			<!-- Weekday headers -->
-			<div class="day-header">Sun</div>
+			<!-- Weekday headers -->			
 			<div class="day-header">Mon</div>
 			<div class="day-header">Tue</div>
 			<div class="day-header">Wed</div>
 			<div class="day-header">Thu</div>
 			<div class="day-header">Fri</div>
 			<div class="day-header">Sat</div>
+			<div class="day-header">Sun</div>
 
 			<!-- Empty cells before the first day -->
-			@for (var i = 0; i < (int)firstDayOfMonth.DayOfWeek; i++)
+			@for (var i = 1; i < (int)firstDayOfMonth.DayOfWeek; i++)
 			{
 				<div class="day empty"></div>
 			}
@@ -47,7 +47,7 @@
 			}
 
 			<!-- Empty cells after the last day -->
-			@for (var i = ((int)firstDayOfMonth.DayOfWeek + daysInMonth) % 7; i < 7 && i > 0; i++)
+			@for (var i = ((int)firstDayOfMonth.DayOfWeek + daysInMonth -1) % 7; i < 7 && i > 0; i++)
 			{
 				<div class="day empty"></div>
 			}
