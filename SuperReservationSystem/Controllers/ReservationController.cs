@@ -156,19 +156,32 @@ namespace SuperReservationSystem.Controllers
             {
                 TempData["ErrorMessage"] = "Lab not selected.";
                 logger.LogWarning("Lab not selected, while creating reservation");
-                return RedirectToAction("Create", reserve);
+                return RedirectToAction("Create", new { reserve, selectedServer });
             }
             if (reserve.ReservationStart >= reserve.ReservationEnd || reserve.ReservationStart < DateTime.Now)
             {
                 TempData["ErrorMessage"] = "Invalid reservation time.";
                 logger.LogWarning("Invalid reservation time, while creating reservation");
-                return RedirectToAction("Create",reserve);
+                return RedirectToAction("Create", new { reserve, selectedServer });
+            }
+            if(reserve.ReservationStart.AddHours(1) > reserve.ReservationEnd)
+            {
+                TempData["ErrorMessage"] = "Reservation must be at least 1 hour.";
+                logger.LogWarning("Reservation must be at least 1 hour, while creating reservation");
+                return RedirectToAction("Create", new { reserve, selectedServer });
+            }
+            //reservation only that day
+            if(reserve.ReservationStart.Date != reserve.ReservationEnd.Date)
+            {
+                TempData["ErrorMessage"] = "Reservation start and end must be on the same day.";
+                logger.LogWarning("Reservation must be on the same day, while creating reservation");
+                return RedirectToAction("Create", new {reserve,selectedServer});
             }
             if (reserve.UserId == -1)
             {
                 TempData["ErrorMessage"] = "User not selected.";
                 logger.LogWarning("User not selected, while creating reservation");
-                return RedirectToAction("Create",reserve);
+                return RedirectToAction("Create");
             }
             var reservation = new ReservationModel
             {
