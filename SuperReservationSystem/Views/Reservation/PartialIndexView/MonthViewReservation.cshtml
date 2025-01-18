@@ -1,0 +1,60 @@
+﻿@{
+	// Parameters for the current month and year
+	int currentMonth = DateTime.Now.Month;
+	int currentYear = DateTime.Now.Year;
+	// Get the first and last days of the current month
+	var firstDayOfMonth = new DateTime(currentYear, currentMonth, 1);
+	var daysInMonth = DateTime.DaysInMonth(currentYear, currentMonth);
+
+	List<ReservationInformationModel> reserve = (List<ReservationInformationModel>)ViewBag.Reservations;
+}
+<div id="month-view" hidden>
+	<div class="calendar">		
+		<div class="calendar-grid">
+			<!-- Weekday headers -->
+			<div class="day-header">Sun</div>
+			<div class="day-header">Mon</div>
+			<div class="day-header">Tue</div>
+			<div class="day-header">Wed</div>
+			<div class="day-header">Thu</div>
+			<div class="day-header">Fri</div>
+			<div class="day-header">Sat</div>
+
+			<!-- Empty cells before the first day -->
+			@for (var i = 0; i < (int)firstDayOfMonth.DayOfWeek; i++)
+			{
+				<div class="day empty"></div>
+			}
+
+			<!-- Days of the month -->
+			@for (var day = 1; day <= daysInMonth; day++)
+			{
+				var currentDate = new DateTime(currentYear, currentMonth, day);
+				var hasEvent2 = reserve.Contains(reserve.FirstOrDefault(o => o.ReservationStart.Date == currentDate));
+
+				<div class="day @(currentDate == DateTime.Now.Date ? "today" : "")">
+					<div class="date">@day</div>
+					@if (hasEvent2)
+					{
+						var todayEvents = reserve.FindAll(o => o.ReservationStart.Date == currentDate);
+						foreach (var item in todayEvents)
+						{
+							<div class="event">@item.ReservationStart.TimeOfDay.Hours:@item.ReservationStart.TimeOfDay.Minutes @item.ServerName - @item.UserName</div>
+						}
+
+					}
+				</div>
+			}
+
+			<!-- Empty cells after the last day -->
+			@for (var i = ((int)firstDayOfMonth.DayOfWeek + daysInMonth) % 7; i < 7 && i > 0; i++)
+			{
+				<div class="day empty"></div>
+			}
+		</div>
+	</div>
+
+	<style>
+		
+	</style>
+</div>

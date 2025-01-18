@@ -1,6 +1,8 @@
 ﻿@{
 	ViewBag.Title = "Reservations";
+	
 }
+<script src="~/js/CalendarSwitch.js" asp-append-version="true"></script>
 <h1>@ViewBag.Title</h1>
 <form>
 	<button class="btn btn-primary" formaction="@Url.Action("Create","Reservation")">Create new reservation</button>
@@ -9,30 +11,32 @@
 <hr />
 <!--Show other planned reservation with time, user and wwhich server and lab-->
 <div>
-	<h3>Planned reservations</h3>
-	<table class="table">
-		<thead>
-			<tr>
-				<th>Server</th>
-				<th>Lab</th>
-				<th>From</th>
-				<th>To</th>
-				<th>User</th>				
-			</tr>
-		</thead>
-		<tbody>
-			@if(ViewBag.Reservations!=null){
-				@for (int i = 0; i < ((List<ReservationInformationModel>)ViewBag.Reservations).Count; i++)
-				{
-					<tr>
-						<td>@ViewBag.Reservations[i].ServerName - @ViewBag.Reservations[i].ServerType </td>
-						<td>@ViewBag.Reservations[i].LabId</td>
-						<td>@ViewBag.Reservations[i].ReservationStart</td>
-						<td>@ViewBag.Reservations[i].ReservationEnd</td>
-						<td>@ViewBag.Reservations[i].UserName</td>
-					</tr>
-				}
-			}
-		</tbody>
-	</table>
+	<div class="form-group">
+		<label for="view" >Select View:</label>
+		<select id="view" class="form-control" onchange="this.form.submit()">
+			<option value="list">List view</option>
+			<option value="month">Month view</option>
+		</select>
+	</div>
+	<br />
+	@Html.Partial("PartialIndexView/ListViewReservation")
+	@Html.Partial("PartialIndexView/MonthViewReservation")
 </div>
+
+<script>
+		// Get references to the select dropdown and views
+	const viewSelect = document.getElementById('view');
+	const monthView = document.getElementById('month-view');
+	const listView = document.getElementById('list-view');
+
+	// Event listener for changing views
+	viewSelect.addEventListener('change', function () {
+		if (this.value === 'month') {
+			monthView.hidden = false;
+			listView.hidden = true;
+		} else if (this.value === 'list') {
+			monthView.hidden = true;
+			listView.hidden = false;
+		}
+	});
+</script>

@@ -1,0 +1,32 @@
+﻿@{
+
+}
+<div id="list-view">
+	<h3>Planned reservations</h3>
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Server</th>
+				<th>Lab</th>
+				<th>From</th>
+				<th>To</th>
+				<th>User</th>
+			</tr>
+		</thead>
+		<tbody>
+			@if (ViewBag.Reservations != null)
+			{
+				@for (int i = 0; i < ((List<ReservationInformationModel>)ViewBag.Reservations).Count; i++)
+				{
+					<tr>
+						<td>@ViewBag.Reservations[i].ServerName - @ViewBag.Reservations[i].ServerType </td>
+						<td>@ViewBag.Reservations[i].LabId</td>
+						<td>@ViewBag.Reservations[i].ReservationStart</td>
+						<td>@ViewBag.Reservations[i].ReservationEnd</td>
+						<td>@ViewBag.Reservations[i].UserName</td>
+					</tr>
+				}
+			}
+		</tbody>
+	</table>
+</div>
