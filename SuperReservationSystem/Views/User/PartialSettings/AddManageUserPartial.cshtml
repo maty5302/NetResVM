@@ -16,13 +16,13 @@
 		<input type="text" class="form-control" id="Username" asp-for="Username" required>
 	</div>
 	<div class="form-group">
-		<label for="Password">Password</label>
-		<input type="password" class="form-control" id="Password" asp-for="Password" required>
+		<label id="PasswordLabel" for="Password">Password</label>
+		<input type="password" class="form-control" id="Password" asp-for="Password">
 	</div>
 	<div class="row">
 		<div class="form-group col-md-10">
-			<label for="AuthorizationType">Authorization type - not works for now...</label>
-			<select class="form-control" id="AuthorizationType" required>
+			<label for="AuthorizationType">Authorization type</label>
+			<select class="form-control" id="AuthorizationType" asp-for="AuthorizationType" required>
 				<option value="localhost">localhost</option>
 				<option value="vsb">VŠB server</option>
 			</select>
@@ -38,3 +38,23 @@
 	</div>
 	<button type="submit" formaction="@Url.Action("AddUser","User")" class="btn btn-primary mt-3">Add user</button>
 </form>
+
+<script>
+	const AuthTypeSelect = document.getElementById('AuthorizationType');
+	const PasswordType = document.getElementById('Password');
+	const PasswordText = document.getElementById('PasswordLabel');
+
+	AuthTypeSelect.addEventListener('change', function ()
+	{
+		if(this.value=='localhost'){
+			PasswordType.required = true;
+			PasswordType.hidden = false;
+			PasswordText.hidden = false;
+		}
+		else{
+			PasswordType.required = false;
+			PasswordType.hidden = true;
+			PasswordText.hidden = true;
+		}
+	});
+</script>
