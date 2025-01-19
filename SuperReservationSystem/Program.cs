@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using SimpleLogger;
 
 namespace SuperReservationSystem
 {
 	public class Program
 	{
-		public static void Main(string[] args)
-		{
-			var builder = WebApplication.CreateBuilder(args);
+		private static BackgroundTask _backgroundTask = new BackgroundTask();
+
+        public static void Main(string[] args)
+		{		
+            var builder = WebApplication.CreateBuilder(args);
 
 			// Add services to the container.
 			builder.Services.AddControllersWithViews();
@@ -52,12 +55,14 @@ namespace SuperReservationSystem
             {
                 // Log the fallback route if necessary
                 Console.WriteLine($"Fallback triggered for: {context.Request.Path}");
+				FileLogger.Instance.LogWarning($"Fallback triggered for: {context.Request.Path}");
 
                 // Redirect to the Home/Index route with status code 302 (Found)
                 context.Response.Redirect("/", permanent: false);
                 return Task.CompletedTask;
             });
-
+			FileLogger.Instance.Log("Application started.");
+            _backgroundTask.Start();
             app.Run();
 
 		}
