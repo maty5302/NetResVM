@@ -21,7 +21,7 @@ namespace BusinessLayer.Services
             _reservationTableDataGateway = new ReservationTableDataGateway();
         }
 
-        public List<ReservationModel> GetAllReservations()
+        public List<ReservationModel>? GetAllReservations()
         {
             try {
                 var rows = _reservationTableDataGateway.GetAllReservations();
@@ -89,9 +89,10 @@ namespace BusinessLayer.Services
             {
                 foreach (var item in GetAllReservations())
                 {
-                    if (item.ServerId == reservation.ServerId && item.ReservationStart == reservation.ReservationEnd)
+                    // Check if reservation already exists for the server at the time or is overlapping
+                    if (item.ServerId == reservation.ServerId && item.ReservationStart < reservation.ReservationEnd && item.ReservationEnd > reservation.ReservationStart)
                     {
-                        logger.LogWarning("Reservation already exists..Cannot make reservation.");
+                        logger.LogWarning($"Reservation for server ID:{reservation.ServerId} already exists at the time.");
                         return false;
                     }
                 }
