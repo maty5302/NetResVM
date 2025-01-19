@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BusinessLayer.MapperDT;
 using SimpleLogger;
 using System.Reflection.Metadata.Ecma335;
+using System.DirectoryServices.Protocols;
 
 namespace BusinessLayer.Services
 {
@@ -87,14 +88,83 @@ namespace BusinessLayer.Services
 
         }
 
+        public string GetAuthorizationType(string Username)
+        {
+            var user = GetUser(Username);
+            if (user != null)
+            {
+                return user.AuthorizationType;
+            }
+            logger.LogWarning($"User with username {Username} not found.");
+            return "";
+        }
+
+        private bool ValidateCredentialsLdap(string Username, string Password)
+        {
+            var user = GetUser(Username);
+            if (user != null)
+            {
+                if (user.Active)
+                {
+                    try
+                    {
+                        var user_context = user.Username.Last();
+                        string bindDn = $"cn={user.Username},ou={user_context},ou=Users,o=VSB";
+                        var connection = new LdapConnection(new LdapDirectoryIdentifier("ldap.vsb.cz", 636));
+                        //setting up the connection
+                        connection.SessionOptions.SecureSocketLayer = true;
+                        connection.SessionOptions.VerifyServerCertificate = (connCon, cer) => true;
+                        connection.SessionOptions.ProtocolVersion = 3;
+                        connection.AuthType = AuthType.Basic;
+                        connection.Bind(new System.Net.NetworkCredential(bindDn, Password));
+                        //requesting user info
+                        var request = new SearchRequest("ou=Users,o=VSB", $"cn={user.Username}", SearchScope.Subtree);
+                        var response = (SearchResponse)connection.SendRequest(request);
+                        return true;
+                    }
+                    catch (LdapException ex)
+                    {
+                        logger.LogError($"Invalid LDAP credentials for user with username {Username}.");
+                        logger.LogError(ex.Message);
+                        return false;
+                    }
+                }
+                logger.LogWarning($"User {Username} is not marked as Active denying access..");
+                return false;
+               
+            }
+            logger.LogWarning($"User with username {Username} not found.");
+            return false;
+        }
+
         public bool ValidateCredentials(string Username, string Password)
         {
             var user = GetUser(Username);
             if (user != null)
             {
-                if(user.Password == Password && user.Active)
+                if(user.Active)
                 {
-                    return true;
+                    if (user.AuthorizationType == "localhost")
+                    {
+                        if (user.Password == Password)
+                            return true;
+                    }
+                    else if(user.AuthorizationType=="vsb")
+                    {
+                        var res = ValidateCredentialsLdap(Username, Password);
+                        if (res)
+                            return true;
+                        else
+                        {
+                            logger.LogWarning($"Invalid password for user with username {Username}.");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        logger.LogWarning("Invalid AuthorizationType.");
+                        return false;
+                    }
                 }
                 else if(!user.Active)
                 {
@@ -149,7 +219,7 @@ namespace BusinessLayer.Services
             return "";
         }
 
-        public bool AddUser(string Username, string Password, string Role /*,string AuthorizationType*/, bool Active)
+        public bool AddUser(string Username, string? Password, string Role ,string AuthorizationType, bool Active)
         {
             try
             {
@@ -159,8 +229,21 @@ namespace BusinessLayer.Services
                     return false;
                 }
                 int ActiveInt = Active ? 1 : 0;
-                _userTableDataGateway.AddUser(Username, Password, Role, ActiveInt);
-                return true;
+                if (AuthorizationType=="localhost" && Password!=null)
+                {
+                    _userTableDataGateway.AddUser(Username, Password, Role, AuthorizationType, ActiveInt);
+                    return true;
+                }
+                else if(AuthorizationType=="vsb")
+                {
+                    _userTableDataGateway.AddUser(Username, Role, AuthorizationType, ActiveInt);
+                    return true;
+                }
+                else
+                {
+                    logger.LogWarning("Invalid AuthorizationType.");
+                    return false;
+                }
             }
             catch (Exception ex)
             {
