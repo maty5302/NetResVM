@@ -1,6 +1,6 @@
 ﻿@{
 	// Parameters for the current month and year
-	int currentMonth = DateTime.Now.Month + 3;
+	int currentMonth = DateTime.Now.Month;
 	int currentYear = DateTime.Now.Year;
 	// Get the first and last days of the current month
 	var firstDayOfMonth = new DateTime(currentYear, currentMonth, 1);
@@ -39,7 +39,7 @@
 						var todayEvents = reserve.FindAll(o => o.ReservationStart.Date == currentDate);
 						foreach (var item in todayEvents)
 						{
-							<div class="event">@item.ReservationStart.TimeOfDay.Hours:@item.ReservationStart.TimeOfDay.Minutes @item.ServerName - @item.UserName</div>
+							<div class="event">@item.ReservationStart.TimeOfDay.Hours:@item.ReservationStart.TimeOfDay.Minutes-@item.ReservationEnd.TimeOfDay.Hours:@item.ReservationEnd.TimeOfDay.Minutes @item.ServerName - @item.UserName</div>
 						}
 
 					}
