@@ -17,6 +17,9 @@ namespace SuperReservationSystem.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
+            
+            ViewBag.UserAuthType = userService.GetAuthorizationType(User.Identity.Name);
+            
             return View();
         }
 
@@ -112,7 +115,12 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
                 return RedirectToAction("Login", "Home");
             }
-            if (userService.AddUser(model.Username, model.Password, "student", model.Active))
+            if(model.AuthorizationType=="localhost" && model.Password==null)
+            {
+                TempData["ErrorMessage"] = "Password is required for local account.";
+                return RedirectToAction("Settings", "User");
+            }
+            if (userService.AddUser(model.Username, model.Password, "student", model.AuthorizationType, model.Active))
             {
                 TempData["SuccessMessage"] = "User added successfully.";
                 return RedirectToAction("Settings", "User");
