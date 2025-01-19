@@ -68,9 +68,9 @@ namespace DataLayer
         }
 
         //In future AuthorizationType will be added
-        public void AddUser(string Username, string Password, string Role, int Active)
+        public void AddUser(string Username, string Password, string Role, string AuthorizationType, int Active)
         {
-            string query = "INSERT INTO \"User\" (Username, Password, Role, Active) VALUES (@username, @password, @role, @active)";
+            string query = "INSERT INTO \"User\" (Username, Password, Role, AuthorizationType, Active) VALUES (@username, @password, @role, @authorizationType, @active)";
             using (var connection = DBConnector.GetConnection())
             {
                 connection.Open();
@@ -79,11 +79,30 @@ namespace DataLayer
                     command.Parameters.AddWithValue("@username", Username);
                     command.Parameters.AddWithValue("@password", Password);
                     command.Parameters.AddWithValue("@role", Role);
+                    command.Parameters.AddWithValue("@authorizationType", AuthorizationType);
                     command.Parameters.AddWithValue("@active", Active);
                     command.ExecuteNonQuery();
                 }
             }
         }
+
+        public void AddUser(string Username, string Role, string AuthorizationType, int Active)
+        {
+            string query = "INSERT INTO \"User\" (Username, Role, AuthorizationType, Active) VALUES (@username, @role, @authorizationType, @active)";
+            using (var connection = DBConnector.GetConnection())
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@username", Username);
+                    command.Parameters.AddWithValue("@role", Role);
+                    command.Parameters.AddWithValue("@authorizationType", AuthorizationType);
+                    command.Parameters.AddWithValue("@active", Active);
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
 
         //Update method for Active atribute
         public void UpdateUserActive(int Id, int Active)
