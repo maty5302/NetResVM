@@ -7,8 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessLayer.MapperDT;
 using SimpleLogger;
-using System.Reflection.Metadata.Ecma335;
 using System.DirectoryServices.Protocols;
+using BusinessLayer.DTOs;
 
 namespace BusinessLayer.Services
 {
@@ -66,16 +66,15 @@ namespace BusinessLayer.Services
             }
         }
 
-        public List<UserModel> GetAllUsersInfo()
+        public List<UserDTO> GetAllUsersInfo()
         {
             try
             {
-                var all = new List<UserModel>();
+                var all = new List<UserDTO>();
                 var table = _userTableDataGateway.GetAllUsers();
                 foreach (System.Data.DataRow row in table.Rows)
                 {
-                    var user = UserMapper.Map(row);
-                    user.Password = "";
+                    var user = UserMapper.MapToDTO(row);
                     all.Add(user);
                 }
                 return all;
@@ -83,7 +82,7 @@ namespace BusinessLayer.Services
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
-                return new List<UserModel>();
+                return new List<UserDTO>();
             }
 
         }

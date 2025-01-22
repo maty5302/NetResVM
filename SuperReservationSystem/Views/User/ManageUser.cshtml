@@ -13,20 +13,20 @@
 				<th>Username</th>
 				<th>Role</th>
 				<th>Active</th>
-				@* <th>Authorization</th> *@
+				<th>Authorization</th>
 				<th></th>
 			</tr>
 		</thead>
 		<tbody>
 			@if (ViewBag.Users != null)
 			{
-				@foreach (var user in (List<BusinessLayer.Models.UserModel>)ViewBag.Users)
+				@foreach (var user in (List<BusinessLayer.DTOs.UserDTO>)ViewBag.Users)
 				{
 					<tr>
 						<td>@user.Username</td>
 						<td>@user.Role</td>
 						<td>@user.Active</td>
-						@* <td>@user.AuthorizationType</td> *@
+						<td>@user.AuthorizationType</td>
 						<td>
 							<form method="post">
 								@if (user.Role != "Admin")
