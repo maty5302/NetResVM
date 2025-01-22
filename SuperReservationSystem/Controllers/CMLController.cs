@@ -2,6 +2,7 @@
 using ApiCisco.Model;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
+using BusinessLayer.Services.ApiCiscoServices;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 
@@ -10,27 +11,7 @@ namespace SuperReservationSystem.Controllers
     public class CMLController : Controller
     {
         private ServerService serverService = new ServerService();
-
-        public async Task<UserHttpClient?> SetClientAndAuth(ServerModel? server)
-        {
-            if (server == null)
-            {
-                TempData["ErrorMessage"] = "Server not found.";
-                return null;
-            }
-
-            UserHttpClient client = new UserHttpClient(server.IpAddress);
-            var res = await Authentication.Authenticate(client, server.Username, server.Password);
-            if (res != null && res.IsSuccessStatusCode)
-            {
-                return client;
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Authentication failed.";
-                return null;
-            }
-        }
+        private ApiCiscoAuthService authService = new ApiCiscoAuthService();
 
         public IActionResult Index(int id)
         {
@@ -44,29 +25,30 @@ namespace SuperReservationSystem.Controllers
 
         public async Task<IActionResult> LabList(int id)
         {
-            var server = serverService.GetServerById(id);
+            var server = serverService.GetServerById(id); //check but differently
             if (server == null)
             {
                 TempData["ErrorMessage"] = "Server not found.";
                 return RedirectToAction("Index", "Home");
             }
-            var client = await SetClientAndAuth(server);
-            if (client == null)
+            var client = await authService.AuthenticateAndCreateClient(id);
+            if (client.conn == null)
             {
+                TempData["ErrorMessage"] = client.message;
                 return RedirectToAction("Index", "Home");
             }
 
             ViewBag.ServerName = server.Name;
             ViewBag.ServerID = id;
 
-            var labsID = Lab.GetLabs(client);
+            var labsID = Lab.GetLabs(client.conn);
 
             List<LabModel> labs = new List<LabModel>();
             if (labsID.Result != null)
             {
                 foreach (var lab in labsID.Result)
                 {
-                    var labInfo = Lab.GetLabInfo(client, lab);
+                    var labInfo = Lab.GetLabInfo(client.conn, lab);
                     if(labInfo.Result!=null)
                         labs.Add(labInfo.Result);
                 }
@@ -82,24 +64,22 @@ namespace SuperReservationSystem.Controllers
 
         public async Task<IActionResult> LabInfo(int id, string labId)
         {
-            //also search if lab is already owned
-            var server = serverService.GetServerById(id);
-
             if (labId == null)
             {
                 TempData["ErrorMessage"] = "Lab not found.";
                 return RedirectToAction("LabList", "CML", new { id = id });
             }
 
-            var client = await SetClientAndAuth(server);
-            if (client == null)
+            var client = await authService.AuthenticateAndCreateClient(id);
+            if (client.conn == null)
             {
+                TempData["ErrorMessage"] = client.message;
                 return RedirectToAction("Index", "Home");
             }
 
             ViewBag.ServerID = id;
 
-            var lab = Lab.GetLabInfo(client, labId);
+            var lab = Lab.GetLabInfo(client.conn, labId);
             if (lab.Result == null)
             {
                 return RedirectToAction("LabList", "CML", new { id = id });
@@ -110,23 +90,22 @@ namespace SuperReservationSystem.Controllers
 
         public async Task<IActionResult> DownloadLab(int id, string labId)
         {
-            var server = serverService.GetServerById(id);
-
             if (labId == null)
             {
                 TempData["ErrorMessage"] = "Lab not found.";
                 return RedirectToAction("LabList", "CML", new { id = id });
             }
 
-            var client = await SetClientAndAuth(server);
-            if (client == null)
+            var client = await authService.AuthenticateAndCreateClient(id);
+            if (client.conn == null)
             {
+                TempData["ErrorMessage"] = client.message;
                 return RedirectToAction("Index", "Home");
             }
 
             ViewBag.ServerID = id;
 
-            var lab = Lab.DownloadLab(client, labId);
+            var lab = Lab.DownloadLab(client.conn, labId);
             if (lab.Result == null)
             {
                 TempData["ErrorMessage"] = $"Lab not found.";
@@ -142,14 +121,13 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Lab not found.";
                 return RedirectToAction("Index", "Home");
             }
-            var server = serverService.GetServerById(id);
-
-            var client = await SetClientAndAuth(server);
-            if (client == null)
+            var client = await authService.AuthenticateAndCreateClient(id);
+            if (client.conn == null)
             {
+                TempData["ErrorMessage"] = client.message;
                 return RedirectToAction("Index", "Home");
             }
-            var lab = Lab.StartLab(client, labId);
+            var lab = Lab.StartLab(client.conn, labId);
             if (lab.Result.Item1)
             {
                 TempData["SuccessMessage"] = "Lab started successfully.";
@@ -166,18 +144,14 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Lab not found.";
                 return RedirectToAction("Index", "Home");
             }
-            var server = serverService.GetServerById(id);
-            if (server == null)
+            var client = await authService.AuthenticateAndCreateClient(id);
+
+            if (client.conn == null)
             {
-                TempData["ErrorMessage"] = "Server not found";
+                TempData["ErrorMessage"] = client.message;
                 return RedirectToAction("Index", "Home");
             }
-            var client = await SetClientAndAuth(server);
-
-            if (client == null)
-                return RedirectToAction("Index", "Home");
-
-            var lab = Lab.StopLab(client, labId);
+            var lab = Lab.StopLab(client.conn, labId);
             if (lab.Result)
             {
                 TempData["SuccessMessage"] = "Lab stopped successfully.";
@@ -195,10 +169,10 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "File not found.";
                 return RedirectToAction("LabList", "CML", new { id = serverId });
             }
-            var server = serverService.GetServerById(serverId);
-            var client = await SetClientAndAuth(server);
-            if (client == null)
+            var client = await authService.AuthenticateAndCreateClient(serverId);
+            if (client.conn == null)
             {
+                TempData["ErrorMessage"] = client.message;
                 return RedirectToAction("LabList", "CML", new { id = serverId });
             }
             string fileContent;
@@ -206,7 +180,7 @@ namespace SuperReservationSystem.Controllers
             {
                 fileContent = await reader.ReadToEndAsync();
             }
-            var lab = Lab.ImportLab(client, fileContent);
+            var lab = Lab.ImportLab(client.conn, fileContent);
             if (lab.Result)
             {
                 TempData["SuccessMessage"] = "Lab imported successfully.";
@@ -218,20 +192,20 @@ namespace SuperReservationSystem.Controllers
         }
 
         public async Task<IActionResult> LabNodeList(int serverId, string labId)
-        {
-            var server = serverService.GetServerById(serverId);
-            var client = await SetClientAndAuth(server);
-            if (client == null)
+        {            
+            var client = await authService.AuthenticateAndCreateClient(serverId);
+            if (client.conn == null)
             {
+                TempData["ErrorMessage"] = client.message;
                 return RedirectToAction("Index", "Home");
             }
-            var nodes = Node.GetNodes(client, labId);
+            var nodes = Node.GetNodes(client.conn, labId);
             if (nodes.Result != null)
             {
                 var nodesInfo = new List<NodeModel>();
                 foreach (var item in nodes.Result)
                 {
-                    var node = Node.GetNodeInfo(client, labId, item);
+                    var node = Node.GetNodeInfo(client.conn, labId, item);
                     nodesInfo.Add(node.Result);
                     ViewBag.Nodes = nodesInfo;
                 }

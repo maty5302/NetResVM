@@ -1,6 +1,7 @@
 ﻿using ApiCisco;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
+using BusinessLayer.Services.ApiCiscoServices;
 using Microsoft.AspNetCore.Mvc;
 using SimpleLogger;
 using SuperReservationSystem.Models;
@@ -12,6 +13,7 @@ namespace SuperReservationSystem.Controllers
         ServerService serverService = new ServerService();
         UserService userService = new UserService();
         ReservationService reservationService = new ReservationService();
+        ApiCiscoAuthService authService = new ApiCiscoAuthService();
         SimpleLogger.ILogger logger = FileLogger.Instance;
 
         public IActionResult Index()
@@ -58,11 +60,11 @@ namespace SuperReservationSystem.Controllers
             {
                 model.ServerId = selectedServer.Value;
                 var selectedServerModel = serverService.GetServerById(selectedServer.Value);
-                var userHttpClient = new UserHttpClient(selectedServerModel.IpAddress);
-                var res = await Authentication.Authenticate(userHttpClient, selectedServerModel.Username, selectedServerModel.Password);
-                if (res != null && res.IsSuccessStatusCode)
+                var client = await authService.AuthenticateAndCreateClient(selectedServer.Value);
+
+                if (client.conn!=null)
                 {
-                    var labs = await Lab.GetLabs(userHttpClient);
+                    var labs = await Lab.GetLabs(client.conn);
 
                     if (labs != null && labs.Length > 0)
                     {
@@ -144,7 +146,7 @@ namespace SuperReservationSystem.Controllers
             if (User.Identity!=null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
             var UserId = userService.GetUserId(User.Identity.Name);
-            if (!selectedServer.HasValue && selectedServer == 0)
+            if (!selectedServer.HasValue && selectedServer == 0 || selectedServer==null)
             {
                 TempData["ErrorMessage"] = "Server not selected.";
                 logger.LogWarning("Server not selected, while creating reservation");

@@ -1,6 +1,7 @@
 ﻿using ApiCisco;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
+using BusinessLayer.Services.ApiCiscoServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SuperReservationSystem.Controllers
@@ -8,6 +9,7 @@ namespace SuperReservationSystem.Controllers
     public class ServerController : Controller
     {
         private ServerService serverService = new ServerService();
+        private ApiCiscoAuthService authService = new ApiCiscoAuthService();
 
         public IActionResult Add()
         {
@@ -73,9 +75,9 @@ namespace SuperReservationSystem.Controllers
             {
                 return View("Error");
             }
-            var client = new UserHttpClient(server.IpAddress);
-            var res = await Authentication.Authenticate(client, server.Username, server.Password);
-            if (res != null && res.IsSuccessStatusCode)
+            var client = await authService.AuthenticateAndCreateClient(server.Id);
+            
+            if (client.conn != null)
             {
                 TempData["SuccessMessage"] = "Connection successful";
                 ViewBag.Tested = true;
@@ -83,8 +85,7 @@ namespace SuperReservationSystem.Controllers
             }
             else
             {
-                if (res != null)
-                    TempData["ErrorMessage"] = "Connection failed. " + res.Content.ReadAsStringAsync().Result;
+                TempData["ErrorMessage"] = "Connection failed. " + client.message;
                 return View("Add", server);
             }
         }
@@ -99,19 +100,21 @@ namespace SuperReservationSystem.Controllers
 
             if (server.ServerType == "CML")
             {
-                var client = new UserHttpClient(server.IpAddress);
-                var res = await Authentication.Authenticate(client, server.Username, server.Password);
-                if (res != null && res.IsSuccessStatusCode)
+                var client = await authService.AuthenticateAndCreateClient(server.Id);
+                if (client.conn != null)
                 {
                     var ok = serverService.InsertServer(server);
+                    if(ok)
+                        TempData["SuccessMessage"] = "Server added successfully";
+                    else
+                        TempData["ErrorMessage"] = "Server cannot be added. See log.";
+
                     ViewBag.Servers = serverService.GetAllServers();
-                    TempData["SuccessMessage"] = "Server added successfully";
                     return RedirectToAction("Index", "Home");
                 }
                 else
                 {
-                    if (res != null)
-                        TempData["ErrorMessage"] = "Connection failed. " + res.Content.ReadAsStringAsync().Result;
+                    TempData["ErrorMessage"] = "Connection failed. " + client.message;
                     return View("Add", server);
                 }
 

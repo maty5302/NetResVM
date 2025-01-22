@@ -2,6 +2,7 @@
 using ApiCisco.Model;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
+using BusinessLayer.Services.ApiCiscoServices;
 using Microsoft.AspNetCore.Mvc;
 using SuperReservationSystem.Models;
 
@@ -10,6 +11,7 @@ namespace SuperReservationSystem.Controllers
     public class UserController : Controller
     {
         private UserLabOwnershipService userLabOwnershipService = new UserLabOwnershipService();
+        private ApiCiscoAuthService authService = new ApiCiscoAuthService();
         private UserService userService = new UserService();
         private ServerService serverService = new ServerService();
 
@@ -40,7 +42,7 @@ namespace SuperReservationSystem.Controllers
                     if (server != null)
                     {
                         var client = new UserHttpClient(server.IpAddress);
-                        var auth = await Authentication.Authenticate(client, server.Username, server.Password);
+                        var auth = await authService.AuthenticateAndCreateClient(item.ServerId);
                         var lab = await Lab.GetLabInfo(client, item.LabId);
                         if (lab != null)
                             labsInfo.Add((server.Id, lab));

@@ -24,7 +24,7 @@ namespace BusinessLayer.Services.ApiCiscoServices
 
         public async Task<(UserHttpClient? conn,string message)> AuthenticateAndCreateClient(int serverId)
         {
-            var server = _serverService.GetServerById(serverId);
+            var server = _serverService.GetServerByIdInternal(serverId);
             if (server == null)
             {
                 return (null,"Server not found.");
