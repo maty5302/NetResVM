@@ -1,4 +1,5 @@
 ﻿using ApiCisco;
+using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using BusinessLayer.Services.ApiCiscoServices;
@@ -34,7 +35,8 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Server not found.";
                 return RedirectToAction("Index", "Home");
             }
-            return View(server);
+
+            return View(ServerMapper.ToModel(server));
         }
 
         public IActionResult Remove(int id)
@@ -71,13 +73,15 @@ namespace SuperReservationSystem.Controllers
 
         public async Task<IActionResult> TestConnection(ServerModel server)
         {
+            if(server.Password == null)
+                return View("Add", server);
             if (!ModelState.IsValid)
             {
                 return View("Error");
             }
-            var client = await authService.AuthenticateAndCreateClient(server.Id);
+            var client = await authService.ValidateCredentials(server.IpAddress, server.Username, server.Password);
             
-            if (client.conn != null)
+            if (client.Valid)
             {
                 TempData["SuccessMessage"] = "Connection successful";
                 ViewBag.Tested = true;
@@ -85,7 +89,7 @@ namespace SuperReservationSystem.Controllers
             }
             else
             {
-                TempData["ErrorMessage"] = "Connection failed. " + client.message;
+                TempData["ErrorMessage"] = "Connection failed. " + client.Message;
                 return View("Add", server);
             }
         }
@@ -100,8 +104,8 @@ namespace SuperReservationSystem.Controllers
 
             if (server.ServerType == "CML")
             {
-                var client = await authService.AuthenticateAndCreateClient(server.Id);
-                if (client.conn != null)
+                var client = await authService.ValidateCredentials(server.IpAddress, server.Username, server.Password);
+                if (client.Valid)
                 {
                     var ok = serverService.InsertServer(server);
                     if(ok)
@@ -114,7 +118,7 @@ namespace SuperReservationSystem.Controllers
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Connection failed. " + client.message;
+                    TempData["ErrorMessage"] = "Connection failed. " + client.Message;
                     return View("Add", server);
                 }
 
