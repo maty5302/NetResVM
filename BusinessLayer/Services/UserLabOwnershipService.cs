@@ -43,7 +43,13 @@ namespace BusinessLayer.Services
         {
             try
             {
-                foreach (var item in GetAllUserLabsByUserID(userLabOwnership.UserId))
+                var allUserLabs = GetAllUserLabsByUserID(userLabOwnership.UserId);
+                if(allUserLabs == null)
+                {
+                    logger.LogError("Error retrieving user labs.");
+                    return (false, "Error retrieving user labs.");
+                }
+                foreach (var item in allUserLabs)
                 {
                     if (item.LabId == userLabOwnership.LabId)
                     { 

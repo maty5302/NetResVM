@@ -16,7 +16,7 @@
     <!-- Displaying server cards -->
     <div class="row justify-content-center">
         @if (ViewBag.Servers != null){
-            @for (int i = 0; i < ((List<BusinessLayer.Models.ServerModel>)ViewBag.Servers).Count; i++)
+            @for (int i = 0; i < ((List<BusinessLayer.DTOs.ServerDTO>)ViewBag.Servers).Count; i++)
             {
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
                     <div class="card flex-fill d-flex flex-column">

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SimpleLogger;
+using BusinessLayer.DTOs;
 
 namespace BusinessLayer.Services
 {
@@ -20,15 +21,15 @@ namespace BusinessLayer.Services
         {
             _gateway = new ServerTableDataGateway();
         }
-        public List<ServerModel>? GetAllServers()
+        public List<ServerDTO>? GetAllServers()
         {
             try
             {
-                var servers = new List<ServerModel>();
+                var servers = new List<ServerDTO>();
                 var table = _gateway.GetAllServers();
                 foreach (System.Data.DataRow row in table.Rows)
                 {
-                    servers.Add(ServerMapper.Map(row));
+                    servers.Add(ServerMapper.MapToDTO(row));
                 }
                 return servers;
             }
@@ -38,7 +39,20 @@ namespace BusinessLayer.Services
                 return null;
             }
         }
-        public ServerModel? GetServerById(int id)
+        public ServerDTO? GetServerById(int id)
+        {
+            try
+            {
+                var table = _gateway.GetServerById(id);
+                return ServerMapper.MapToDTO(table.Rows[0]);
+            }
+            catch
+            {
+                _logger.LogError($"Server with id {id} not found.");
+                return null;
+            }
+        }
+        internal ServerModel? GetServerByIdInternal(int id)
         {
             try
             {
@@ -51,17 +65,38 @@ namespace BusinessLayer.Services
                 return null;
             }
         }
+
+        public bool ServerExists(int id)
+        {
+            try
+            {
+                var table = _gateway.GetServerById(id);
+                return table.Rows.Count > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
         public bool InsertServer(ServerModel server)
         {
             try
             {
-                foreach (var item in GetAllServers())
-                {
-                    if (item.Name == server.Name)
+                var servers = GetAllServers();
+                if (servers != null) {
+                    foreach (var item in servers)
                     {
-                        _logger.LogWarning($"Server with name {server.Name} already exists.");
-                        return false;
+                        if (item.Name == server.Name)
+                        {
+                            _logger.LogWarning($"Server with name {server.Name} already exists.");
+                            return false;
+                        }
                     }
+                }
+                else
+                {
+                    _logger.LogError("Couldn't fetch servers from database.");
+                    return false;
                 }
             }
             catch
@@ -84,7 +119,7 @@ namespace BusinessLayer.Services
 
         public bool UpdateServer(ServerModel server)
         {
-            var serverToUpdate = GetServerById(server.Id);
+            var serverToUpdate = GetServerByIdInternal(server.Id);
             if (serverToUpdate == null)
             {
                 return false;
