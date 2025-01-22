@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,6 +21,40 @@ namespace BusinessLayer.Services.ApiCiscoServices
         {
             _serverService = new ServerService();
             _authentication = new Authentication();
+        }
+
+        public async Task<(bool Valid, string Message)> ValidateCredentials(string ipAddress,string username, string password)
+        {
+            var response = await _authentication.Authenticate(new UserHttpClient(ipAddress), username, password);
+            if(response == null)
+            {
+                logger.LogError("Couldn't fetch response from cisco API.");
+                return (false, "Couldn't fetch response from cisco API.");
+            }
+            else if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
+            {
+                logger.LogError("Cisco API- Service Unavailable");
+                return (false, "Service Unavailable");
+            }
+            else if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                logger.LogWarning("Unauthorized access. Probably bad password while trying to authenticate to cisco cml server.");
+                return (false, "Invalid credentials");
+            }
+            else if (response.StatusCode == HttpStatusCode.RequestTimeout)
+            {
+                logger.LogError("Cisco API - Request Timeout");
+                return (false, "Request Timeout");
+            }
+            else if (response.StatusCode == HttpStatusCode.OK)
+            {
+                return (true,"");
+            }
+            else
+            {
+                logger.LogError("Cisco API - Unknown error");
+                return (false, "Unknown error..");
+            }
         }
 
         public async Task<(UserHttpClient? conn,string message)> AuthenticateAndCreateClient(int serverId)
