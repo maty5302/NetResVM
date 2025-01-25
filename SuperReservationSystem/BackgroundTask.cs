@@ -1,5 +1,6 @@
 ﻿using ApiCisco;
 using BusinessLayer.Services;
+using BusinessLayer.Services.ApiCiscoServices;
 using SimpleLogger;
 using System.Threading.Tasks;
 
@@ -10,38 +11,39 @@ namespace SuperReservationSystem
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ReservationService _reservationService = new ReservationService();
         private readonly ServerService _serverService = new ServerService();
+        private readonly ApiCiscoAuthService _apiCiscoAuthService = new ApiCiscoAuthService();
+        private readonly ApiCiscoLabService _apiCiscoLabService = new ApiCiscoLabService();
 
         private async void CheckReservations()
         {
             try
             {
                 var reservations = _reservationService.GetAllReservations();
+                
                 var time = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0);
                 FileLogger.Instance.Log($"Checking reservations..{time}");
                 if (reservations != null)
                 {
                     foreach (var reservation in reservations)
-                    {
+                    {                        
                         var server = _serverService.GetServerById(reservation.ServerId);
                         if (server == null)
                         {
                             FileLogger.Instance.LogError("Server not found.");
                             continue;
                         }
-
-                        UserHttpClient client = new UserHttpClient(server.IpAddress); 
+                        
                         if (reservation.ReservationEnd.AddMonths(6) < DateTime.Now)
                         {
                             _reservationService.DeleteReservation(reservation.Id);
                         }
 
-                        if (reservation.ReservationStart == time && server.ServerType == "CML") //reservation.ReservationStart<time && reservation.ReservationEnd > time && //lab not running?
+                        if ((reservation.ReservationStart == time || (reservation.ReservationStart < time && reservation.ReservationEnd > time )) && server.ServerType == "CML") 
                         {
-                            await Authentication.Authenticate(client, server.Username, server.Password);
-                            var stopped = await Lab.StopAllLabs(client);
-                            if (stopped)
+                            var stopped = await _apiCiscoLabService.StopAllLabs(reservation.ServerId);
+                            if (stopped.value)
                             {
-                                var res = await Lab.StartLab(client, reservation.LabId);
+                                var res = await _apiCiscoLabService.StartLab(reservation.ServerId, reservation.LabId);
                                 if (res.Item1)
                                     FileLogger.Instance.Log("Lab started");
                                 else
@@ -52,9 +54,8 @@ namespace SuperReservationSystem
                         }
                         else if (reservation.ReservationEnd <= time && server.ServerType == "CML")
                         {
-                            await Authentication.Authenticate(client, server.Username, server.Password);
-                            var res = await Lab.StopLab(client, reservation.LabId);
-                            if (res)
+                            var res = await _apiCiscoLabService.StopLab(reservation.ServerId, reservation.LabId);
+                            if (res.value)
                                 FileLogger.Instance.Log("Lab stopped");
                             else
                                 FileLogger.Instance.LogWarning("Lab could not be stopped");

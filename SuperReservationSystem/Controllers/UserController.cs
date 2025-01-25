@@ -12,6 +12,7 @@ namespace SuperReservationSystem.Controllers
     {
         private UserLabOwnershipService userLabOwnershipService = new UserLabOwnershipService();
         private ApiCiscoAuthService authService = new ApiCiscoAuthService();
+        private ApiCiscoLabService labService = new ApiCiscoLabService();
         private UserService userService = new UserService();
         private ServerService serverService = new ServerService();
 
@@ -36,16 +37,14 @@ namespace SuperReservationSystem.Controllers
             if (allUserLabs != null)
             {
                 var labsInfo = new List<(int, LabModel)>(); // Tuple of server id and lab model
-                foreach (var item in allUserLabs)
+                foreach (var owned in allUserLabs)
                 {
-                    var server = serverService.GetServerById(item.ServerId);
-                    if (server != null)
-                    {
-                        var client = new UserHttpClient(server.IpAddress);
-                        var auth = await authService.AuthenticateAndCreateClient(item.ServerId);
-                        var lab = await Lab.GetLabInfo(client, item.LabId);
-                        if (lab != null)
-                            labsInfo.Add((server.Id, lab));
+                    var server = serverService.ServerExists(owned.ServerId);
+                    if (server)
+                    {                        
+                        var lab = await labService.GetLabInfo(owned.ServerId, owned.LabId);
+                        if (lab.lab != null)
+                            labsInfo.Add((owned.ServerId, lab.lab));
                     }
                 }
                 ViewBag.Labs = labsInfo;
@@ -62,8 +61,8 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
                 return RedirectToAction("Login", "Home");
             }
-            var server = serverService.GetServerById(serverID);
-            if (server == null)
+            var server = serverService.ServerExists(serverID);
+            if (!server)
             {
                 TempData["ErrorMessage"] = "Server not found.";
                 return RedirectToAction("Index", "Home");

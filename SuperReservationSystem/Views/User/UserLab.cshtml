@@ -9,7 +9,7 @@
 <div class="row">
     @if (ViewBag.Labs != null)
     {
-        var labs = (List<(int, ApiCisco.Model.LabModel)>)ViewBag.Labs;
+        var labs = (List<(int, BusinessLayer.Models.LabModel)>)ViewBag.Labs;
         for (int i = 0; i < labs.Count; i++)
         {
             var labTuple = labs[i];

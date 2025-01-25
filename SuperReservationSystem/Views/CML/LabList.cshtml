@@ -1,7 +1,7 @@
 @{
     ViewData["Title"] = @ViewBag.ServerName;
 }
-@model ApiCisco.Model.LabModel
+@model BusinessLayer.Models.LabModel
 <h1>@ViewBag.ServerName</h1>
 <hr />
 @if (User.Identity!=null && User.Identity.Name == "admin")
@@ -20,7 +20,8 @@
 <br />
 <div class="row ">
  @if (ViewBag.Labs != null){
-    @for (int i = 0; i < ((List<ApiCisco.Model.LabModel>)ViewBag.Labs).Count; i++){
+        @for (int i = 0; i < ((List<BusinessLayer.Models.LabModel>)ViewBag.Labs).Count; i++)
+        {
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
                 <div class="card flex-fill d-flex flex-column">
                     <a href="@Url.Action("LabInfo","CML",new {id=ViewBag.ServerID, labId=ViewBag.Labs[i].Id})" class="card-link">
@@ -39,9 +40,3 @@
     }
  }
  </div>
-
-<h5>DEBUG THING Labs ID:</h5>
-@for (int i = 0; i < ((object[])ViewBag.Labs2).Length; i++)
-{
-    <a href="@Url.Action("LabInfo","CML",new {id=ViewBag.ServerID, labId=ViewBag.Labs2[i]})"><p>@ViewBag.Labs2[i]</p> </a>
-}

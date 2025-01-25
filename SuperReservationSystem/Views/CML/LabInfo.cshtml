@@ -1,11 +1,11 @@
 
-@model ApiCisco.Model.LabModel
+@model BusinessLayer.Models.LabModel
 
 
 @{
     var serverID = ViewBag.ServerID;
     var serverName = ViewBag.ServerName as string;
-    var lab = ViewBag.Lab as ApiCisco.Model.LabModel;
+    var lab = ViewBag.Lab as BusinessLayer.Models.LabModel;
     if(lab!=null)
     {
         ViewData["Title"] = "Lab Info of " + lab.Name;
@@ -30,16 +30,20 @@ else
 <p>Last modified: @lab.Last_modified</p>
 
 <form method="post">
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabList","CML", new {id=ViewBag.ServerID})">Back to Lab List</button> <br />
-
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabList","CML", new {id=ViewBag.ServerID})">Back to Lab List</button>
+    <button class="btn btn-primary" type="submit">Backup lab</button> @*locally or google drive*@
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("DownloadLab","CML",new{id=ViewBag.ServerID,serverName,labId=lab.Id})">Download lab</button>
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("Create","Reservation",new{selectedServer=ViewBag.ServerID,labId=lab.Id})">Reserve this lab</button>
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("OwnLab","User",new{serverID=ViewBag.ServerID,labID=lab.Id})">Own a lab</button><br />
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("OwnLab","User",new{serverID=ViewBag.ServerID,labId=lab.Id})">Own a lab</button>
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabNodeList","CML",new{serverID=ViewBag.ServerID, labId=lab.Id})">Show nodes</button> <br />
 
-    <button class="btn btn-danger" type="submit" >Delete this lab</button>
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabNodeList","CML",new{serverID=ViewBag.ServerID, labId=lab.Id})">Show nodes</button><br />
-
+    @*if lab owned*@ 
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("StartLab","CML",new{id=ViewBag.ServerID,labId=lab.Id})">Start this lab</button>
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("StopLab","CML",new{id=ViewBag.ServerID,labId=lab.Id})">Stop the lab</button> 
-    
+
+    @*Admin only*@
+    @if (User.IsInRole("Admin"))
+    {
+        <button class="btn btn-danger" type="submit">Delete this lab</button>
+    }
 </form>

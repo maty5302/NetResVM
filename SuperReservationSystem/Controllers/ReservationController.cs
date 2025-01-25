@@ -5,6 +5,7 @@ using BusinessLayer.Services.ApiCiscoServices;
 using Microsoft.AspNetCore.Mvc;
 using SimpleLogger;
 using SuperReservationSystem.Models;
+using System.Linq;
 
 namespace SuperReservationSystem.Controllers
 {
@@ -14,6 +15,7 @@ namespace SuperReservationSystem.Controllers
         UserService userService = new UserService();
         ReservationService reservationService = new ReservationService();
         ApiCiscoAuthService authService = new ApiCiscoAuthService();
+        ApiCiscoLabService labService = new ApiCiscoLabService();
         SimpleLogger.ILogger logger = FileLogger.Instance;
 
         public IActionResult Index()
@@ -21,12 +23,19 @@ namespace SuperReservationSystem.Controllers
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
 
-            var reservations = reservationService.GetAllReservations();
-
+            var reservations = reservationService.GetAllReservations();          
             List<ReservationInformationModel> plannedReservations = new List<ReservationInformationModel>();
+            if (reservations == null)
+            {
+                ViewBag.Reservations = plannedReservations;
+                return View();
+            }
+
             foreach (var reservation in reservations)
             {
                 var server = serverService.GetServerById(reservation.ServerId);
+                if (server == null)
+                    continue;
                 var user = userService.GetUsername(reservation.UserId);
                 if(reservation.ReservationEnd>DateTime.Now)
                 plannedReservations.Add(new ReservationInformationModel
@@ -59,19 +68,20 @@ namespace SuperReservationSystem.Controllers
             if (selectedServer.HasValue)
             {
                 model.ServerId = selectedServer.Value;
-                var selectedServerModel = serverService.GetServerById(selectedServer.Value);
-                var client = await authService.AuthenticateAndCreateClient(selectedServer.Value);
+                var res = await labService.GetLabs(selectedServer.Value);
 
-                if (client.conn!=null)
+                LabModel? labSelected = null;                
+                if(labId!=null)
                 {
-                    var labs = await Lab.GetLabs(client.conn);
+                    var lab = await labService.GetLabInfo(selectedServer.Value,labId);
+                    labSelected = lab.lab;
+                }                
 
-                    if (labs != null && labs.Length > 0)
-                    {
-                        ViewBag.Labs3 = labs;
-                        if (labId != null && labs.Contains(labId))
-                            model.LabId = labId;
-                    }
+                if (res.labs != null && res.labs.Count > 0)
+                {
+                    ViewBag.Labs3 = res.labs;
+                    if (labId != null && labSelected!=null)
+                        model.LabId = labId;
                 }
                 else
                 {
@@ -93,6 +103,8 @@ namespace SuperReservationSystem.Controllers
             foreach (var reservation in reservations)
             {
                 var server = serverService.GetServerById(reservation.ServerId);
+                if (server == null)
+                    continue;
                 var user = userService.GetUsername(reservation.UserId);
                 if (reservation.ReservationEnd > DateTime.Now)
                     plannedReservations.Add(new ReservationInformationModel

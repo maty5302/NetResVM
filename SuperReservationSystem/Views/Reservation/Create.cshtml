@@ -10,7 +10,7 @@
 	<label>Server:</label>
 		<select id="server" name="selectedServer" asp-for="ServerId" class="form-select me-2" onchange="this.form.submit()">
 		<option value="">Select server...</option>
-		@for (int i = 0; i < ((List<BusinessLayer.Models.ServerModel>)ViewBag.Servers).Count; i++)
+		@for (int i = 0; i < ((List<BusinessLayer.DTOs.ServerDTO>)ViewBag.Servers).Count; i++)
 		{
 			<option value="@ViewBag.Servers[i].Id">@ViewBag.Servers[i].Name</option>
 		})
@@ -19,16 +19,16 @@
 	<select id="lab" name="labId" asp-for="LabId" class="form-select me-2" >
 			<option value="">Select lab...</option>
 			@if (ViewBag.Labs3 != null){
-				var labs = (string[])ViewBag.Labs3;
+				var labs = (List<BusinessLayer.Models.LabModel>)ViewBag.Labs3;
 				foreach (var lab in labs)
 				{
-					@if (Model.LabId == lab)
+					@if (Model.LabId == lab.Id)
 					{
-						<option value="@lab" selected>@lab</option>
+						<option value="@lab.Id" selected>@lab.Name</option>
 					}
 					else
 					{
-						<option value="@lab">@lab</option>
+						<option value="@lab.Id">@lab.Name</option>
 					}
 				}
 
