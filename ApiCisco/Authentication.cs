@@ -6,9 +6,9 @@ using System.Text.Json;
 namespace ApiCisco
 {
     //class for api authentication and logout 
-    public static class Authentication
+    public class Authentication
     {
-        public static async Task<HttpResponseMessage?> Authenticate(UserHttpClient client, string username, string password)
+        public async Task<HttpResponseMessage?> Authenticate(UserHttpClient client, string username, string password)
         {
             var url = client.Url + "authenticate";
             var authData = new
@@ -17,7 +17,6 @@ namespace ApiCisco
                 password = password
             };
             string jsondata = JsonSerializer.Serialize(authData);
-
 
             try
             {
@@ -35,16 +34,12 @@ namespace ApiCisco
             catch (HttpRequestException e)
             {
                 Console.WriteLine(e.Message); //somehow pass this message to the user
-                HttpResponseMessage responseMessage = new HttpResponseMessage();
-                responseMessage.StatusCode = HttpStatusCode.ServiceUnavailable;
-                return responseMessage;
+                return new HttpResponseMessage() { StatusCode = HttpStatusCode.ServiceUnavailable };
             }
             catch (TaskCanceledException e)
             {
                 Console.WriteLine(e.Message);
-                HttpResponseMessage responseMessage = new HttpResponseMessage();
-                responseMessage.StatusCode = HttpStatusCode.RequestTimeout;
-                return responseMessage;
+                return new HttpResponseMessage() { StatusCode = HttpStatusCode.RequestTimeout };
             }
             catch (Exception e)
             {
@@ -53,7 +48,7 @@ namespace ApiCisco
             }
         }
 
-        public static async Task<HttpResponseMessage> Logout(UserHttpClient client)
+        public async Task<HttpResponseMessage> Logout(UserHttpClient client)
         {
             var url = client.Url + "logout";
             try
