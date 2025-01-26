@@ -66,6 +66,22 @@ namespace BusinessLayer.Services
             }
         }
 
+        public string GetServerType(int id)
+        {
+            try
+            {
+                var server=GetServerByIdInternal(id);
+                if (server == null)
+                    return "";
+                return server.ServerType;
+
+            }
+            catch (Exception)
+            {
+                return "";
+            }
+        }
+
         public bool ServerExists(int id)
         {
             try

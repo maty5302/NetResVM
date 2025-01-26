@@ -24,7 +24,7 @@ namespace BusinessLayer.Services.ApiCiscoServices
             _labApi = new ApiCiscoLab();
         }
 
-        public async Task<(List<LabModel>? labs, string Message)> GetLabs(int serverId)
+        public async Task<(List<CiscoLabModel>? labs, string Message)> GetLabs(int serverId)
         {
             var client = await _authService.AuthenticateAndCreateClient(serverId);
             if (client.conn == null)
@@ -32,7 +32,7 @@ namespace BusinessLayer.Services.ApiCiscoServices
                 return (null, client.message);
             }
             var labsID = await _labApi.GetLabs(client.conn);
-            List<LabModel> labs = new List<LabModel>();
+            List<CiscoLabModel> labs = new List<CiscoLabModel>();
             if (labsID != null)
             {
                 foreach (var lab in labsID)
@@ -51,7 +51,7 @@ namespace BusinessLayer.Services.ApiCiscoServices
 
         }
 
-        public async Task<(LabModel? lab, string Message)> GetLabInfo(int serverId, string labId, UserHttpClient? httpClient = null)
+        public async Task<(CiscoLabModel? lab, string Message)> GetLabInfo(int serverId, string labId, UserHttpClient? httpClient = null)
         {
             try
             {
@@ -67,7 +67,7 @@ namespace BusinessLayer.Services.ApiCiscoServices
                 var json = await _labApi.GetLabInfo2(httpClient, labId);
                 if (json != null)
                 {
-                    var lab = JsonSerializer.Deserialize<LabModel>(json);
+                    var lab = JsonSerializer.Deserialize<CiscoLabModel>(json);
                     return (lab, "");
                 }
                 else
