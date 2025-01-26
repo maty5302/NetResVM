@@ -1,8 +1,10 @@
 ﻿using ApiCisco;
+using ApiEVE;
 using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using BusinessLayer.Services.ApiCiscoServices;
+using BusinessLayer.Services.ApiEVEServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SuperReservationSystem.Controllers
@@ -10,7 +12,8 @@ namespace SuperReservationSystem.Controllers
     public class ServerController : Controller
     {
         private ServerService serverService = new ServerService();
-        private ApiCiscoAuthService authService = new ApiCiscoAuthService();
+        private ApiCiscoAuthService authServiceCisco = new ApiCiscoAuthService();
+        private ApiEVEAuthService authServiceEVE = new ApiEVEAuthService();
 
         public IActionResult Add()
         {
@@ -79,7 +82,7 @@ namespace SuperReservationSystem.Controllers
             {
                 return View("Error");
             }
-            var client = await authService.ValidateCredentials(server.IpAddress, server.Username, server.Password);
+            var client = await authServiceCisco.ValidateCredentials(server.IpAddress, server.Username, server.Password);
             
             if (client.Valid)
             {
@@ -104,15 +107,15 @@ namespace SuperReservationSystem.Controllers
 
             if (server.ServerType == "CML")
             {
-                var client = await authService.ValidateCredentials(server.IpAddress, server.Username, server.Password);
+                var client = await authServiceCisco.ValidateCredentials(server.IpAddress, server.Username, server.Password);
                 if (client.Valid)
                 {
                     var ok = serverService.InsertServer(server);
-                    if(ok)
+                    if (ok)
                         TempData["SuccessMessage"] = "Server added successfully";
                     else
                         TempData["ErrorMessage"] = "Server cannot be added. See log.";
-
+                    
                     ViewBag.Servers = serverService.GetAllServers();
                     return RedirectToAction("Index", "Home");
                 }
@@ -122,6 +125,26 @@ namespace SuperReservationSystem.Controllers
                     return View("Add", server);
                 }
 
+            }
+            else if (server.ServerType == "EVE")
+            {
+                var valid = await authServiceEVE.ValidateCredentials(server.IpAddress,server.Username, server.Password);
+                if (valid)
+                {
+                    var insert = serverService.InsertServer(server);
+                    if(insert)
+                        TempData["SuccessMessage"] = "Server added successfully";
+                    else
+                        TempData["ErrorMessage"] = "Server cannot be added. See log.";
+
+                    ViewBag.Servers = serverService.GetAllServers();
+                    return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Connection failed. Invalid Credentials";
+                    return View("Add", server);
+                }
             }
             else
                 return RedirectToAction("Index", "Home");

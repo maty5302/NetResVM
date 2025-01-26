@@ -12,8 +12,15 @@
         <div>
             <label type="form-label">Server type:</label>
             <select name="ServerType" class="form-select me-2">
-                <option value="CML">CML</option>
-                <option value="EVE">EVE</option>
+                @if(Model.ServerType=="EVE")
+                {
+                    <option value="CML">CML</option>
+                    <option value="EVE" selected>EVE</option>
+                }
+                else if(Model.ServerType=="CML"){
+                    <option value="CML" selected>CML</option>
+                    <option value="EVE">EVE</option>
+                }                
             </select>
         </div>
 

@@ -63,7 +63,7 @@ namespace SuperReservationSystem.Controllers
                 return RedirectToAction("Index", "Login");
             var servers = serverService.GetAllServers();
             ViewBag.Servers = servers;
-            ViewBag.Labs3 = new string[0]; // Initialize with empty array to avoid null reference
+            
 
             if (selectedServer.HasValue)
             {
