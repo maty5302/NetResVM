@@ -105,6 +105,10 @@ namespace BusinessLayer.Services
             }
             try
             {
+                if (server.ServerType == "EVE" && !server.IpAddress.StartsWith("http"))
+                    server.IpAddress = "http://" + server.IpAddress;
+                else if (server.ServerType == "CML" && !server.IpAddress.StartsWith("http"))
+                    server.IpAddress = "https://" + server.IpAddress;
                 string ip = new Uri(server.IpAddress).Host;
                 _gateway.InsertServer(server.ServerType, server.Name, ip, server.Username, server.Password);
                 _logger.Log($"Server with name {server.Name} has been inserted.");

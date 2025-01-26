@@ -45,7 +45,7 @@ namespace BusinessLayer.Services.ApiCiscoServices
             }
             else
             {
-                logger.LogError("Couldn't fetch labs from cisco API.");
+                logger.LogError("ApiCiscoLabService - Couldn't fetch labs from cisco API.");
                 return (null, "Couldn't fetch labs from cisco API.");
             }
 
@@ -72,13 +72,13 @@ namespace BusinessLayer.Services.ApiCiscoServices
                 }
                 else
                 {
-                    logger.LogWarning($"Lab not found. Lab ID:{labId}");
+                    logger.LogWarning($"ApiCiscoLabService - Lab not found. Lab ID:{labId}");
                     return (null, "Lab not found..");
                 }
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                logger.LogError("ApiCiscoLabService - GetLabInfo - " + e.Message);
                 return (null, "Something went wrong.. Contact admin.");
 
             }
@@ -100,13 +100,13 @@ namespace BusinessLayer.Services.ApiCiscoServices
                 }
                 else
                 {
-                    logger.LogWarning($"Lab not found. Lab ID:{labId}");
+                    logger.LogWarning($"ApiCiscoLabService - Lab not found. Lab ID:{labId}");
                     return (null, "Lab not found..");
                 }
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                logger.LogError("ApiCiscoLabService - DownloadLab - " + e.Message);
                 return (null, "Something went wrong.. Contact admin.");
             }
         }
@@ -136,7 +136,7 @@ namespace BusinessLayer.Services.ApiCiscoServices
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                logger.LogError("ApiCiscoLabService - StartLab - " + e.Message);
                 return (false, "Something went wrong.. Contact admin.");
             }
         }
@@ -154,7 +154,7 @@ namespace BusinessLayer.Services.ApiCiscoServices
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                logger.LogError("ApiCiscoLabService - StopLab - " + e.Message);
                 return (false, "Something went wrong.. Contact admin.");
             }
         }
@@ -182,7 +182,7 @@ namespace BusinessLayer.Services.ApiCiscoServices
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                logger.LogError("ApiCiscoLabService - StopAllLabs - " + e.Message);
                 return (false, "Something went wrong.. Contact admin.");
             }
         }
@@ -206,7 +206,7 @@ namespace BusinessLayer.Services.ApiCiscoServices
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                logger.LogError("ApiCiscoLabService - ImportLab - " + e.Message);
                 return false;
             }
         }
