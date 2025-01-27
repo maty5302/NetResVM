@@ -11,5 +11,6 @@ namespace BusinessLayer.Interface
         string Id { get; }
         string Name { get; }
         string Description { get; }
+        DateTime Last_modified { get; }
     }
 }
