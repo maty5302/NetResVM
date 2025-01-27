@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -16,12 +17,17 @@ namespace ApiEVE
             var authData = new
             {
                 username = username,
-                password = password
+                password = password,
+                html5 = "-1"
             };
 
             var content = new StringContent(JsonSerializer.Serialize(authData), Encoding.UTF8,"application/json");
             var response = await client.Client.PostAsync(loginUrl, content);
             response.EnsureSuccessStatusCode();
+            var authCookies = response.Headers.GetValues("Set-Cookie").First().Split(';');
+            var session = authCookies[0].Split('=');
+            Cookie auth = new Cookie(session[0], session[1]);
+            client.cookieContainer.Add(new Uri(client.Url), auth);
             return response;
         }
 

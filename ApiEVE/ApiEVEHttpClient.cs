@@ -10,7 +10,7 @@ namespace ApiEVE
     public class ApiEVEHttpClient
     {
         public string Url { get; private set; }
-        private readonly CookieContainer cookieContainer;
+        internal readonly CookieContainer cookieContainer;
         public HttpClient Client { get; private set; }
 
         public ApiEVEHttpClient(string url)
