@@ -1,8 +1,10 @@
 ﻿using ApiCisco;
 using ApiCisco.Model;
+using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using BusinessLayer.Services.ApiCiscoServices;
+using BusinessLayer.Services.ApiEVEServices;
 using Microsoft.AspNetCore.Mvc;
 using SuperReservationSystem.Models;
 
@@ -10,19 +12,19 @@ namespace SuperReservationSystem.Controllers
 {
     public class UserController : Controller
     {
-        private UserLabOwnershipService userLabOwnershipService = new UserLabOwnershipService();
-        private ApiCiscoAuthService authService = new ApiCiscoAuthService();
-        private ApiCiscoLabService labService = new ApiCiscoLabService();
-        private UserService userService = new UserService();
-        private ServerService serverService = new ServerService();
+        private readonly UserLabOwnershipService userLabOwnershipService = new UserLabOwnershipService();
+        private readonly ApiCiscoLabService labServiceCisco = new ApiCiscoLabService();
+        private readonly ApiEVELabService labServiceEVE = new ApiEVELabService();
+        private readonly UserService userService = new UserService();
+        private readonly ServerService serverService = new ServerService();
 
         public IActionResult Settings()
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
-            
-            ViewBag.UserAuthType = userService.GetAuthorizationType(User.Identity.Name);
-            
+
+            ViewBag.UserAuthType = userService.GetAuthorizationType(User.Identity?.Name ?? string.Empty);
+
             return View();
         }
 
@@ -36,15 +38,22 @@ namespace SuperReservationSystem.Controllers
 
             if (allUserLabs != null)
             {
-                var labsInfo = new List<(int, LabModel)>(); // Tuple of server id and lab model
+                var labsInfo = new List<(int, ILabModel)>(); // Tuple of server id and lab model
                 foreach (var owned in allUserLabs)
                 {
                     var server = serverService.ServerExists(owned.ServerId);
-                    if (server)
+                    var serverType = serverService.GetServerType(owned.ServerId);
+                    if (server && serverType=="CML")
                     {                        
-                        var lab = await labService.GetLabInfo(owned.ServerId, owned.LabId);
+                        var lab = await labServiceCisco.GetLabInfo(owned.ServerId, owned.LabId);
                         if (lab.lab != null)
                             labsInfo.Add((owned.ServerId, lab.lab));
+                    }
+                    else if(server && serverType=="EVE")
+                    {
+                        var lab = await labServiceEVE.GetLabInfo(owned.ServerId, owned.LabId);
+                        if (lab != null)
+                            labsInfo.Add((owned.ServerId, lab));
                     }
                 }
                 ViewBag.Labs = labsInfo;
@@ -71,13 +80,13 @@ namespace SuperReservationSystem.Controllers
             {
                 ServerId = serverID,
                 LabId = labID,
-                UserId = userService.GetUserId(User.Identity.Name)
+                UserId = userService.GetUserId(User.Identity?.Name ?? string.Empty)
             };
             var lab = userLabOwnershipService.InsertUserLabOwnership(model);
             if (lab.Item1)
             {
                 TempData["SuccessMessage"] = "Lab owned successfully.";
-                return RedirectToAction("LabInfo", "CML", new { id = serverID, id_lab = labID });
+                return RedirectToAction("LabInfo", "CML", new { id = serverID, labId = labID });
             }
             TempData["ErrorMessage"] = lab.Item2;
             return RedirectToAction("LabList", "CML", new { id = serverID });

@@ -3,16 +3,9 @@
 }
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 <div class="text-center">
-    
+    <br />
     <h1 class="display-4">Server selection</h1>
-    <p>This page will be for selecting your existing server list from database</p>
-
-    <div class="d-flex justify-content-center gap-2 mb-4">
-        <form asp-area="" asp-controller="" asp-action="" method="post">
-            <button class="btn btn-primary" type="submit" disabled>Test of connection to EVE coming soon</button>
-        </form>
-    </div>
-
+    <br /><br />
     <!-- Displaying server cards -->
     <div class="row justify-content-center">
         @if (ViewBag.Servers != null){

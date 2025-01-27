@@ -1,11 +1,10 @@
 
-@model BusinessLayer.Models.LabModel
+@model BusinessLayer.Models.CiscoLabModel
 
 
 @{
-    var serverID = ViewBag.ServerID;
     var serverName = ViewBag.ServerName as string;
-    var lab = ViewBag.Lab as BusinessLayer.Models.LabModel;
+    var lab = ViewBag.Lab as BusinessLayer.Models.CiscoLabModel;
     if(lab!=null)
     {
         ViewData["Title"] = "Lab Info of " + lab.Name;

@@ -1,0 +1,28 @@
+﻿@{
+	ViewBag.Title = @ViewBag.ServerName;
+}
+@model BusinessLayer.Models.EVELabModel
+<h1>@ViewBag.ServerName</h1>
+<hr />
+<div class="row ">
+    @if (ViewBag.Labs != null)
+    {
+        @for (int i = 0; i < ((List<BusinessLayer.Models.EVELabModel>)ViewBag.Labs).Count; i++)
+        {
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
+                <div class="card flex-fill d-flex flex-column">
+                    <a href="@Url.Action("LabInfo","EVE",new {id=ViewBag.ServerID, filename=ViewBag.Labs[i].Filename})" class="card-link">
+                        <div class="card-body" sstyle="height: 175px;">
+                            <h5 class="card-title">@ViewBag.Labs[i].Name</h5><hr />
+                            <span>Last modified: @ViewBag.Labs[i].Last_modified</span><br />
+                        </div>
+                    </a>
+                </div>
+            </div>
+            @if ((i + 1) % 4 == 0)
+            {
+                <div class="w-100"></div>
+            }
+        }
+    }
+</div>

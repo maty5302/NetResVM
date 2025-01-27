@@ -19,7 +19,8 @@
 	<select id="lab" name="labId" asp-for="LabId" class="form-select me-2" >
 			<option value="">Select lab...</option>
 			@if (ViewBag.Labs3 != null){
-				var labs = (List<BusinessLayer.Models.LabModel>)ViewBag.Labs3;
+				
+				var labs = (List<BusinessLayer.Interface.ILabModel>)ViewBag.Labs3;
 				foreach (var lab in labs)
 				{
 					@if (Model.LabId == lab.Id)

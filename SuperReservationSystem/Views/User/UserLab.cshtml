@@ -2,14 +2,14 @@
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @{
-	ViewData["Title"] = "My labs";
+    ViewData["Title"] = "My labs";
 }
 <h1>My labs</h1>
 <hr />
 <div class="row">
     @if (ViewBag.Labs != null)
     {
-        var labs = (List<(int, BusinessLayer.Models.LabModel)>)ViewBag.Labs;
+        var labs = (List<(int, BusinessLayer.Interface.ILabModel)>)ViewBag.Labs;
         for (int i = 0; i < labs.Count; i++)
         {
             var labTuple = labs[i];
@@ -19,12 +19,27 @@
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
                 <div class="card flex-fill d-flex flex-column">
                     <div class="card-body d-flex flex-column justify-content-between">
-                        <a href="@Url.Action("LabInfo", "CML", new { id = serverID, id_lab = labModel.Id })" class="card-link">
-                            <h5 class="card-title">@labModel.Name</h5>
-                            <hr />
-                            <span>@labModel.State</span><br />
-                            <span>Last modified: @labModel.Last_modified</span>
-                        </a>
+                        @if (labModel is BusinessLayer.Models.CiscoLabModel)
+                        {
+                            var ciscoModel = (BusinessLayer.Models.CiscoLabModel)labModel;
+                            <a href="@Url.Action("LabInfo", "CML", new { id = serverID, labId = labModel.Id })" class="card-link">
+                                <h5 class="card-title">@ciscoModel.Name</h5>
+                                <hr />
+                                <span>@ciscoModel.Description</span><br />
+                                <span>@ciscoModel.State</span><br />
+                                <span>@ciscoModel.Last_modified</span>
+                            </a>
+                        }
+                        else if(labModel is BusinessLayer.Models.EVELabModel)
+                        {
+                            var eveModel = (BusinessLayer.Models.EVELabModel)labModel;
+                            <a href="" class="card-link">
+                                <h5 class="card-title">@eveModel.Name</h5>
+                                <hr />
+                                <span>@eveModel.Description</span><br />
+                                <span>@eveModel.Filename</span>
+                            </a>
+                        }
                         <button class="btn btn-danger mt-3 align-self-start">Remove ownership</button>
                     </div>
                 </div>

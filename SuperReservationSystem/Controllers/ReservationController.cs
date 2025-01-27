@@ -1,7 +1,9 @@
 ﻿using ApiCisco;
+using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using BusinessLayer.Services.ApiCiscoServices;
+using BusinessLayer.Services.ApiEVEServices;
 using Microsoft.AspNetCore.Mvc;
 using SimpleLogger;
 using SuperReservationSystem.Models;
@@ -15,7 +17,8 @@ namespace SuperReservationSystem.Controllers
         UserService userService = new UserService();
         ReservationService reservationService = new ReservationService();
         ApiCiscoAuthService authService = new ApiCiscoAuthService();
-        ApiCiscoLabService labService = new ApiCiscoLabService();
+        ApiCiscoLabService labServiceCisco = new ApiCiscoLabService();
+        ApiEVELabService labServiceEve = new ApiEVELabService();
         SimpleLogger.ILogger logger = FileLogger.Instance;
 
         public IActionResult Index()
@@ -63,29 +66,43 @@ namespace SuperReservationSystem.Controllers
                 return RedirectToAction("Index", "Login");
             var servers = serverService.GetAllServers();
             ViewBag.Servers = servers;
-            
 
             if (selectedServer.HasValue)
             {
                 model.ServerId = selectedServer.Value;
-                var res = await labService.GetLabs(selectedServer.Value);
-
-                LabModel? labSelected = null;                
-                if(labId!=null)
+                var serverType = serverService.GetServerType(selectedServer.Value);
+                if (serverType == "CML")
                 {
-                    var lab = await labService.GetLabInfo(selectedServer.Value,labId);
-                    labSelected = lab.lab;
-                }                
+                    var res = await labServiceCisco.GetLabs(selectedServer.Value);
 
-                if (res.labs != null && res.labs.Count > 0)
-                {
-                    ViewBag.Labs3 = res.labs;
-                    if (labId != null && labSelected!=null)
-                        model.LabId = labId;
+                    CiscoLabModel? labSelected = null;
+                    if (labId != null)
+                    {
+                        labSelected = (await labServiceCisco.GetLabInfo(selectedServer.Value, labId)).lab;
+                        if (labId != null && labSelected != null)
+                            model.LabId = labId;
+                    }
+
+                    if (res.labs != null && res.labs.Count > 0)
+                    {
+                        ViewBag.Labs3 = new List<ILabModel>(res.labs);
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = "Cannot connect to server. Try again..";
+                    }
                 }
-                else
+                else if (serverType == "EVE")
                 {
-                    TempData["ErrorMessage"] = "Cannot connect to server. Try again..";
+                    var res = await labServiceEve.GetLabs(selectedServer.Value);
+                    if (res != null && res.Count > 0)
+                    {
+                        ViewBag.Labs3 = new List<ILabModel>(res);
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = "Cannot connect to server. Try again..";
+                    }
                 }
             }
 
