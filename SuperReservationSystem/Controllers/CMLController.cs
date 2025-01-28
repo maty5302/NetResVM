@@ -10,6 +10,8 @@ namespace SuperReservationSystem.Controllers
 {
     public class CMLController : Controller
     {
+        private readonly UserLabOwnershipService labOwnershipService = new UserLabOwnershipService();
+        private readonly UserService userService = new UserService();
         private ServerService serverService = new ServerService();
         private ApiCiscoAuthService authService = new ApiCiscoAuthService();
         private ApiCiscoLabService labService = new ApiCiscoLabService();
@@ -55,6 +57,9 @@ namespace SuperReservationSystem.Controllers
             }
             ViewBag.ServerID = id;
 
+            var owned = labOwnershipService.IsLabAlreadyOwned(userService.GetUserId(User.Identity?.Name),labId);
+            ViewBag.Owned = owned.owned;
+            ViewBag.UserOwn = owned.userOwns;
             var lab = await labService.GetLabInfo(id, labId);
             if (lab.lab == null)
             {

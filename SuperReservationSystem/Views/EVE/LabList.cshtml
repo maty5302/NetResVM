@@ -11,7 +11,7 @@
         {
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
                 <div class="card flex-fill d-flex flex-column">
-                    <a href="@Url.Action("LabInfo","EVE",new {id=ViewBag.ServerID, filename=ViewBag.Labs[i].Filename})" class="card-link">
+                    <a href="@Url.Action("LabInfo","EVE",new {id=ViewBag.ServerID, labId=ViewBag.Labs[i].Id})" class="card-link">
                         <div class="card-body" sstyle="height: 175px;">
                             <h5 class="card-title">@ViewBag.Labs[i].Name</h5><hr />
                             <span>Last modified: @ViewBag.Labs[i].Last_modified</span><br />

@@ -51,7 +51,7 @@ namespace SuperReservationSystem.Controllers
                     }
                     else if(server && serverType=="EVE")
                     {
-                        var lab = await labServiceEVE.GetLabInfo(owned.ServerId, owned.LabId);
+                        var lab = await labServiceEVE.GetLabInfoById(owned.ServerId, owned.LabId);
                         if (lab != null)
                             labsInfo.Add((owned.ServerId, lab));
                     }
@@ -76,6 +76,7 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Server not found.";
                 return RedirectToAction("Index", "Home");
             }
+            var serverType = serverService.GetServerType(serverID);
             UserLabOwnershipModel model = new UserLabOwnershipModel
             {
                 ServerId = serverID,
@@ -86,10 +87,34 @@ namespace SuperReservationSystem.Controllers
             if (lab.Item1)
             {
                 TempData["SuccessMessage"] = "Lab owned successfully.";
-                return RedirectToAction("LabInfo", "CML", new { id = serverID, labId = labID });
+                return RedirectToAction("LabInfo", $"{serverType}", new { id = serverID, labId = labID });
             }
             TempData["ErrorMessage"] = lab.Item2;
-            return RedirectToAction("LabList", "CML", new { id = serverID });
+            return RedirectToAction("LabList", $"{serverType}", new { id = serverID });
+        }
+
+        public IActionResult RemoveOwnership(int serverId, string labId)
+        {
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                return RedirectToAction("Login", "Home");
+            }
+            var userId = userService.GetUserId(User.Identity?.Name ?? string.Empty);
+            UserLabOwnershipModel model = new UserLabOwnershipModel
+            {
+                ServerId = serverId,
+                LabId = labId,
+                UserId = userId
+            };
+            var lab = userLabOwnershipService.DeleteUserLabOwnership(model);
+            if (lab)
+            {
+                TempData["SuccessMessage"] = "Lab ownership removed successfully.";
+                return RedirectToAction("UserLab", "User");
+            }
+            TempData["ErrorMessage"] = "Lab ownership could not be removed.";
+            return RedirectToAction("UserLab", "User");
         }
 
         public IActionResult ChangePassword(ChangePasswordModel PassModel)

@@ -8,6 +8,8 @@ namespace SuperReservationSystem.Controllers
     {
         private readonly ApiEVELabService _apiEVELabService = new ApiEVELabService();
         private readonly ServerService serverService = new ServerService();
+        private readonly UserLabOwnershipService labOwnershipService = new UserLabOwnershipService();
+        private readonly UserService userService = new UserService();
 
         public IActionResult Index(int id)
         {
@@ -38,20 +40,23 @@ namespace SuperReservationSystem.Controllers
             TempData["ErrorMessage"] = "An error occurred. Please try again.";
             return RedirectToAction("Index", "Home");
         }
-        public async Task<IActionResult> LabInfo(int id, string filename)
+        public async Task<IActionResult> LabInfo(int id, string labId)
         {
-            if (filename == null)
+            if (labId == null)
             {
                 TempData["ErrorMessage"] = "Lab not found.";
-                return RedirectToAction("LabList", "CML", new { id = id });
+                return RedirectToAction("LabList", "EVE", new { id = id });
             }
+            var owned = labOwnershipService.IsLabAlreadyOwned(userService.GetUserId(User.Identity?.Name), labId);
+            ViewBag.Owned = owned.owned;
+            ViewBag.UserOwn = owned.userOwns;
             ViewBag.ServerID = id;
 
-            var lab = await _apiEVELabService.GetLabInfo(id, filename);
+            var lab = await _apiEVELabService.GetLabInfoById(id, labId);
             if (lab == null)
             {
                 TempData["ErrorMessage"] = "";
-                return RedirectToAction("LabList", "CML", new { id = id });
+                return RedirectToAction("LabList", "EVE", new { id = id });
             }
             ViewBag.Lab = lab;
             return View();

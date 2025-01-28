@@ -33,14 +33,16 @@
                         else if(labModel is BusinessLayer.Models.EVELabModel)
                         {
                             var eveModel = (BusinessLayer.Models.EVELabModel)labModel;
-                            <a href="" class="card-link">
+                            <a href="@Url.Action("LabInfo", "EVE", new { id = serverID, labId = labModel.Id })" class="card-link">
                                 <h5 class="card-title">@eveModel.Name</h5>
                                 <hr />
                                 <span>@eveModel.Description</span><br />
                                 <span>@eveModel.Filename</span>
                             </a>
                         }
-                        <button class="btn btn-danger mt-3 align-self-start">Remove ownership</button>
+                        <form method="post">
+                            <button class="btn btn-danger mt-3 align-self-start" formaction="@Url.Action("RemoveOwnership","User",new {serverId=serverID,labId=labModel.Id})">Remove ownership</button>
+                        </form>
                     </div>
                 </div>
             </div>
