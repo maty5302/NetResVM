@@ -2,7 +2,9 @@
 using BusinessLayer.Models;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -36,27 +38,27 @@ namespace BusinessLayer.Services.ApiEVEServices
                 var labsElement = jsonDoc.RootElement.GetProperty("data").GetProperty("labs");
 
                 // Create a list to store the file names
-                List<(string fileName,DateTime modified)> fileNames = new List<(string,DateTime)>();
+                List<(string fileName, string path, DateTime mtimestring)> fileNames = new List<(string, string, DateTime)>();
                 string dateFormat = "dd MMM yyyy HH:mm";
                 // Loop through the labs array and get the file names
                 foreach (var lab in labsElement.EnumerateArray())
                 {
                     string? file = lab.GetProperty("file").GetString();
+                    string? path = lab.GetProperty("path").GetString();
                     string? mtimestring = lab.GetProperty("mtime").GetString();
-                    if (file == null || mtimestring == null)
-                        continue;
                     DateTime date = DateTime.ParseExact(mtimestring, dateFormat, System.Globalization.CultureInfo.InvariantCulture);
-                    fileNames.Add((file,date)); // Add the file name to the list
+                    if (file == null || path == null || mtimestring == null)
+                        continue;
+                    fileNames.Add((file,path,date)); // Add the file name to the list
                 }
-
+                
                 // Create a list to store the lab models
                 List<EVELabModel> labModels = new List<EVELabModel>();
                 foreach (var item in fileNames)
                 {
-                    var lab = await GetLabInfo(serverId, item.fileName);
+                    var lab = await GetLabInfo(client.client,serverId, item.fileName,item.path,item.mtimestring);
                     if (lab != null)
                     {
-                        lab.Last_modified = item.modified;
                         labModels.Add(lab);
                     }
                 }
@@ -67,20 +69,40 @@ namespace BusinessLayer.Services.ApiEVEServices
 
         }    
 
-        public async Task<EVELabModel?> GetLabInfo(int serverId, string labName)
+        private async Task<EVELabModel?> GetLabInfo(ApiEVEHttpClient client,int serverId, string labName, string path, DateTime? date)
         {
-            var client = await apiEVEAuthService.AuthenticateAndCreateClient(serverId);
-            if (client.client == null)
+            if (client == null)
             {
                 return null;
             }
-            var labInfo = await apiEVELab.GetLabInfo(client.client, labName);
+            var labInfo = await apiEVELab.GetLabInfo(client, labName);
             if (labInfo != null)
             {
                 var jsonDoc = JsonDocument.Parse(labInfo);
                 var labElement = jsonDoc.RootElement.GetProperty("data");
                 var lab = JsonSerializer.Deserialize<EVELabModel>(labElement);
-                if(lab != null)
+                if (lab != null)
+                {
+                    
+                    if (path != null && date != null)
+                    {
+                        lab.Path = path;
+                        lab.Last_modified = date.Value;
+                    }
+                    return lab;
+                }
+            }
+            return null;
+        }
+
+        public async Task<EVELabModel?> GetLabInfoById(int serverId, string labId)
+        {
+            var allLabs = await GetLabs(serverId);
+            if (allLabs == null)
+                return null;
+            foreach(var lab in allLabs)
+            {
+                if (lab.Id == labId)
                     return lab;
             }
             return null;

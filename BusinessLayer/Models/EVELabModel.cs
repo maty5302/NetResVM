@@ -18,6 +18,9 @@ namespace BusinessLayer.Models
         public required string Description { get; set; }
         [JsonPropertyName("filename")]
         public required string Filename { get; set; }
+        //[JsonPropertyName("path")]
+        [JsonIgnore]
+        public string? Path { get; set; }
         [JsonPropertyName("mtime")]
         public DateTime Last_modified { get; set; }
     }

@@ -39,6 +39,31 @@ namespace BusinessLayer.Services
             }
         }
 
+        public (bool owned,bool userOwns) IsLabAlreadyOwned(int userId, string labId)
+        {
+            try
+            {
+                var all = _gateway.GetAllUserLabsByLabID(labId);
+                if (all.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in all.Rows)
+                    {
+                        if ((int)row["UserID"] == userId)
+                        {
+                            return (true, true);
+                        }
+                    }
+                    return (true,false);
+                }
+                return (false,false);
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e.Message);
+                return (false, false);
+            }
+        }
+
         public (bool,string) InsertUserLabOwnership(UserLabOwnershipModel userLabOwnership)
         {
             try
