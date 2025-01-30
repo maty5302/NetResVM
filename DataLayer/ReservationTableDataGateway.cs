@@ -30,6 +30,25 @@ namespace DataLayer
             return result;
         }
 
+        public DataTable GetReservationById(int id)
+        {
+            string query = "SELECT * FROM Reservation WHERE ReservationID = @Id";
+            var result = new DataTable();
+            using (var connection = DBConnector.GetConnection())
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", id);
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        result.Load(reader);
+                    }
+                }
+            }
+            return result;
+        }
+
         public DataTable GetReservationsByUserId(int id)
         {
             string query = "SELECT * FROM Reservation WHERE UserID = @Id";
