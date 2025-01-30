@@ -4,6 +4,20 @@
 @model BusinessLayer.Models.EVELabModel
 <h1>@ViewBag.ServerName</h1>
 <hr />
+@if (User.Identity != null && User.IsInRole("Admin"))
+{
+    <form method="post" enctype="multipart/form-data" action="@Url.Action("ImportLab", "EVE", new {serverID=ViewBag.ServerID })">
+        <div class="row mb-3">
+            <div class="col-md-12 d-flex align-items-center">
+                <div class="flex-grow-1 me-3">
+                    <input type="file" class="form-control" id="fileUpload" name="file" accept=".zip" />
+                </div>
+                <button type="submit" class="btn btn-primary">Import lab</button>
+            </div>
+        </div>
+    </form>
+}
+<br />
 <div class="row ">
     @if (ViewBag.Labs != null)
     {

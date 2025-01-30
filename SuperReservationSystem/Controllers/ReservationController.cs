@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using SimpleLogger;
 using SuperReservationSystem.Models;
 using System.Linq;
+using System.Text;
 
 namespace SuperReservationSystem.Controllers
 {
@@ -16,7 +17,6 @@ namespace SuperReservationSystem.Controllers
         ServerService serverService = new ServerService();
         UserService userService = new UserService();
         ReservationService reservationService = new ReservationService();
-        ApiCiscoAuthService authService = new ApiCiscoAuthService();
         ApiCiscoLabService labServiceCisco = new ApiCiscoLabService();
         ApiEVELabService labServiceEve = new ApiEVELabService();
         SimpleLogger.ILogger logger = FileLogger.Instance;
@@ -28,6 +28,7 @@ namespace SuperReservationSystem.Controllers
 
             var reservations = reservationService.GetAllReservations();          
             List<ReservationInformationModel> plannedReservations = new List<ReservationInformationModel>();
+            List<ReservationInformationModel> allReservations = new List<ReservationInformationModel>();
             if (reservations == null)
             {
                 ViewBag.Reservations = plannedReservations;
@@ -40,8 +41,22 @@ namespace SuperReservationSystem.Controllers
                 if (server == null)
                     continue;
                 var user = userService.GetUsername(reservation.UserId);
-                if(reservation.ReservationEnd>DateTime.Now)
-                plannedReservations.Add(new ReservationInformationModel
+                if (reservation.ReservationEnd > DateTime.Now)
+                    plannedReservations.Add(new ReservationInformationModel
+                    {
+                        Id = reservation.Id,
+                        ServerName = server.Name,
+                        ServerType = server.ServerType,
+                        ServerId = server.Id,
+                        LabId = reservation.LabId,
+                        ReservationStart = reservation.ReservationStart,
+                        ReservationEnd = reservation.ReservationEnd,
+                        UserId = reservation.UserId,
+                        UserName = user
+                    });
+                //this month
+                if(reservation.ReservationStart.Month==DateTime.Now.Month)
+                allReservations.Add(new ReservationInformationModel
                 {
                     Id = reservation.Id,
                     ServerName = server.Name,
@@ -54,8 +69,8 @@ namespace SuperReservationSystem.Controllers
                     UserName = user
                 });
             }
-
-            ViewBag.Reservations = plannedReservations;
+            ViewBag.AllReservations = allReservations;
+            ViewBag.PlannedReservations = plannedReservations;
             return View();
         }
 
@@ -228,6 +243,15 @@ namespace SuperReservationSystem.Controllers
             else
                 TempData["ErrorMessage"] = "Something went wrong. See log.";
             return RedirectToAction("Index","Reservation");
+        }
+
+        public IActionResult SaveEvent(int reservationId)
+        {
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "Login");
+            var reservation = reservationService.SaveReservation(reservationId);
+
+            return File(Encoding.UTF8.GetBytes(reservation.ToString()), "text/calendar", "reservation.ics");
         }
 
     }

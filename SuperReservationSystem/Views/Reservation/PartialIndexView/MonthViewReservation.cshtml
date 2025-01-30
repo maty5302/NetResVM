@@ -6,7 +6,7 @@
 	var firstDayOfMonth = new DateTime(currentYear, currentMonth, 1);
 	var daysInMonth = DateTime.DaysInMonth(currentYear, currentMonth);
 
-	List<ReservationInformationModel> reserve = (List<ReservationInformationModel>)ViewBag.Reservations;
+	List<ReservationInformationModel> reserve = (List<ReservationInformationModel>)ViewBag.AllReservations;
 }
 <div id="month-view" hidden>
 	<div class="calendar">		
@@ -39,7 +39,9 @@
 						var todayEvents = reserve.FindAll(o => o.ReservationStart.Date == currentDate);
 						foreach (var item in todayEvents)
 						{
+							<a href="@Url.Action("SaveEvent","Reservation", new {reservationId=item.Id}) " target="_blank">
 							<div class="event">@item.ReservationStart.TimeOfDay.Hours:@item.ReservationStart.TimeOfDay.Minutes-@item.ReservationEnd.TimeOfDay.Hours:@item.ReservationEnd.TimeOfDay.Minutes @item.ServerName - @item.UserName</div>
+							</a>
 						}
 
 					}

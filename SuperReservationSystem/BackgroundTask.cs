@@ -37,7 +37,7 @@ namespace SuperReservationSystem
                         {
                             _reservationService.DeleteReservation(reservation.Id);
                         }
-
+                        
                         if ((reservation.ReservationStart == time || (reservation.ReservationStart < time && reservation.ReservationEnd > time )) && server.ServerType == "CML") 
                         {
                             var stopped = await _apiCiscoLabService.StopAllLabs(reservation.ServerId);
@@ -52,13 +52,17 @@ namespace SuperReservationSystem
                             else
                                 FileLogger.Instance.LogWarning("Labs could not be stopped");
                         }
-                        else if (reservation.ReservationEnd <= time && server.ServerType == "CML")
+                        else if (reservation.ReservationEnd <= time && server.ServerType == "CML" )
                         {
-                            var res = await _apiCiscoLabService.StopLab(reservation.ServerId, reservation.LabId);
-                            if (res.value)
-                                FileLogger.Instance.Log("Lab stopped");
-                            else
-                                FileLogger.Instance.LogWarning("Lab could not be stopped");
+                            var labState = await _apiCiscoLabService.GetState(reservation.ServerId, reservation.LabId);
+                            if (labState != null && labState == "started")
+                            {
+                                var res = await _apiCiscoLabService.StopLab(reservation.ServerId, reservation.LabId);
+                                if (res.value)
+                                    FileLogger.Instance.Log("Lab stopped");
+                                else
+                                    FileLogger.Instance.LogWarning("Lab could not be stopped");
+                            }
                         }
                     }
                 }

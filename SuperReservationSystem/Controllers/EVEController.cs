@@ -61,5 +61,46 @@ namespace SuperReservationSystem.Controllers
             ViewBag.Lab = lab;
             return View();
         }
+        public async Task<IActionResult> DownloadLab(int id, string labId)
+        {
+            if (labId == null)
+            {
+                TempData["ErrorMessage"] = "Lab not found.";
+                return RedirectToAction("LabList", "EVE", new { id = id });
+            }
+            var lab = await _apiEVELabService.GetLabInfoById(id, labId);
+            if (lab == null)
+            {
+                TempData["ErrorMessage"] = "Lab not found.";
+                return RedirectToAction("LabList", "EVE", new { id = id });
+            }
+            var file = await _apiEVELabService.DownloadLab(lab, id);
+            if (file == null)
+            {
+                TempData["ErrorMessage"] = "An error occurred. Please try again.";
+                return RedirectToAction("LabList", "EVE", new { id = id });
+            }
+            return File(file, "application/zip", $"{lab.Name}-{DateTime.Now}.zip");
+        }
+        public async Task<IActionResult> ImportLab(IFormFile file, int serverId)
+        {
+            if (file == null)
+            {
+                TempData["ErrorMessage"] = "No file selected.";
+                return RedirectToAction("LabList", "EVE", new { id = serverId });
+            }
+            if (file.Length == 0)
+            {
+                TempData["ErrorMessage"] = "The file is empty.";
+                return RedirectToAction("LabList", "EVE", new { id = serverId });
+            }
+            var result = await _apiEVELabService.ImportLab(serverId, file);
+            if (!result)
+            {
+                TempData["ErrorMessage"] = "An error occurred. Please try again.";
+                return RedirectToAction("LabList", "EVE", new { id = serverId });
+            }
+            return RedirectToAction("LabList", "EVE", new { id = serverId });
+        }
     }
 }

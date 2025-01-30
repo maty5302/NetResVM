@@ -4,7 +4,7 @@
 @model BusinessLayer.Models.CiscoLabModel
 <h1>@ViewBag.ServerName</h1>
 <hr />
-@if (User.Identity!=null && User.Identity.Name == "admin")
+@if (User.Identity != null && User.IsInRole("Admin"))
 {
     <form method="post" enctype="multipart/form-data" action="@Url.Action("ImportLab", "CML", new {serverID=ViewBag.ServerID })">
         <div class="row mb-3">

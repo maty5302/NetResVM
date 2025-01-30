@@ -1,5 +1,5 @@
 ﻿@{
-
+	var plannedReservations = (List<ReservationInformationModel>)ViewBag.PlannedReservations;
 }
 <div id="list-view">
 	<h3>Planned reservations</h3>
@@ -11,19 +11,25 @@
 				<th>From</th>
 				<th>To</th>
 				<th>User</th>
+				<th>Export</th>
 			</tr>
 		</thead>
 		<tbody>
-			@if (ViewBag.Reservations != null)
+			@if (plannedReservations != null)
 			{
-				@for (int i = 0; i < ((List<ReservationInformationModel>)ViewBag.Reservations).Count; i++)
+				@foreach (var reservation in plannedReservations)
 				{
 					<tr>
-						<td>@ViewBag.Reservations[i].ServerName - @ViewBag.Reservations[i].ServerType </td>
-						<td>@ViewBag.Reservations[i].LabId</td>
-						<td>@ViewBag.Reservations[i].ReservationStart</td>
-						<td>@ViewBag.Reservations[i].ReservationEnd</td>
-						<td>@ViewBag.Reservations[i].UserName</td>
+						<td>@reservation.ServerName - @reservation.ServerType </td>
+						<td>@reservation.LabId</td>
+						<td>@reservation.ReservationStart</td>
+						<td>@reservation.ReservationEnd</td>
+						<td>@reservation.UserName</td>
+						<td>
+							<form method="post" action="@Url.Action("SaveEvent", "Reservation", new { reservationId = reservation.Id })">
+								<button type="submit" class="btn btn-primary"><i class="bi bi-floppy"></i></button>
+							</form>
+						</td>
 					</tr>
 				}
 			}
