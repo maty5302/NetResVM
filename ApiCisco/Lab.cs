@@ -27,7 +27,7 @@ namespace ApiCisco
                         foreach (string item in charactersToRemove)
                         {
                             data[i] = data[i].Replace(item, string.Empty);
-                        }                           
+                        }
                     }
                     return data;
                 }
@@ -41,9 +41,9 @@ namespace ApiCisco
             }
         }
 
-        public async Task<string?> GetLabInfo2(UserHttpClient client, string labId,bool download=false)
+        public async Task<string?> GetLabInfo2(UserHttpClient client, string labId, bool download = false)
         {
-            
+
             var url = $"{client.Url}labs/{labId.Trim()}";
             if (download)
                 url = url + "/download";
@@ -56,7 +56,7 @@ namespace ApiCisco
                 return null;
         }
 
-        public async Task<(bool result, HttpStatusCode message)> StartStopLab(UserHttpClient client,string labId,bool start=true)
+        public async Task<(bool result, HttpStatusCode message)> StartStopLab(UserHttpClient client, string labId, bool start = true)
         {
             var url = $"{client.Url}labs/{labId.Trim()}";
             if (start)
@@ -87,6 +87,17 @@ namespace ApiCisco
             {
                 throw new Exception("Failed to import the lab.", ex);
             }
+        }
+
+        public async Task<string?> StateOfLab(UserHttpClient user, string labId)
+        {
+            var url = $"{user.Url}labs/{labId.Trim()}/state";
+            var response = await user.Client.GetAsync(url);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsStringAsync();
+            }
+            return null;
         }
     }
 }
