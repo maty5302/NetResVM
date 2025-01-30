@@ -129,5 +129,17 @@ namespace BusinessLayer.Services
                 return false;
             }
         }
+
+        public StringBuilder SaveReservation(int reservationId)
+        {
+            var reservation = _reservationTableDataGateway.GetReservationById(reservationId);
+            var reservationModel = ReservationMapper.Map(reservation.Rows[0]);
+            var sb = new StringBuilder();
+            sb.AppendLine("BEGIN:VCALENDAR").AppendLine("VERSION:2.0").AppendLine("BEGIN:VEVENT").AppendLine($"SUMMARY:Reservation of lab")
+                .AppendLine($"DTSTART:{reservationModel.ReservationStart:yyyyMMddTHHmmss}").AppendLine($"DTEND:{reservationModel.ReservationEnd:yyyyMMddTHHmmss}")
+                .AppendLine("LOCATION:").AppendLine("DESCRIPTION:").AppendLine("END:VEVENT").AppendLine("END:VCALENDAR");
+
+            return sb;
+        }
     }
 }

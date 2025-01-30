@@ -210,5 +210,24 @@ namespace BusinessLayer.Services.ApiCiscoServices
                 return false;
             }
         }
+
+        public async Task<string?> GetState(int serverId, string labId)
+        {
+            try
+            {
+                var client = await _authService.AuthenticateAndCreateClient(serverId);
+                if (client.conn == null)
+                {
+                    return null;
+                }
+                var labState = await _labApi.StateOfLab(client.conn, labId);
+                return labState;
+            }
+            catch (Exception e)
+            {
+                logger.LogError("ApiCiscoLabService - GetState - " + e.Message);
+                return null;
+            }
+        }
     }
 }
