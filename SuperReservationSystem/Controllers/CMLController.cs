@@ -55,6 +55,7 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Lab not found.";
                 return RedirectToAction("LabList", "CML", new { id = id });
             }
+
             ViewBag.ServerID = id;
 
             var owned = labOwnershipService.IsLabAlreadyOwned(userService.GetUserId(User.Identity?.Name),labId);
@@ -139,6 +140,23 @@ namespace SuperReservationSystem.Controllers
             TempData["ErrorMessage"] = "An error occurred.";
             return RedirectToAction("LabList", "CML", new { id = serverId });
 
+        }
+
+        public async Task<IActionResult> DeleteLab(int serverId, string labId)
+        {
+            if(labId==null)
+            {
+                TempData["ErrorMessage"] = "Lab not found.";
+                return RedirectToAction("LabList", "CML", new { id = serverId });
+            }
+            var result = await labService.DeleteLab(serverId, labId);
+            if (result.value)
+            {
+                TempData["SuccessMessage"] = result.message;
+                return RedirectToAction("LabList", "CML", new { id = serverId });
+            }
+            TempData["ErrorMessage"] = result.message;
+            return RedirectToAction("LabList", "CML", new { id = serverId });
         }
 
         public async Task<IActionResult> LabNodeList(int serverId, string labId)

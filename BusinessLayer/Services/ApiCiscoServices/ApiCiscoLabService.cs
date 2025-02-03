@@ -187,6 +187,25 @@ namespace BusinessLayer.Services.ApiCiscoServices
             }
         }
 
+        public async Task<bool> ImportLab(int serverId, byte[] fileContent)
+        {
+            try
+            {
+                var client = await _authService.AuthenticateAndCreateClient(serverId);
+                if (client.conn == null)
+                {
+                    return false;
+                }
+                var result = await _labApi.ImportLab(client.conn, Encoding.UTF8.GetString(fileContent));
+                return result;
+            }
+            catch (Exception e)
+            {
+                logger.LogError("ApiCiscoLabService - ImportLab - " + e.Message);
+                return false;
+            }
+        }
+
         public async Task<bool> ImportLab(int serverId, IFormFile file)
         {
             try
@@ -227,6 +246,33 @@ namespace BusinessLayer.Services.ApiCiscoServices
             {
                 logger.LogError("ApiCiscoLabService - GetState - " + e.Message);
                 return null;
+            }
+        }
+        
+        public async Task<(bool value, string message)> DeleteLab(int serverId, string labId)
+        {
+            try
+            {
+                var client = await _authService.AuthenticateAndCreateClient(serverId);
+                if (client.conn == null)
+                {
+                    return (false, "Authentication failed");
+                }
+                var result = await _labApi.DeleteLab(client.conn, labId);
+                if (result.IsSuccessStatusCode)
+                {
+                    return (true, "Lab deleted successfully");
+                }
+                else
+                {
+                    logger.LogError($"ApiCiscoLabService - DeleteLab - {result.StatusCode}");
+                    return (false, "Failed to delete lab");
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogError("ApiCiscoLabService - DeleteLab - " + e.Message);
+                return (false, "Something went wrong.. Contact admin.");
             }
         }
     }

@@ -99,5 +99,12 @@ namespace ApiCisco
             }
             return null;
         }
+        
+        public async Task<HttpResponseMessage> DeleteLab(UserHttpClient user, string labId)
+        {
+            var url = $"{user.Url}labs/{labId.Trim()}";
+            var response = await user.Client.DeleteAsync(url);
+            return response;
+        }
     }
 }
