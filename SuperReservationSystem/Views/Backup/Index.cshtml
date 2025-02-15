@@ -1,0 +1,52 @@
+﻿@{
+    ViewData["Title"] = "Manage Backups";
+    var backups= ViewBag.Backups as List<BusinessLayer.DTOs.BackupDTO>;
+}
+<h1>@ViewData["Title"]</h1>
+<br/>
+<div>
+    @if(backups.Count==0)
+    {
+        <p>No backups available</p>
+    }
+    else
+    {
+        
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Server Name</th>
+                <th>Server type</th>
+                <th>Lab ID</th>
+                <th>Created at</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var backup in backups)
+            {
+                <tr>
+                    <td>@backup.ServerName</td>
+                    <td>@backup.ServerType</td>
+                    <td>@backup.LabId</td>
+                    <td>@backup.CreatedAt</td>
+                    <td>
+                        <form method="post">
+                            @if (backup.ServerId == -1)
+                            {
+                                <button class="btn btn-primary" disabled><i class="bi bi-arrow-clockwise"></i></button>
+                            }
+                            else
+                            {
+                                <button type="submit" formaction="@Url.Action("RestoreBackup", "Backup", new { serverId = @backup.ServerId, labId = @backup.LabId, serverType = @backup.ServerType, filename = @backup.FileName })" class="btn btn-primary"><i class="bi bi-arrow-clockwise"></i></button>
+                            }
+                            <button type="submit" formaction="@Url.Action("DownloadBackup", "Backup", new { labId = @backup.LabId, serverType = @backup.ServerType, filename = @backup.FileName })" class="btn btn-primary"><i class="bi bi-download"></i></button>
+                            <button type="submit" formaction="@Url.Action("DeleteBackup", "Backup", new { filename = @backup.FileName, labId = @backup.LabId, serverType = @backup.ServerType })" class="btn btn-danger"> <i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>

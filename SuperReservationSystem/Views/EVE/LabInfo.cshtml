@@ -16,7 +16,7 @@
 
 <form method="post">
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabList","EVE", new {id=ViewBag.ServerID})">Back to Lab List</button>
-    <button class="btn btn-primary" type="submit">Backup lab</button> @*locally or google drive*@
+    <button class="btn btn-primary" type="submit" formaction="@Url.Action("MakeBackup","Backup",new {serverId=ViewBag.ServerID,labId=lab.Id,serverType="EVE"})">Backup lab</button> @*locally or google drive*@
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("DownloadLab","EVE",new{id=ViewBag.ServerID,labId=lab.Id})">Download lab</button>
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("Create","Reservation",new{selectedServer=ViewBag.ServerID,labId=lab.Id})">Reserve this lab</button>
     <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabNodeList","EVE",new{serverID=ViewBag.ServerID, labId=lab.Id})">Show nodes</button>
