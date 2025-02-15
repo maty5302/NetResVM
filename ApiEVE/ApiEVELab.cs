@@ -75,6 +75,13 @@ namespace ApiEVE
                 return response.IsSuccessStatusCode;
             }
         }
+        
+        public async Task<bool> DeleteLab(ApiEVEHttpClient user, string labName)
+        {
+            var url = $"{user.Url}labs/{labName.Trim()}";
+            var response = await user.Client.DeleteAsync(url);
+            return response.IsSuccessStatusCode;
+        }
     }
 
 }
