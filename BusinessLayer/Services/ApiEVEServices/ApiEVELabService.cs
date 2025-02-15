@@ -160,6 +160,27 @@ namespace BusinessLayer.Services.ApiEVEServices
                 return await apiEVELab.ImportLab(client.client, ms.ToArray(), file.FileName);
             }
         }
+
+        public async Task<bool> ImportLab(int serverId, byte[] fileContent, string filename)
+        {
+            var client = await apiEVEAuthService.AuthenticateAndCreateClient(serverId);
+            if (client.client == null)
+            {
+                return false;
+            }
+            
+            return await apiEVELab.ImportLab(client.client, fileContent, filename);
+        }
+        
+        public async Task<bool> DeleteLab(int serverId, string fileName)
+        {
+            var client = await apiEVEAuthService.AuthenticateAndCreateClient(serverId);
+            if (client.client == null)
+            {
+                return false;
+            }
+            return await apiEVELab.DeleteLab(client.client, fileName);
+        }
     }
 
 }
