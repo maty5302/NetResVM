@@ -3,12 +3,14 @@ using BusinessLayer.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessLayer.MapperDT;
 using SimpleLogger;
 using System.DirectoryServices.Protocols;
 using BusinessLayer.DTOs;
+using System.Runtime.InteropServices;
 
 namespace BusinessLayer.Services
 {
@@ -16,7 +18,6 @@ namespace BusinessLayer.Services
     {
         private readonly UserTableDataGateway _userTableDataGateway;
         private static ILogger logger = FileLogger.Instance;
-
         public UserService()
         {
             _userTableDataGateway = new UserTableDataGateway();
@@ -100,40 +101,35 @@ namespace BusinessLayer.Services
 
         private bool ValidateCredentialsLdap(string Username, string Password)
         {
-            var user = GetUser(Username);
-            if (user != null)
+            try
             {
-                if (user.Active)
-                {
-                    try
-                    {
-                        var user_context = user.Username.Last();
-                        string bindDn = $"cn={user.Username},ou={user_context},ou=Users,o=VSB";
-                        var connection = new LdapConnection(new LdapDirectoryIdentifier("ldap.vsb.cz", 636));
-                        //setting up the connection
-                        connection.SessionOptions.SecureSocketLayer = true;
-                        connection.SessionOptions.VerifyServerCertificate = (connCon, cer) => true;
-                        connection.SessionOptions.ProtocolVersion = 3;
-                        connection.AuthType = AuthType.Basic;
-                        connection.Bind(new System.Net.NetworkCredential(bindDn, Password));
-                        //requesting user info
-                        var request = new SearchRequest("ou=Users,o=VSB", $"cn={user.Username}", SearchScope.Subtree);
-                        var response = (SearchResponse)connection.SendRequest(request);
-                        return true;
-                    }
-                    catch (LdapException ex)
-                    {
-                        logger.LogError($"Invalid LDAP credentials for user with username {Username}.");
-                        logger.LogError(ex.Message);
-                        return false;
-                    }
-                }
-                logger.LogWarning($"User {Username} is not marked as Active denying access..");
-                return false;
-               
+                var user_context = Username.Last();
+                string bindDn = $"cn={Username},ou={user_context},ou=Users,o=VSB";
+
+
+                var connection = new LdapConnection(new LdapDirectoryIdentifier("ldap.vsb.cz", 636));
+                //setting up the connection
+                connection.SessionOptions.SecureSocketLayer = true;
+
+                //Just Windows being Windows
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    connection.SessionOptions.VerifyServerCertificate = (connCon, cer) => true;
+
+                connection.SessionOptions.ProtocolVersion = 3;
+                connection.AuthType = AuthType.Basic;
+                //authentication
+                connection.Bind(new System.Net.NetworkCredential(bindDn, Password));
+                //requesting user info
+                var request = new SearchRequest("ou=Users,o=VSB", $"cn={Username}", SearchScope.Subtree);
+                var response = (SearchResponse)connection.SendRequest(request);
+                return true;
             }
-            logger.LogWarning($"User with username {Username} not found.");
-            return false;
+            catch (LdapException ex)
+            {
+                logger.LogError(ex.Message);
+                return false;
+            }
+
         }
 
         public bool ValidateCredentials(string Username, string Password)
@@ -153,11 +149,8 @@ namespace BusinessLayer.Services
                         var res = ValidateCredentialsLdap(Username, Password);
                         if (res)
                             return true;
-                        else
-                        {
-                            logger.LogWarning($"Invalid password for user with username {Username}.");
+                        else                        
                             return false;
-                        }
                     }
                     else
                     {
