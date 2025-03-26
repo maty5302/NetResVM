@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using SimpleLogger;
+using TelnetConsole;
 
 namespace SuperReservationSystem
 {
@@ -28,6 +29,14 @@ namespace SuperReservationSystem
                 options.LoginPath = "/Login/Index";
                 options.LogoutPath = "/Login/Logout";
             });
+            //builder.WebHost.ConfigureKestrel(options =>
+            //{
+            //    options.ConfigureHttpsDefaults(httpsOptions =>
+            //    {
+            //        httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
+            //    });
+            //});
+
             var app = builder.Build();
 
 			// Configure the HTTP request pipeline.
@@ -62,7 +71,11 @@ namespace SuperReservationSystem
                 return Task.CompletedTask;
             });
 			FileLogger.Instance.Log("Application started.");
-            _backgroundTask.Start();
+            //background checking of reservations
+			_backgroundTask.Start();
+			//starts TelnetConsole
+			Task.Run(()=>TelnetConsole.TelnetConsole.StartListener());
+			//starts web app
             app.Run();
 
 		}
