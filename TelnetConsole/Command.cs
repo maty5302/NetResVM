@@ -88,22 +88,60 @@ namespace TelnetConsole
             return sb.ToString();
         }
 
-        public static string StartLab(string server_id,string lab_id)
+        public static string StartLab(string server_id, string lab_id)
         {
             int id = -1;
             int.TryParse(server_id, out id);
             if (id < 0)
-                return "Invalid ID"; 
+                return "Invalid ID";
             var type = server.GetServerType(id);
             if (type == "CML")
                 return StartCMLLab(server_id, lab_id);
             else if (type == "EVE")
-                return "???";
+                return StartEVELab(server_id, lab_id);
             else
                 return "Unknown serverID";
         }
 
-        private static string StartCMLLab(string server_id, string lab_id) { 
+        public static string StopLab(string server_id, string lab_id)
+        {
+            int id = -1;
+            int.TryParse(server_id, out id);
+            if (id < 0)
+                return "Invalid ID";
+            var type = server.GetServerType(id);
+            if (type == "CML")
+                return StopCMLLab(server_id, lab_id);
+            else if (type == "EVE")
+                return StopEVELab(server_id, lab_id);
+            else
+                return "Unknown serverID";
+        }
+
+        private static string StopEVELab(string server_id, string lab_id)
+        {
+            ApiEVELabService labService = new ApiEVELabService();
+            ApiEVENodeService nodeService = new ApiEVENodeService();
+            var lab = labService.GetLabInfoById(int.Parse(server_id), lab_id).Result;
+            if (lab == null)
+                return "Cannot find a lab";
+            var res = nodeService.StartAllNodes(int.Parse(server_id), lab.Filename).Result;
+            if (res)
+                return "Lab stopped successfully";
+            return "Lab cannot be stopped";
+        }
+
+        private static string StopCMLLab(string server_id, string lab_id)
+        {
+            ApiCiscoLabService service = new ApiCiscoLabService();
+            var res = service.StopLab(int.Parse(server_id), lab_id).Result;
+            if (res.value == false)
+                return res.message;
+            else
+                return "Lab stopped successfully";
+        }
+
+        private static string StartCMLLab(string server_id, string lab_id) {
             ApiCiscoLabService service = new ApiCiscoLabService();
             var res = service.StartLab(int.Parse(server_id), lab_id).Result;
             if (res.value == false)
@@ -114,11 +152,34 @@ namespace TelnetConsole
 
         private static string StartEVELab(string server_id, string lab_id)
         {
-            ApiEVELabService service = new ApiEVELabService();
-            //var res = service.
-            return "";
+            ApiEVELabService labService = new ApiEVELabService();
+            ApiEVENodeService nodeService = new ApiEVENodeService();
+            var lab = labService.GetLabInfoById(int.Parse(server_id), lab_id).Result;
+            if (lab == null)
+                return "Cannot find a lab";
+            var res = nodeService.StartAllNodes(int.Parse(server_id), lab.Filename).Result;
+            if (res)
+                return "Lab started successfully";
+            return "Lab cannot be started";
         }
 
+        public static string DeactivateUser(int userId)
+        {
+            UserService userService = new UserService();
+            var res = userService.UpdateUser(userId, false);
+            if (!res)
+                return $"User with ID {userId} cannot be deactivated";
+            return $"User with ID {userId} deactivated";
+        }
+
+        public static string ActivateUser(int userId)
+        {
+            UserService userService = new UserService();
+            var res = userService.UpdateUser(userId, true);
+            if (!res)
+                return $"User with ID {userId} cannot be activated";
+            return $"User with ID {userId} activated";
+        }
 
     }
 }

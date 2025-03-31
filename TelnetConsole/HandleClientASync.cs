@@ -45,38 +45,59 @@ namespace TelnetConsole
                 {
                     if (args[0] == "list")
                     {
-                        if (args[1]=="servers")
+                        if (args[1] == "servers")
                         {
                             return Command.ListServers();
                         }
-                        else if(args[1]=="labs")
+                        else if (args[1] == "labs" && args.Length == 3)
                         {
-                            return Command.ListLabs(args[2]);
+                            if (!String.IsNullOrEmpty(args[2]))
+                                return Command.ListLabs(args[2]);
+                            return GetHelp();
                         }
-                        else if (args[1]=="users")
+                        else if (args[1] == "users")
                         {
                             return Command.ListUsers();
                         }
                         else
-                            return $"Unknown argument {args[1]}";
+                            return GetHelp();
                     }
-                    else if(args[0] == "start")
+                    else if(args[0] == "start" && args.Length == 3)
                     {
                         if(!String.IsNullOrEmpty(args[1]) && !String.IsNullOrEmpty(args[2]))
                             return Command.StartLab(args[1], args[2]);
                         return GetHelp();
                     }
-                    else if (args[0] == "stop")
+                    else if (args[0] == "stop" && args.Length == 3)
                     {
-
+                        if (!String.IsNullOrEmpty(args[1]) && !String.IsNullOrEmpty(args[2]))
+                            return Command.StopLab(args[1], args[2]);
+                        return GetHelp();
                     }
                     else if (args[0] == "deactivate")
                     {
+                        if(!String.IsNullOrEmpty(args[1]))
+                        {
+                            int id = -1;
+                            int.TryParse(args[1],out id);
+                            if (id == -1 || id==0)
+                                return GetHelp();
+                            return Command.DeactivateUser(id);
+                        }
+                        return GetHelp();
 
                     }
                     else if (args[0] == "activate")
                     {
-
+                        if (!String.IsNullOrEmpty(args[1]))
+                        {
+                            int id = -1;
+                            int.TryParse(args[1], out id);
+                            if (id == -1 || id == 0)
+                                return GetHelp();
+                            return Command.ActivateUser(id);
+                        }
+                        return GetHelp();
                     }
                     else
                         return $"Unknown command {command}";
