@@ -1,0 +1,41 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = ViewBag.Title;
+}
+<h1>@ViewData["Title"]</h1>
+<hr />
+<div class="row ">
+    @if (ViewBag.Nodes != null)
+    {
+        @for (int i = 0; i < ((List<BusinessLayer.Models.EVENodeModel>)ViewBag.Nodes).Count; i++)
+        {
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
+                <div class="card flex-fill d-flex flex-column">
+                    <div class="card-body" sstyle="height: 175px;">
+                        <h5 class="card-title">@ViewBag.Nodes[i].Name</h5><hr />
+                        @if (ViewBag.Nodes[i].Status == 2)
+                        {
+                            <span> <i class="bi bi-caret-right"></i> STARTED </span><br />
+                        }
+                        else
+                        {
+                            <span> <i class="bi bi-caret-right"></i> STOPPED </span>
+
+                            <br />
+                        }
+                        <span> <i class="bi bi-cpu"></i> CPU: @ViewBag.Nodes[i].NumberOfCPU</span><br />
+                        <span> <i class="bi bi-memory"></i> RAM: @ViewBag.Nodes[i].Memory MB</span><br />
+                        <span> <i class="bi bi-ethernet"></i> Number of ethernets: @ViewBag.Nodes[i].NumberOfEthernet  </span><br />
+
+                    </div>
+                </div>
+            </div>
+            @if ((i + 1) % 4 == 0)
+            {
+                <div class="w-100"></div>
+            }
+        }
+    }
+</div>

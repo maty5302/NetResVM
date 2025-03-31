@@ -30,8 +30,8 @@
 
     @if (ViewBag.UserOwn == true || User.IsInRole("Admin"))
     {
-        <button class="btn btn-primary" type="submit" formaction="@Url.Action("StartLab","EVE",new{id=ViewBag.ServerID,labId=lab.Id})">Start this lab</button>
-        <button class="btn btn-primary" type="submit" formaction="@Url.Action("StopLab","EVE",new{id=ViewBag.ServerID,labId=lab.Id})">Stop the lab</button>
+        <button class="btn btn-primary" type="submit" formaction="@Url.Action("StartLab","EVE",new{serverId=ViewBag.ServerID,labId=lab.Id})">Start this lab</button>
+        <button class="btn btn-primary" type="submit" formaction="@Url.Action("StopLab","EVE",new{serverId=ViewBag.ServerID,labId=lab.Id})">Stop the lab</button>
     }
     @*Admin only*@
     @if (User.IsInRole("Admin"))
