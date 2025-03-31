@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiEVE", "ApiEVE\ApiEVE.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleLogger", "SimpleLogger\SimpleLogger.csproj", "{851EDB4B-AAED-4528-A3F9-EB52C4F57BBB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TelnetConsole", "TelnetConsole\TelnetConsole.csproj", "{1A002304-DE85-412E-9D3E-5963AAE680EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +63,10 @@ Global
 		{851EDB4B-AAED-4528-A3F9-EB52C4F57BBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{851EDB4B-AAED-4528-A3F9-EB52C4F57BBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{851EDB4B-AAED-4528-A3F9-EB52C4F57BBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A002304-DE85-412E-9D3E-5963AAE680EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A002304-DE85-412E-9D3E-5963AAE680EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A002304-DE85-412E-9D3E-5963AAE680EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A002304-DE85-412E-9D3E-5963AAE680EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
