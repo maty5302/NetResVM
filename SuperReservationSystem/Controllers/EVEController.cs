@@ -163,11 +163,11 @@ namespace SuperReservationSystem.Controllers
             var res = await _apiEVENodeService.StopAllNodes(serverId, lab.Filename);
             if (!res)
             {
-                TempData["ErrorMessage"] = "Couldn't start a lab";
+                TempData["ErrorMessage"] = "Couldn't stop a lab";
             }
             else
             {
-                TempData["SuccessMessage"] = "Lab started";
+                TempData["SuccessMessage"] = "Lab stopped";
             }
             return RedirectToAction("LabInfo", "EVE", new { id = serverId, labId = labId });
         }
