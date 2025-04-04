@@ -1,8 +1,9 @@
-﻿using ApiCisco;
-using BusinessLayer.Services;
+﻿using BusinessLayer.Services;
 using BusinessLayer.Services.ApiCiscoServices;
+using BusinessLayer.Services.ApiEVEServices;
 using SimpleLogger;
 using System.Threading.Tasks;
+using ILogger = SimpleLogger.ILogger;
 
 namespace SuperReservationSystem
 {
@@ -11,8 +12,58 @@ namespace SuperReservationSystem
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ReservationService _reservationService = new ReservationService();
         private readonly ServerService _serverService = new ServerService();
-        private readonly ApiCiscoAuthService _apiCiscoAuthService = new ApiCiscoAuthService();
+        private readonly ApiEVELabService _apiEVELabService = new ApiEVELabService();
+        private readonly ApiEVENodeService _apiEVENodeService = new ApiEVENodeService();
         private readonly ApiCiscoLabService _apiCiscoLabService = new ApiCiscoLabService();
+        private readonly ILogger _logger = FileLogger.Instance;
+
+        /// <summary>
+        /// Starts Reservation of a lab by stopping all of them before
+        /// </summary>
+        /// <param name="serverType"></param>
+        /// <param name="serverID"></param>
+        /// <param name="labId"></param>
+        private async void StartReservation(string serverType, int serverID, string labId)
+        {
+            if(serverType=="CML")
+            {
+                var stopped = await _apiCiscoLabService.StopAllLabs(serverID);
+                if (stopped.value)
+                {
+                    var res = await _apiCiscoLabService.StartLab(serverID, labId);
+                    if (res.Item1)
+                        _logger.Log($"Lab {labId} on server {serverID} started");
+                    else
+                        _logger.LogWarning($"Lab {labId} on server {serverID} could not be started");
+                }
+                else
+                    _logger.LogWarning($"All labs on server {serverID} could not be stopped");
+            }
+            else if(serverType=="EVE")
+            {
+                var stopped = true; //hardcoded testing - implement method for stopping all labs EVE
+                if(stopped)
+                {
+                    var eve = await _apiEVELabService.GetLabInfoById(serverID,labId);
+                    if (eve != null)
+                    {
+                        var res = await _apiEVENodeService.StartAllNodes(serverID, eve.Filename);
+                        if (res)
+                        {
+                            _logger.Log($"Lab {labId} on server {serverID} started");
+                        }
+                        else
+                            _logger.LogWarning($"Lab {labId} on server {serverID} could not be started");
+                    }
+                    else
+                        _logger.LogError($"Could not find a lab {labId} on {serverID} - {serverType}");
+                }
+                else
+                    _logger.LogWarning($"All labs on server {serverID} could not be stopped");
+            }
+            else
+                _logger.LogError($"Unknown server type {serverType}. Skipping..");
+        }
 
         private async void CheckReservations()
         {
@@ -20,39 +71,30 @@ namespace SuperReservationSystem
             {
                 var reservations = _reservationService.GetAllReservations();
                 
-                var time = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0);
-                FileLogger.Instance.Log($"Checking reservations..{time}");
+                var time = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second);
+                _logger.Log($"Checking reservations..{time}");
                 if (reservations != null)
                 {
                     foreach (var reservation in reservations)
-                    {                        
-                        var server = _serverService.GetServerById(reservation.ServerId);
-                        if (server == null)
+                    {
+                        //getting type of server for start correct actions for each type of server
+                        var serverType = _serverService.GetServerType(reservation.ServerId);
+                        if (serverType == "" || serverType == null)
                         {
-                            FileLogger.Instance.LogError("Server not found.");
+                            _logger.LogError("Server not found.");
                             continue;
                         }
-                        
+                        //delete expire reservations after 6 months by default
                         if (reservation.ReservationEnd.AddMonths(6) < DateTime.Now)
                         {
                             _reservationService.DeleteReservation(reservation.Id);
                         }
-                        
-                        if ((reservation.ReservationStart == time || (reservation.ReservationStart < time && reservation.ReservationEnd > time )) && server.ServerType == "CML") 
+                        //checking if reservation has to be started, if so then start it
+                        if ((reservation.ReservationStart == time || (reservation.ReservationStart < time && reservation.ReservationEnd > time)))
                         {
-                            var stopped = await _apiCiscoLabService.StopAllLabs(reservation.ServerId);
-                            if (stopped.value)
-                            {
-                                var res = await _apiCiscoLabService.StartLab(reservation.ServerId, reservation.LabId);
-                                if (res.Item1)
-                                    FileLogger.Instance.Log("Lab started");
-                                else
-                                    FileLogger.Instance.LogWarning("Lab could not be started");
-                            }
-                            else
-                                FileLogger.Instance.LogWarning("Labs could not be stopped");
+                            StartReservation(serverType, reservation.ServerId, reservation.LabId);
                         }
-                        else if (reservation.ReservationEnd <= time && server.ServerType == "CML" )
+                        else if (reservation.ReservationEnd <= time && serverType == "CML")
                         {
                             var labState = await _apiCiscoLabService.GetState(reservation.ServerId, reservation.LabId);
                             if (labState != null && labState == "started")
@@ -66,10 +108,12 @@ namespace SuperReservationSystem
                         }
                     }
                 }
+                else
+                    _logger.LogWarning("No reservations were found...");
             }
             catch (Exception e)
             {
-                FileLogger.Instance.LogError(e.Message);
+                _logger.LogError(e.Message);
             }
         }
 
@@ -86,12 +130,12 @@ namespace SuperReservationSystem
                     }
                     catch (TaskCanceledException)
                     {                        
-                        FileLogger.Instance.LogWarning("Task was cancelled");
+                        _logger.LogWarning("Task was cancelled");
                     }
                     catch (Exception ex)
                     {
                         // Log or handle exceptions
-                        FileLogger.Instance.LogError(ex.Message);
+                        _logger.LogError(ex.Message);
                     }
                 }
             },_cancellationTokenSource.Token);
@@ -101,7 +145,7 @@ namespace SuperReservationSystem
         {
             // Cancel the task
             _cancellationTokenSource.Cancel();
-            FileLogger.Instance.LogWarning("Background task for checking reservations was cancelled.");
+            _logger.LogWarning("Background task for checking reservations was cancelled.");
         }
 
     }
