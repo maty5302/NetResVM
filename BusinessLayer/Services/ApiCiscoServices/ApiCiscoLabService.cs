@@ -240,7 +240,9 @@ namespace BusinessLayer.Services.ApiCiscoServices
                     return null;
                 }
                 var labState = await _labApi.StateOfLab(client.conn, labId);
-                return labState;
+                if(labState == null)
+                    return null;
+                return labState.Replace("\"","");
             }
             catch (Exception e)
             {
