@@ -181,6 +181,22 @@ namespace BusinessLayer.Services.ApiEVEServices
             }
             return await apiEVELab.DeleteLab(client.client, fileName);
         }
+
+        public async Task<int> StateOfLab(int serverId, string labName)
+        {
+            ApiEVENodeService service = new ApiEVENodeService();
+            var nodes = await service.GetAllNodes(serverId, labName);
+            if (nodes == null)
+            {
+                return -1;
+            }
+            foreach (var node in nodes)
+            {
+                if (node.Status == 2)
+                    return 2;
+            }
+            return 0;
+        }
     }
 
 }
