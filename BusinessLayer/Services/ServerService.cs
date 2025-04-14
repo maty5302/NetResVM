@@ -1,17 +1,14 @@
 ﻿using DataLayer;
-using BusinessLayer;
 using BusinessLayer.Models;
 using BusinessLayer.MapperDT;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SimpleLogger;
 using BusinessLayer.DTOs;
 
 namespace BusinessLayer.Services
 {
+    /// <summary>
+    /// Service class for managing server operations.
+    /// </summary>
     public class ServerService
     {
         private readonly ServerTableDataGateway _gateway;
@@ -21,6 +18,14 @@ namespace BusinessLayer.Services
         {
             _gateway = new ServerTableDataGateway();
         }
+
+        /// <summary>
+        /// Retrieves a list of all servers available in the system.
+        /// </summary>
+        /// <returns>
+        /// A list of <see cref="ServerDTO"/> objects representing the servers,
+        /// or <c>null</c> if no servers are found or an error occurs.
+        /// </returns>
         public List<ServerDTO>? GetAllServers()
         {
             try
@@ -39,6 +44,14 @@ namespace BusinessLayer.Services
                 return null;
             }
         }
+
+        /// <summary>
+        /// Retrieves a server by its unique identifier.
+        /// </summary>
+        /// <param name="id">The unique identifier (ID) of the server.</param>
+        /// <returns>
+        /// A <see cref="ServerDTO"/> object if a server with the specified ID exists; otherwise, <c>null</c>.
+        /// </returns>
         public ServerDTO? GetServerById(int id)
         {
             try
@@ -52,6 +65,15 @@ namespace BusinessLayer.Services
                 return null;
             }
         }
+
+        /// <summary>
+        /// Retrieves a server entity from the internal data source by its unique identifier.
+        /// </summary>
+        /// <param name="id">The unique identifier (ID) of the server.</param>
+        /// <returns>
+        /// A <see cref="ServerModel"/> object if the server exists; otherwise, <c>null</c>.
+        /// </returns>
+        /// <remarks> This method is intended for internal use within the business logic layer. </remarks>
         internal ServerModel? GetServerByIdInternal(int id)
         {
             try
@@ -66,6 +88,13 @@ namespace BusinessLayer.Services
             }
         }
 
+        /// <summary>
+        /// Retrieves the type of a server by its unique identifier.
+        /// </summary>
+        /// <param name="id">The unique identifier (ID) of the server.</param>
+        /// <returns>
+        /// The server type as a string if the server exists; otherwise, an empty string.
+        /// </returns>
         public string GetServerType(int id)
         {
             try
@@ -82,6 +111,13 @@ namespace BusinessLayer.Services
             }
         }
 
+        /// <summary>
+        /// Checks whether a server with the specified ID exists in the system.
+        /// </summary>
+        /// <param name="id">The unique identifier (ID) of the server.</param>
+        /// <returns>
+        /// <c>true</c> if the server exists; otherwise, <c>false</c>.
+        /// </returns>
         public bool ServerExists(int id)
         {
             try
@@ -94,38 +130,37 @@ namespace BusinessLayer.Services
                 return false;
             }
         }
+
+        /// <summary>
+        /// Inserts a new server into the system.
+        /// </summary>
+        /// <param name="server">The <see cref="ServerModel"/> object containing the server details to insert.</param>
+        /// <returns>
+        /// <c>true</c> if the server was successfully inserted; otherwise, <c>false</c>.
+        /// </returns>
         public bool InsertServer(ServerModel server)
         {
-            try
+            var servers = GetAllServers();
+            if (servers != null)
             {
-                var servers = GetAllServers();
-                if (servers != null) {
-                    foreach (var item in servers)
-                    {
-                        if (item.Name == server.Name)
-                        {
-                            _logger.LogWarning($"Server with name {server.Name} already exists.");
-                            return false;
-                        }
-                    }
-                }
-                else
+                if(servers.Any(servers => servers.Name == server.Name))
                 {
-                    _logger.LogError("Couldn't fetch servers from database.");
+                    _logger.LogWarning($"Server with name {server.Name} already exists.");
                     return false;
                 }
             }
-            catch
+            else
             {
+                _logger.LogError("Couldn't fetch servers from database.");
                 return false;
             }
             try
             {
-                if (server.ServerType == "EVE" && !server.IpAddress.StartsWith("http"))
+                if (server.ServerType == "EVE" && !server.IpAddress.StartsWith("http")) 
                     server.IpAddress = "http://" + server.IpAddress;
                 else if (server.ServerType == "CML" && !server.IpAddress.StartsWith("http"))
                     server.IpAddress = "https://" + server.IpAddress;
-                string ip = new Uri(server.IpAddress).Host;
+                string ip = new Uri(server.IpAddress).Host; //To get the IP address from the URL
                 _gateway.InsertServer(server.ServerType, server.Name, ip, server.Username, server.Password);
                 _logger.Log($"Server with name {server.Name} has been inserted.");
                 return true;
@@ -137,6 +172,13 @@ namespace BusinessLayer.Services
             }
         }
 
+        /// <summary>
+        /// Updates the details of an existing server in the system.
+        /// </summary>
+        /// <param name="server">The <see cref="ServerModel"/> object containing the updated server details.</param>
+        /// <returns>
+        /// <c>true</c> if the server was successfully updated; otherwise, <c>false</c>.
+        /// </returns>
         public bool UpdateServer(ServerModel server)
         {
             var serverToUpdate = GetServerByIdInternal(server.Id);
@@ -144,7 +186,7 @@ namespace BusinessLayer.Services
             {
                 return false;
             }
-            if (server.Password == null)
+            if (server.Password == String.Empty)
             {
                 server.Password = serverToUpdate.Password;
             }
@@ -161,6 +203,13 @@ namespace BusinessLayer.Services
             }
         }
 
+        /// <summary>
+        /// Removes a server from the system by its unique identifier.
+        /// </summary>
+        /// <param name="id">The unique identifier (ID) of the server to remove.</param>
+        /// <returns>
+        /// <c>true</c> if the server was successfully removed; otherwise, <c>false</c>.
+        /// </returns>
         public bool RemoveServer(int id)
         {
             var server = GetServerById(id);

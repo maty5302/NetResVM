@@ -1,11 +1,12 @@
-﻿using ApiCisco;
-using ApiEVE;
+﻿using ApiEVE;
 using SimpleLogger;
-using System.ComponentModel;
 using System.Net;
 
 namespace BusinessLayer.Services.ApiEVEServices
 {
+    /// <summary>
+    /// Service for handling authentication with the ApiEVE server.
+    /// </summary>
     public class ApiEVEAuthService
     {
         private readonly ApiEVEAuthentication authentication;
@@ -19,6 +20,15 @@ namespace BusinessLayer.Services.ApiEVEServices
             logger = FileLogger.Instance; 
         }
 
+        /// <summary>
+        /// Asynchronously validates the credentials for a given user on a specified server based on IP address.
+        /// </summary>
+        /// <param name="ipAddress">The IP address of the server to validate credentials against.</param>
+        /// <param name="username">The username of the user attempting to authenticate.</param>
+        /// <param name="password">The password of the user attempting to authenticate.</param>
+        /// <returns>
+        /// <c>true</c> if the credentials are valid; otherwise, <c>false</c> if the validation fails.
+        /// </returns>
         public async Task<bool> ValidateCredentials(string ipAddress, string username, string password)
         {
             var response = await authentication.Authenticate(new ApiEVEHttpClient(ipAddress), username, password);
@@ -29,6 +39,15 @@ namespace BusinessLayer.Services.ApiEVEServices
             return false;
         }
 
+        /// <summary>
+        /// Asynchronously authenticates a user and creates an API client for a specified server.
+        /// </summary>
+        /// <param name="serverId">The unique identifier (ID) of the server to authenticate against and create the client for.</param>
+        /// <returns>
+        /// A tuple containing:
+        /// <c>client</c> – An instance of <see cref="ApiEVEHttpClient"/> if authentication is successful; otherwise, <c>null</c>.
+        /// <c>message</c> – A string message providing the result of the authentication process (success or error description).
+        /// </returns>
         public async Task<(ApiEVEHttpClient? client,string message)> AuthenticateAndCreateClient(int serverId)
         {
             try
@@ -38,8 +57,8 @@ namespace BusinessLayer.Services.ApiEVEServices
                 {
                     return (null, "Server not found");
                 }
-                var client = new ApiEVEHttpClient(server.IpAddress);
-                var response = await authentication.Authenticate(client, server.Username, server.Password);
+                var client = new ApiEVEHttpClient(server.IpAddress); // Create a new instance of ApiEVEHttpClient with the server's IP address
+                var response = await authentication.Authenticate(client, server.Username, server.Password); // Authenticate the user with the server's credentials
                 if (response.IsSuccessStatusCode)
                     return (client, "OK");
 
@@ -63,6 +82,13 @@ namespace BusinessLayer.Services.ApiEVEServices
             }
         }
 
+        /// <summary>
+        /// Asynchronously logs out the user by invalidating the session associated with the specified API client.
+        /// </summary>
+        /// <param name="client">The <see cref="ApiEVEHttpClient"/> instance representing the authenticated user session to log out.</param>
+        /// <remarks>
+        /// This method performs the logout operation asynchronously, but does not return any result or status.
+        /// </remarks>
         public async void Logout(ApiEVEHttpClient client)
         {
             var res = await authentication.Logout(client);

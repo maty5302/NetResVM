@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace BusinessLayer.Interface
 {
+    /// <summary>
+    /// This interface defines the properties of a lab model.
+    /// </summary>
     public interface ILabModel
     {
         string Id { get; }

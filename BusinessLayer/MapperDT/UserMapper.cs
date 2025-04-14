@@ -11,8 +11,16 @@ using System.Threading.Tasks;
 
 namespace BusinessLayer.MapperDT
 {
+    /// <summary>
+    /// This class is responsible for mapping DataRow objects to UserModel and UserDTO objects.
+    /// </summary>
     public class UserMapper
     {
+        /// <summary>
+        /// Maps a DataRow object to a UserModel object.
+        /// </summary>
+        /// <param name="row"> The DataRow containing data from the database. </param>
+        /// <returns> A UserModel object with values populated from the DataRow. </returns>
         public static UserModel Map(DataRow row)
         {
             return new UserModel
@@ -26,6 +34,11 @@ namespace BusinessLayer.MapperDT
             };
         }
 
+        /// <summary>
+        /// Maps a DataRow object to a UserDTO object.
+        /// </summary>
+        /// <param name="row"> The DataRow containing data from the database. </param>
+        /// <returns> A UserDTO object with values populated from the DataRow. </returns>
         public static UserDTO MapToDTO(DataRow row)
         {
             return new UserDTO

@@ -8,8 +8,16 @@ using System.Threading.Tasks;
 
 namespace BusinessLayer.MapperDT
 {
+    /// <summary>
+    /// This class is responsible for mapping DataRow objects to ReservationModel objects.
+    /// </summary>
     public class ReservationMapper
     {
+        /// <summary>
+        /// Maps a DataRow object to a ReservationModel object.
+        /// </summary>
+        /// <param name="row"> The DataRow containing data from the database. </param>
+        /// <returns>  A ReservationModel object with values populated from the DataRow. </returns>
         public static ReservationModel Map(DataRow row)
         {
             return new ReservationModel

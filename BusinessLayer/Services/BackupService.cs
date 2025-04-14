@@ -1,4 +1,3 @@
-using ApiCisco;
 using BusinessLayer.DTOs;
 using BusinessLayer.Interface;
 using BusinessLayer.Services.ApiCiscoServices;
@@ -8,6 +7,9 @@ using SimpleLogger;
 
 namespace BusinessLayer.Services;
 
+/// <summary>
+/// This class is responsible for managing backups of labs.
+/// </summary>
 public class BackupService
 {
     private readonly ApiCiscoLabService _apiCisco;
@@ -25,6 +27,17 @@ public class BackupService
         _logger = FileLogger.Instance;
     }
 
+    /// <summary>
+    /// Asynchronously creates a backup of a lab for a specified server.
+    /// </summary>
+    /// <param name="serverId">The unique identifier (ID) of the server where the lab is hosted.</param>
+    /// <param name="labId">The unique identifier (ID) of the lab to back up.</param>
+    /// <param name="serverType">The type of the server (e.g., CML, EVE-NG, etc.).</param>
+    /// <returns>
+    /// A tuple containing:
+    /// <c>backup</c> – <c>true</c> if the backup was successfully created; otherwise, <c>false</c>,
+    /// <c>Message</c> – a string message providing additional details (e.g., success or error description).
+    /// </returns>
     public async Task<(bool backup, string Message)> BackupLab(int serverId, string labId, string serverType)
     {
         if (serverType == "CML")
@@ -56,7 +69,14 @@ public class BackupService
         return (false, "Not implemented");
     }
 
-
+    /// <summary>
+    /// Asynchronously retrieves the lab file for a specific lab on a CML server.
+    /// </summary>
+    /// <param name="serverId">The unique identifier (ID) of the server hosting the lab.</param>
+    /// <param name="labId">The unique identifier (ID) of the lab to retrieve the file for.</param>
+    /// <returns>
+    /// A byte array representing the lab file if successfully retrieved; otherwise, <c>null</c> if the operation fails.
+    /// </returns>
     private async Task<byte[]?> GetCMLLabFile(int serverId, string labId)
     {
         var response = await _apiCisco.DownloadLab(serverId, labId);
@@ -68,6 +88,14 @@ public class BackupService
         return null;
     }
 
+    /// <summary>
+    /// Asynchronously retrieves the lab file for a specific lab on a EVE server.
+    /// </summary>
+    /// <param name="serverId">The unique identifier (ID) of the server hosting the lab.</param>
+    /// <param name="labId">The unique identifier (ID) of the lab to retrieve the file for.</param>
+    /// <returns>
+    /// A byte array representing the lab file if successfully retrieved; otherwise, <c>null</c> if the operation fails.
+    /// </returns>
     private async Task<byte[]?> GetEVELabFile(int serverId, string labId)
     {
         var lab = await _apiEve.GetLabInfoById(serverId, labId);
@@ -85,17 +113,27 @@ public class BackupService
         return null;
     }
 
-
+    /// <summary>
+    /// Asynchronously retrieves a list of all backups available in the system.
+    /// </summary>
+    /// <returns>
+    /// A list of <see cref="BackupDTO"/> objects representing the backups.
+    /// Returns an empty list if no backups are found or <c>null</c> if an error occurs.
+    /// </returns>
     public async Task<List<BackupDTO>> GetBackups()
     {
         var backups = _localBackupStorage.GetBackupRecords();
         var servers = _serverService.GetAllServers();
         var backupDTOs = new List<BackupDTO>();
+        if (servers == null || backups == null)
+        {
+            return backupDTOs; // Return empty list if no servers or backups found
+        }
 
         foreach (var backup in backups)
         {
             ServerDTO? s = null;
-
+            // Find the server that matches the backup
             foreach (var server in servers)
             {
                 ILabModel res;
@@ -112,6 +150,7 @@ public class BackupService
 
             if (s != null)
             {
+                // Lab exists and has valid server = add it to the list
                 backupDTOs.Add(new BackupDTO
                 {
                     ServerId = s.Id,
@@ -142,6 +181,16 @@ public class BackupService
         return backupDTOs;
     }
 
+    /// <summary>
+    /// Asynchronously restores a backup for a specified server and lab.
+    /// </summary>
+    /// <param name="serverId">The unique identifier (ID) of the server where the lab is hosted.</param>
+    /// <param name="serverType">The type of the server (e.g., CML, EVE-NG).</param>
+    /// <param name="labId">The unique identifier (ID) of the lab to restore the backup for.</param>
+    /// <param name="fileName">The name of the backup file to restore.</param>
+    /// <returns>
+    /// <c>true</c> if the backup was successfully restored; otherwise, <c>false</c>.
+    /// </returns>
     public async Task<bool> RestoreBackup(int serverId, string serverType, string labId, string fileName)
     {
         var file = await _localBackupStorage.GetBackup(serverType, labId, fileName);
@@ -167,11 +216,29 @@ public class BackupService
         return false;
     }
 
+    /// <summary>
+    /// Deletes a backup for a specified lab and server based on the backup file name.
+    /// </summary>
+    /// <param name="fileName">The name of the backup file to delete.</param>
+    /// <param name="labId">The unique identifier (ID) of the lab associated with the backup.</param>
+    /// <param name="serverType">The type of the server (e.g., CML, EVE-NG) where the backup is stored.</param>
+    /// <returns>
+    /// <c>true</c> if the backup was successfully deleted; otherwise, <c>false</c>.
+    /// </returns>
     public bool DeleteBackup(string fileName, string labId, string serverType)
     {
         return _localBackupStorage.DeleteBackup(serverType, labId, fileName);
     }
 
+    /// <summary>
+    /// Asynchronously downloads a backup file for a specific lab and server.
+    /// </summary>
+    /// <param name="serverType">The type of the server (e.g., CML, EVE-NG, etc.) hosting the backup.</param>
+    /// <param name="labId">The unique identifier (ID) of the lab associated with the backup.</param>
+    /// <param name="fileName">The name of the backup file to download.</param>
+    /// <returns>
+    /// A byte array containing the backup file if successfully downloaded; otherwise, an empty byte array or <c>null</c> if an error occurs.
+    /// </returns>
     public async Task<byte[]> DownloadBackup(string serverType, string labId, string fileName)
     {
         var file = await _localBackupStorage.GetBackup(serverType, labId, fileName);

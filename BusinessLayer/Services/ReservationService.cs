@@ -2,25 +2,31 @@
 using BusinessLayer.Models;
 using DataLayer;
 using SimpleLogger;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace BusinessLayer.Services
 {
+    /// <summary>
+    /// This class is responsible for managing reservations.
+    /// </summary>
     public class ReservationService
     {
         private readonly ReservationTableDataGateway _reservationTableDataGateway;
-        private static ILogger logger = FileLogger.Instance;
+        private static ILogger _logger = FileLogger.Instance;
 
         public ReservationService()
         {
             _reservationTableDataGateway = new ReservationTableDataGateway();
         }
 
+        /// <summary>
+        /// Retrieves a list of all reservations in the system.
+        /// </summary>
+        /// <returns>
+        /// A list of <see cref="ReservationModel"/> objects representing the reservations,
+        /// returns an empty list if no reservations are found,
+        /// or <c>null</c> if error occurs.
+        /// </returns>
         public List<ReservationModel>? GetAllReservations()
         {
             try {
@@ -35,13 +41,21 @@ namespace BusinessLayer.Services
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                _logger.LogError(e.Message);
                 return null;
             }
         }
 
-
-        public List<ReservationModel> GetReservationsByUserId(int userId)
+        /// <summary>
+        /// Retrieves a list of reservations for a specific user by their unique identifier.
+        /// </summary>
+        /// <param name="userId">The unique identifier (ID) of the user.</param>
+        /// <returns>
+        /// A list of <see cref="ReservationModel"/> objects representing the reservations of the user,
+        /// returns an empty list if no reservations are found,
+        /// or <c>null</c> if error occurs.
+        /// </returns>
+        public List<ReservationModel>? GetReservationsByUserId(int userId)
         {
             try
             {
@@ -52,18 +66,27 @@ namespace BusinessLayer.Services
                     reservations.Add(ReservationMapper.Map(row));
                 }
 
-                logger.Log($"Reservations for user ID:{userId} have been retrieved.");
+                _logger.Log($"Reservations for user ID:{userId} have been retrieved.");
                 return reservations;
 
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                _logger.LogError(e.Message);
                 return null;
             }
         }
 
-        public List<ReservationModel> GetReservationsByServerId(int serverId)
+        /// <summary>
+        /// Retrieves a list of reservations for a specific server by their unique identifier.
+        /// </summary>
+        /// <param name="serverId">The unique identifier (ID) of the server.</param>
+        /// <returns>
+        /// A list of <see cref="ReservationModel"/> objects representing the reservations of the server,
+        /// returns an empty list if no reservations are found,
+        /// or <c>null</c> if error occurs.
+        /// </returns>
+        public List<ReservationModel>? GetReservationsByServerId(int serverId)
         {
             try
             {
@@ -73,63 +96,78 @@ namespace BusinessLayer.Services
                 {
                     reservations.Add(ReservationMapper.Map(row));
                 }
-                logger.Log($"Reservations for server ID:{serverId} have been retrieved.");
+                _logger.Log($"Reservations for server ID:{serverId} have been retrieved.");
                 return reservations;
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                _logger.LogError(e.Message);
                 return null;
             }
         }
 
+        /// <summary>
+        /// Makes a reservation for a specific server or resource.
+        /// </summary>
+        /// <param name="reservation">The <see cref="ReservationModel"/> object containing the reservation details.</param>
+        /// <returns>
+        /// <c>true</c> if the reservation was successfully created; otherwise, <c>false</c>.
+        /// </returns>
         public bool MakeReservation(ReservationModel reservation)
         {
-            try
+            var reservations = GetAllReservations();
+            if (reservations == null)
             {
-                foreach (var item in GetAllReservations())
-                {
-                    // Check if reservation already exists for the server at the time or is overlapping
-                    if (item.ServerId == reservation.ServerId && item.ReservationStart < reservation.ReservationEnd && item.ReservationEnd > reservation.ReservationStart)
-                    {
-                        logger.LogWarning($"Reservation for server ID:{reservation.ServerId} already exists at the time.");
-                        return false;
-                    }
-                }
+                _logger.LogError("Error retrieving reservations.");
+                return false;
             }
-            catch (Exception e)
+            if (reservations.Any(item => item.ServerId == reservation.ServerId && item.ReservationStart < reservation.ReservationEnd && item.ReservationEnd > reservation.ReservationStart))
             {
-                logger.LogError(e.Message);
+                _logger.LogWarning($"Reservation for server ID:{reservation.ServerId} already exists at the time.");
                 return false;
             }
             try
             {
                 _reservationTableDataGateway.InsertReservation(reservation.ServerId, reservation.UserId, reservation.ReservationStart, reservation.ReservationEnd, reservation.LabId);
-                logger.Log($"Reservation has been made. ServerID:{reservation.ServerId}, UserID:{reservation.UserId}, StartDate:{reservation.ReservationStart}, EndDate:{reservation.ReservationEnd}, LabID:{reservation.LabId}");
+                _logger.Log($"Reservation has been made. ServerID:{reservation.ServerId}, UserID:{reservation.UserId}, StartDate:{reservation.ReservationStart}, EndDate:{reservation.ReservationEnd}, LabID:{reservation.LabId}");
                 return true;
             }
             catch (Exception e)
             {
-                logger.LogError(e.Message);
+                _logger.LogError(e.Message);
                 return false;
             }
         }
 
+        /// <summary>
+        /// Deletes a reservation from the system by its unique identifier.
+        /// </summary>
+        /// <param name="id">The unique identifier (ID) of the reservation to delete.</param>
+        /// <returns>
+        /// <c>true</c> if the reservation was successfully deleted; otherwise, <c>false</c>.
+        /// </returns>
         public bool DeleteReservation(int id)
         {
             try
             {
                 _reservationTableDataGateway.RemoveReservation(id);
-                logger.Log($"Reservation has been deleted. ID:{id}");
+                _logger.Log($"Reservation has been deleted. ID:{id}");
                 return true;
             }
             catch (Exception)
             {
-                logger.LogError($"Error deleting reservation ID:{id}");
+                _logger.LogError($"Error deleting reservation ID:{id}");
                 return false;
             }
         }
 
+        /// <summary>
+        /// Saves the reservation details to the system by its unique identifier.
+        /// </summary>
+        /// <param name="reservationId">The unique identifier (ID) of the reservation to save.</param>
+        /// <returns>
+        /// A <see cref="StringBuilder"/> object containing a message indicating the result of the save operation.
+        /// </returns>
         public StringBuilder SaveReservation(int reservationId)
         {
             var reservation = _reservationTableDataGateway.GetReservationById(reservationId);
