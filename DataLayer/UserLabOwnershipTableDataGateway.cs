@@ -7,8 +7,16 @@ using System.Threading.Tasks;
 
 namespace DataLayer
 {
+    /// <summary>
+    /// This class is responsible for interacting with the UserLabOwnership table in the database.
+    /// </summary>
     public class UserLabOwnershipTableDataGateway
     {
+        /// <summary>
+        /// Retrieves all user lab ownership records from the UserLabOwnership table.
+        /// </summary>
+        /// <param name="userID"> ID of a user </param>
+        /// <returns></returns>
         public DataTable GetAllUserLabsByUserID(int userID)
         {
             string query = "SELECT * FROM UserLabOwnership WHERE UserID = @UserID";
@@ -29,6 +37,11 @@ namespace DataLayer
             return result;
         }
 
+        /// <summary>
+        /// Retrieves all user lab ownership records from the UserLabOwnership table by LabID.
+        /// </summary>
+        /// <param name="labID"> ID of a lab </param>
+        /// <returns></returns>
         public DataTable GetAllUserLabsByLabID(string labID)
         {
             string query = "SELECT * FROM UserLabOwnership WHERE LabID = @LabID";
@@ -49,6 +62,13 @@ namespace DataLayer
             return result;
         }
 
+
+        /// <summary>
+        /// Inserts a new user lab ownership record into the UserLabOwnership table.
+        /// </summary>
+        /// <param name="userID"> ID of a user </param>
+        /// <param name="labID"> ID of a lab </param>
+        /// <param name="serverID"> ID of a server </param>
         public void InsertUserLabOwnership(int userID, string labID, int serverID)
         {
             string query = "INSERT INTO UserLabOwnership (UserID, LabID, ServerID) VALUES (@UserID, @LabID, @ServerID)";
@@ -66,6 +86,12 @@ namespace DataLayer
             }
         }
 
+        /// <summary>
+        /// Deletes a user lab ownership record from the UserLabOwnership table.
+        /// </summary>
+        /// <param name="userID"> ID of a user </param>
+        /// <param name="labID"> ID of a lab </param>
+        /// <param name="serverID"> ID of a server </param>
         public void DeleteUserLabOwnership(int userID, string labID, int serverID)
         {
             string query = "DELETE FROM UserLabOwnership WHERE UserID = @UserID AND LabID = @LabID AND ServerID = @ServerID";
