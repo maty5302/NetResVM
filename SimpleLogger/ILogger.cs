@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace SimpleLogger
 {
+    /// <summary>
+    /// Interface for logging functionality.
+    /// </summary>
     public interface ILogger
     {
         void Log(string message);
