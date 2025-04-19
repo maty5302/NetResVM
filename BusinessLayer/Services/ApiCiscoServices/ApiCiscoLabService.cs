@@ -1,16 +1,19 @@
 ﻿using ApiCisco;
 using SimpleLogger;
 using BusinessLayer.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 namespace BusinessLayer.Services.ApiCiscoServices
 {
+    /// <summary>
+    /// Service responsible for managing Cisco CML labs, including operations like retrieving, starting, stopping,
+    /// importing, exporting, and deleting labs.
+    /// </summary>
+    /// <remarks>
+    /// Communicates with the Cisco CML API through <see cref="ApiCiscoLab"/> and uses <see cref="ApiCiscoAuthService"/> for authentication.
+    /// </remarks>
     public class ApiCiscoLabService
     {
         private readonly ApiCiscoAuthService _authService;
@@ -23,7 +26,13 @@ namespace BusinessLayer.Services.ApiCiscoServices
             _authService = new ApiCiscoAuthService();
             _labApi = new ApiCiscoLab();
         }
-
+        /// <summary>
+        /// Retrieves a list of all available labs on the specified Cisco CML server.
+        /// </summary>
+        /// <param name="serverId">The ID of the server from which to retrieve labs.</param>
+        /// <returns>
+        /// A tuple containing a list of <see cref="CiscoLabModel"/> and a message string.
+        /// </returns>
         public async Task<(List<CiscoLabModel>? labs, string Message)> GetLabs(int serverId)
         {
             var client = await _authService.AuthenticateAndCreateClient(serverId);
@@ -51,7 +60,16 @@ namespace BusinessLayer.Services.ApiCiscoServices
 
         }
 
-        public async Task<(CiscoLabModel? lab, string Message)> GetLabInfo(int serverId, string labId, UserHttpClient? httpClient = null)
+        /// <summary>
+        /// Retrieves detailed information about a specific lab from the Cisco CML server.
+        /// </summary>
+        /// <param name="serverId">The ID of the server hosting the lab.</param>
+        /// <param name="labId">The unique identifier of the lab.</param>
+        /// <param name="httpClient">Optional existing HTTP client to use for the request.</param>
+        /// <returns>
+        /// A tuple containing a <see cref="CiscoLabModel"/> and a message string.
+        /// </returns>
+        public async Task<(CiscoLabModel? lab, string Message)> GetLabInfo(int serverId, string labId, ApiCiscoHttpClient? httpClient = null)
         {
             try
             {
@@ -84,6 +102,12 @@ namespace BusinessLayer.Services.ApiCiscoServices
             }
         }
 
+        /// <summary>
+        /// Downloads the contents of a specified lab as a byte array.
+        /// </summary>
+        /// <param name="serverId">The ID of the server hosting the lab.</param>
+        /// <param name="labId">The unique identifier of the lab.</param>
+        /// <returns>A tuple containing the file contents and a message string.</returns>
         public async Task<(byte[]? fileContent, string message)> DownloadLab(int serverId, string labId)
         {
             try
@@ -111,6 +135,12 @@ namespace BusinessLayer.Services.ApiCiscoServices
             }
         }
 
+        /// <summary>
+        /// Starts the specified lab if no other lab is currently running.
+        /// </summary>
+        /// <param name="serverId">The ID of the server hosting the lab.</param>
+        /// <param name="labId">The unique identifier of the lab to start.</param>
+        /// <returns>A tuple indicating whether the operation was successful and a message string.</returns>
         public async Task<(bool value, string message)> StartLab(int serverId, string labId)
         {
             try
@@ -140,6 +170,12 @@ namespace BusinessLayer.Services.ApiCiscoServices
                 return (false, "Something went wrong.. Contact admin.");
             }
         }
+        /// <summary>
+        /// Stops the specified lab on the Cisco CML server.
+        /// </summary>
+        /// <param name="serverId">The ID of the server hosting the lab.</param>
+        /// <param name="labId">The unique identifier of the lab to stop.</param>
+        /// <returns>A tuple indicating success and a message string.</returns>
         public async Task<(bool value, string message)> StopLab(int serverId, string labId)
         {
             try
@@ -158,7 +194,11 @@ namespace BusinessLayer.Services.ApiCiscoServices
                 return (false, "Something went wrong.. Contact admin.");
             }
         }
-
+        /// <summary>
+        /// Stops all currently running labs on the given server.
+        /// </summary>
+        /// <param name="serverId">The ID of the server.</param>
+        /// <returns>A tuple indicating whether all labs were successfully stopped and a message string.</returns>
         public async Task<(bool value, string message)> StopAllLabs(int serverId)
         {
             try
@@ -186,7 +226,12 @@ namespace BusinessLayer.Services.ApiCiscoServices
                 return (false, "Something went wrong.. Contact admin.");
             }
         }
-
+        /// <summary>
+        /// Imports a lab from a raw byte array into the Cisco CML server.
+        /// </summary>
+        /// <param name="serverId">The ID of the server to import the lab into.</param>
+        /// <param name="fileContent">The lab file contents as a byte array.</param>
+        /// <returns><c>true</c> if the import was successful; otherwise, <c>false</c>.</returns>
         public async Task<bool> ImportLab(int serverId, byte[] fileContent)
         {
             try
@@ -205,7 +250,12 @@ namespace BusinessLayer.Services.ApiCiscoServices
                 return false;
             }
         }
-
+        /// <summary>
+        /// Imports a lab from an uploaded file into the Cisco CML server.
+        /// </summary>
+        /// <param name="serverId">The ID of the server to import the lab into.</param>
+        /// <param name="file">The lab file to import.</param>
+        /// <returns><c>true</c> if the import was successful; otherwise, <c>false</c>.</returns>
         public async Task<bool> ImportLab(int serverId, IFormFile file)
         {
             try
@@ -229,7 +279,12 @@ namespace BusinessLayer.Services.ApiCiscoServices
                 return false;
             }
         }
-
+        /// <summary>
+        /// Gets the current running state of the specified lab.
+        /// </summary>
+        /// <param name="serverId">The ID of the server.</param>
+        /// <param name="labId">The unique identifier of the lab.</param>
+        /// <returns>The state of the lab as a string, or <c>null</c> if the operation fails.</returns>
         public async Task<string?> GetState(int serverId, string labId)
         {
             try
@@ -250,7 +305,12 @@ namespace BusinessLayer.Services.ApiCiscoServices
                 return null;
             }
         }
-        
+        /// <summary>
+        /// Deletes the specified lab from the Cisco CML server.
+        /// </summary>
+        /// <param name="serverId">The ID of the server.</param>
+        /// <param name="labId">The unique identifier of the lab to delete.</param>
+        /// <returns>A tuple indicating whether the lab was successfully deleted and a message string.</returns>
         public async Task<(bool value, string message)> DeleteLab(int serverId, string labId)
         {
             try
