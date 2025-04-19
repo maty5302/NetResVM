@@ -1,5 +1,4 @@
-﻿using System.Net;
-namespace ApiCisco
+﻿namespace ApiCisco
 {
     /// <summary>
     /// Class used for making requests to server Cisco CML API about nodes of lab
