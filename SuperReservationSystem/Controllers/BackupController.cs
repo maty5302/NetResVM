@@ -11,6 +11,11 @@ public class BackupController : Controller
     // GET
     public async Task<IActionResult> Index()
     {
+        if (User.Identity != null && !User.Identity.IsAuthenticated)
+        {
+            TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+            return RedirectToAction("Login", "Home");
+        }
         var allBackups = await _backupService.GetBackups();
         
         ViewBag.Backups = allBackups;

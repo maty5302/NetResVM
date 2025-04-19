@@ -241,7 +241,7 @@ namespace SuperReservationSystem.Controllers
             if (result)
                 TempData["SuccessMessage"] = "Reservation created.";
             else
-                TempData["ErrorMessage"] = "Something went wrong. See log.";
+                TempData["ErrorMessage"] = "Reservation exists at this time or error occurred.";
             return RedirectToAction("Index","Reservation");
         }
 

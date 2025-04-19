@@ -1,10 +1,6 @@
-﻿using ApiCisco;
-using ApiCisco.Model;
-using BusinessLayer.Models;
-using BusinessLayer.Services;
+﻿using BusinessLayer.Services;
 using BusinessLayer.Services.ApiCiscoServices;
 using Microsoft.AspNetCore.Mvc;
-using System.Text;
 
 namespace SuperReservationSystem.Controllers
 {
@@ -15,6 +11,7 @@ namespace SuperReservationSystem.Controllers
         private ServerService serverService = new ServerService();
         private ApiCiscoAuthService authService = new ApiCiscoAuthService();
         private ApiCiscoLabService labService = new ApiCiscoLabService();
+        private ApiCiscoNodeService nodeService = new ApiCiscoNodeService();
 
         public IActionResult Index(int id)
         {
@@ -167,16 +164,10 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = client.message;
                 return RedirectToAction("Index", "Home");
             }
-            var nodes = Node.GetNodes(client.conn, labId);
-            if (nodes.Result != null)
+            var nodes = await nodeService.GetNodes(serverId, labId);
+            if (nodes != null)
             {
-                var nodesInfo = new List<NodeModel>();
-                foreach (var item in nodes.Result)
-                {
-                    var node = Node.GetNodeInfo(client.conn, labId, item);
-                    nodesInfo.Add(node.Result);
-                    ViewBag.Nodes = nodesInfo;
-                }
+                ViewBag.Nodes = nodes;
                 return View();
             }
             TempData["ErrorMessage"] = "An error occurred.";

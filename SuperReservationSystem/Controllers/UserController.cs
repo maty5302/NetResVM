@@ -1,5 +1,4 @@
 ﻿using ApiCisco;
-using ApiCisco.Model;
 using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
