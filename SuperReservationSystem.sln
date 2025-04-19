@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SuperReservationSystem", "S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiCisco", "ApiCisco\ApiCisco.csproj", "{30402EE2-EADA-45FF-BA4E-9C1AE9E611E6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Testovaci_Konzole", "Testovaci_Konzole\Testovaci_Konzole.csproj", "{A90FB548-3292-4D9D-BF31-8B8932B7F556}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataLayer", "DataLayer\DataLayer.csproj", "{2AB516A1-6391-4F6F-95F4-7C0A7206C01D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{851EDB4B-AAED-4528-A3F9-EB52C4F57BBB} = {851EDB4B-AAED-4528-A3F9-EB52C4F57BBB}
@@ -43,10 +41,6 @@ Global
 		{30402EE2-EADA-45FF-BA4E-9C1AE9E611E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{30402EE2-EADA-45FF-BA4E-9C1AE9E611E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{30402EE2-EADA-45FF-BA4E-9C1AE9E611E6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A90FB548-3292-4D9D-BF31-8B8932B7F556}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A90FB548-3292-4D9D-BF31-8B8932B7F556}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A90FB548-3292-4D9D-BF31-8B8932B7F556}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A90FB548-3292-4D9D-BF31-8B8932B7F556}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2AB516A1-6391-4F6F-95F4-7C0A7206C01D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2AB516A1-6391-4F6F-95F4-7C0A7206C01D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2AB516A1-6391-4F6F-95F4-7C0A7206C01D}.Release|Any CPU.ActiveCfg = Release|Any CPU
