@@ -1,16 +1,13 @@
 ﻿using ApiEVE;
 using BusinessLayer.Models;
 using SimpleLogger;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace BusinessLayer.Services.ApiEVEServices
 {
+    /// <summary>
+    /// Service for managing EVE-NG lab nodes (start, stop, retrieve).
+    /// </summary>
     public class ApiEVENodeService
     {
         private readonly ApiEVEAuthService apiEVEAuthService;
@@ -23,6 +20,12 @@ namespace BusinessLayer.Services.ApiEVEServices
             this.apiEVENode = new ApiEVENode();
         }
 
+        /// <summary>
+        /// Retrieves all nodes from the specified EVE-NG lab.
+        /// </summary>
+        /// <param name="serverId">Server identifier.</param>
+        /// <param name="labName">Name of the lab.</param>
+        /// <returns>List of <see cref="EVENodeModel"/> or null if failed.</returns>
         public async Task<List<EVENodeModel>?> GetAllNodes(int serverId, string labName)
         {
             var client = await apiEVEAuthService.AuthenticateAndCreateClient(serverId);
@@ -49,6 +52,13 @@ namespace BusinessLayer.Services.ApiEVEServices
             return allNodes;
         }
 
+        /// <summary>
+        /// Starts a specific node in the specified EVE-NG lab.
+        /// </summary>
+        /// <param name="serverId">Server identifier.</param>
+        /// <param name="labName">Name of the lab.</param>
+        /// <param name="nodeId">Node identifier.</param>
+        /// <returns>True if the node was started successfully; otherwise, false.</returns>
         public async Task<bool> StartNode(int serverId, string labName, int nodeId)
         {
             var client = await apiEVEAuthService.AuthenticateAndCreateClient(serverId);
@@ -66,6 +76,13 @@ namespace BusinessLayer.Services.ApiEVEServices
             return true;
         }
 
+        /// <summary>
+        /// Stops a specific node in the specified EVE-NG lab.
+        /// </summary>
+        /// <param name="serverId">Server identifier.</param>
+        /// <param name="labName">Name of the lab.</param>
+        /// <param name="nodeId">Node identifier.</param>
+        /// <returns>True if the node was stopped successfully; otherwise, false.</returns>
         public async Task<bool> StopNode(int serverId, string labName, int nodeId)
         {
             var client = await apiEVEAuthService.AuthenticateAndCreateClient(serverId);
@@ -83,6 +100,12 @@ namespace BusinessLayer.Services.ApiEVEServices
             return true;
         }
 
+        /// <summary>
+        /// Starts all nodes in the specified EVE-NG lab.
+        /// </summary>
+        /// <param name="serverId">Server identifier.</param>
+        /// <param name="labName">Name of the lab.</param>
+        /// <returns>True if all nodes were started successfully; otherwise, false.</returns>
         public async Task<bool> StartAllNodes(int serverId, string labName)
         {
             var nodes = await GetAllNodes(serverId, labName);
@@ -98,6 +121,12 @@ namespace BusinessLayer.Services.ApiEVEServices
             return true;
         }
 
+        /// <summary>
+        /// Stops all nodes in the specified EVE-NG lab.
+        /// </summary>
+        /// <param name="serverId">Server identifier.</param>
+        /// <param name="labName">Name of the lab.</param>
+        /// <returns>True if all nodes were stopped successfully; otherwise, false.</returns>
         public async Task<bool> StopAllNodes (int serverId, string labName)
         {
             var nodes = await GetAllNodes(serverId, labName);

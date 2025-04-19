@@ -1,19 +1,15 @@
 ﻿using ApiEVE;
 using BusinessLayer.Models;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO.Compression;
-using System.Linq;
-using System.Numerics;
-using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace BusinessLayer.Services.ApiEVEServices
 {
+    /// <summary>
+    /// This class is responsible for managing labs in the EVE Online API.
+    /// </summary>
     public class ApiEVELabService
     {
         private readonly ApiEVEAuthService apiEVEAuthService;
@@ -25,6 +21,15 @@ namespace BusinessLayer.Services.ApiEVEServices
             this.apiEVELab = new ApiEVELab();
         }
 
+
+        /// <summary>
+        /// Asynchronously retrieves a list of labs associated with a specified server.
+        /// </summary>
+        /// <param name="serverId">The unique identifier (ID) of the server to retrieve the labs from.</param>
+        /// <returns>
+        /// A list of <see cref="EVELabModel"/> objects representing the labs on the server.
+        /// Returns <c>null</c> if no labs are found or an error occurs.
+        /// </returns>
         public async Task<List<EVELabModel>?> GetLabs(int serverId)
         {
             var client = await apiEVEAuthService.AuthenticateAndCreateClient(serverId);
@@ -188,13 +193,15 @@ namespace BusinessLayer.Services.ApiEVEServices
             var nodes = await service.GetAllNodes(serverId, labName);
             if (nodes == null)
             {
-                return -1;
+                // No nodes found or error occurred
+                return -1; 
             }
             foreach (var node in nodes)
             {
-                if (node.Status == 2)
+                if (node.Status == 2) // Node is running
                     return 2;
             }
+            // All nodes are stopped
             return 0;
         }
     }
