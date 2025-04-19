@@ -9,7 +9,7 @@
 <div class="row ">
     @if (ViewBag.Nodes != null)
     {
-        @for (int i = 0; i < ((List<ApiCisco.Model.NodeModel>)ViewBag.Nodes).Count; i++)
+        @for (int i = 0; i < ((List<BusinessLayer.Models.CiscoNodeModel>)ViewBag.Nodes).Count; i++)
         {
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
                 <div class="card flex-fill d-flex flex-column">
