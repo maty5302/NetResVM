@@ -9,8 +9,16 @@ using System.Threading.Tasks;
 
 namespace ApiEVE
 {
+    /// <summary>
+    /// Provides methods to interact with the EVE API for lab management, including retrieving, exporting, importing, and deleting labs.
+    /// </summary>
     public class ApiEVELab
     {
+        /// <summary>
+        /// Retrieves a list of all labs from the EVE API.
+        /// </summary>
+        /// <param name="client">An authenticated <see cref="ApiEVEHttpClient"/> instance.</param>
+        /// <returns>A string containing the list of labs in JSON format, or null if the request fails.</returns>
         public async Task<string?> GetLabs(ApiEVEHttpClient client)
         {
             var url = $"{client.Url}folders/";
@@ -22,6 +30,12 @@ namespace ApiEVE
             return null;
         }
 
+        /// <summary>
+        /// Retrieves detailed information about a specific lab.
+        /// </summary>
+        /// <param name="client">An authenticated <see cref="ApiEVEHttpClient"/> instance.</param>
+        /// <param name="labName">The name of the lab to retrieve information for.</param>
+        /// <returns>A string containing the lab information in JSON format, or null if the request fails.</returns>
         public async Task<string?> GetLabInfo(ApiEVEHttpClient client, string labName)
         {
             var url = $"{client.Url}labs/{labName.Trim()}";
@@ -34,6 +48,12 @@ namespace ApiEVE
                 return null;
         }
 
+        /// <summary>
+        /// Exports a lab's data to a downloadable link.
+        /// </summary>
+        /// <param name="client">An authenticated <see cref="ApiEVEHttpClient"/> instance.</param>
+        /// <param name="jsonData">The JSON data to specify which lab to export.</param>
+        /// <returns>A string containing the lab export download data, or null if the request fails.</returns>
         public async Task<string?> ExportLab(ApiEVEHttpClient client, string jsonData)
         {
             var url = $"{client.Url}export";
@@ -51,12 +71,18 @@ namespace ApiEVE
                 }
                 else
                     return null;
-
             }
             else
                 return null;
         }
 
+        /// <summary>
+        /// Imports a lab from a specified file.
+        /// </summary>
+        /// <param name="user">An authenticated <see cref="ApiEVEHttpClient"/> instance.</param>
+        /// <param name="file">The file content as a byte array.</param>
+        /// <param name="fileName">The name of the file being uploaded.</param>
+        /// <returns>A boolean indicating whether the import was successful.</returns>
         public async Task<bool> ImportLab(ApiEVEHttpClient user, byte[] file, string fileName)
         {
             var url = user.Url + "import";
@@ -75,7 +101,13 @@ namespace ApiEVE
                 return response.IsSuccessStatusCode;
             }
         }
-        
+
+        /// <summary>
+        /// Deletes a specific lab.
+        /// </summary>
+        /// <param name="user">An authenticated <see cref="ApiEVEHttpClient"/> instance.</param>
+        /// <param name="labName">The name of the lab to delete.</param>
+        /// <returns>A boolean indicating whether the lab deletion was successful.</returns>
         public async Task<bool> DeleteLab(ApiEVEHttpClient user, string labName)
         {
             var url = $"{user.Url}labs/{labName.Trim()}";

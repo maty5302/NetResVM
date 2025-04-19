@@ -1,16 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace ApiEVE
 {
-    //komunitni verze čili jen http
+    /// <summary>
+    // /// Provides authentication services for the EVE API, including login and logout operations.
+    // /// </summary>
     public class ApiEVEAuthentication
     {
+        /// <summary>
+        /// Authenticates the user by sending login credentials to the API and stores the session cookie.
+        /// </summary>
+        /// <param name="client">The client instance containing the URL and HTTP client.</param>
+        /// <param name="username">The username for authentication.</param>
+        /// <param name="password">The password for authentication.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation, with an <see cref="HttpResponseMessage"/> result.</returns>
+        /// <exception cref="HttpRequestException">Thrown if the request fails or the response status code indicates failure.</exception>
         public async Task<HttpResponseMessage> Authenticate(ApiEVEHttpClient client,string username, string password)
         {
             var loginUrl = $"{client.Url}auth/login";
@@ -31,6 +37,12 @@ namespace ApiEVE
             return response;
         }
 
+        /// <summary>
+        /// Logs the user out by sending a logout request to the API.
+        /// </summary>
+        /// <param name="client">The client instance containing the URL and HTTP client.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation, with an <see cref="HttpResponseMessage"/> result.</returns>
+        /// <exception cref="HttpRequestException">Thrown if the request fails or the response status code indicates failure.</exception>
         public async Task<HttpResponseMessage> Logout(ApiEVEHttpClient client)
         {
             var logoutUrl = $"{client.Url}auth/logout";
