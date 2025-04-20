@@ -31,12 +31,20 @@ namespace BusinessLayer.Services.ApiEVEServices
         /// </returns>
         public async Task<bool> ValidateCredentials(string ipAddress, string username, string password)
         {
-            var response = await authentication.Authenticate(new ApiEVEHttpClient(ipAddress), username, password);
-            if(response.IsSuccessStatusCode)
+            try
             {
-                return true;
+                var response = await authentication.Authenticate(new ApiEVEHttpClient(ipAddress), username, password);
+                if (response.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+                return false;
             }
-            return false;
+            catch (Exception e)
+            {
+                logger.LogError($"ApiEVEAuthService - ValidateCredentials - {e.Message}");
+                return false;
+            }
         }
 
         /// <summary>

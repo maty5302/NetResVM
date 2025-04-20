@@ -68,7 +68,7 @@ namespace BusinessLayer.Services.ApiCiscoServices
             }
             catch (Exception e)
             {
-                logger.LogError("ApiCiscoAuthService - Unknown error");
+                logger.LogError($"ApiCiscoAuthService - Unknown error - {e.Message}");
                 return (false, "Unknown error..");
             }
         }
@@ -105,19 +105,19 @@ namespace BusinessLayer.Services.ApiCiscoServices
                 logger.LogWarning($"ApiCiscoAuthService - Invalid credentials. Response: {response.StatusCode.ToString()}");
                 return (null, $"Invalid credentials. Response: {response.StatusCode.ToString()}");
             }
-            catch (HttpRequestException e)
+            catch (HttpRequestException)
             {
                 logger.LogError("ApiCiscoAuthService - Request Timeout");
                 return (null, "Request Timeout");
             }
-            catch (TaskCanceledException e)
+            catch (TaskCanceledException)
             {
                 logger.LogError("ApiCiscoAuthService - Service Unavailable");
                 return (null, "Service Unavailable");
             }
             catch (Exception e)
             {
-                logger.LogError("ApiCiscoAuthService - Unknown error");
+                logger.LogError($"ApiCiscoAuthService - Unknown error - {e.Message}");
                 return (null, "Unknown error");
             }
         }

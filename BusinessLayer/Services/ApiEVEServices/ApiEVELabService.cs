@@ -1,6 +1,7 @@
 ﻿using ApiEVE;
 using BusinessLayer.Models;
 using Microsoft.AspNetCore.Http;
+using SimpleLogger;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
@@ -14,6 +15,7 @@ namespace BusinessLayer.Services.ApiEVEServices
     {
         private readonly ApiEVEAuthService apiEVEAuthService;
         private readonly ApiEVELab apiEVELab;
+        private static ILogger _logger = FileLogger.Instance; // Logger instance for logging errors and information
 
         public ApiEVELabService()
         {
@@ -77,6 +79,15 @@ namespace BusinessLayer.Services.ApiEVEServices
 
         }
 
+        /// <summary>
+        /// Asynchronously retrieves detailed information about a specific lab.
+        /// </summary>
+        /// <param name="client">An instance of <see cref="ApiEVEHttpClient"/> used to communicate with the server.</param>
+        /// <param name="serverId">The unique identifier of the EVE-NG server.</param>
+        /// <param name="labName">The name of the lab to retrieve information for.</param>
+        /// <param name="path">The file path to the lab on the server.</param>
+        /// <param name="date">An optional timestamp representing the last modified date to compare or filter by.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="EVELabModel"/> with the lab details, or null if not found.</returns>
         private async Task<EVELabModel?> GetLabInfo(ApiEVEHttpClient client, int serverId, string labName, string path, DateTime? date)
         {
             if (client == null)
@@ -103,6 +114,12 @@ namespace BusinessLayer.Services.ApiEVEServices
             return null;
         }
 
+        /// <summary>
+        /// Retrieves detailed information about a specific lab by its ID.
+        /// </summary>
+        /// <param name="serverId">The unique identifier of the EVE-NG server.</param>
+        /// <param name="labId"> The unique identifier of the EVE-NG lab </param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="EVELabModel"/> with the lab details, or null if the lab is not found.</returns>
         public async Task<EVELabModel?> GetLabInfoById(int serverId, string labId)
         {
             var allLabs = await GetLabs(serverId);
@@ -116,6 +133,12 @@ namespace BusinessLayer.Services.ApiEVEServices
             return null;
         }
 
+        /// <summary>
+        /// Downloads a lab from the EVE-NG server.
+        /// </summary>
+        /// <param name="lab"> Model of the lab that has all information about it </param>
+        /// <param name="serverId">The unique identifier of the EVE-NG server.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a byte array of the lab content if successful, or null if the download fails.</returns>
         public async Task<byte[]?> DownloadLab(EVELabModel lab, int serverId)
         {
             var client = await apiEVEAuthService.AuthenticateAndCreateClient(serverId);
@@ -152,6 +175,12 @@ namespace BusinessLayer.Services.ApiEVEServices
             return null;
         }
 
+        /// <summary>
+        /// Imports a lab into the EVE-NG server.
+        /// </summary>
+        /// <param name="serverId">The unique identifier of the EVE-NG server.</param>
+        /// <param name="file"> File (ZIP) that needs to be imported </param>
+        /// <returns>A task that represents the asynchronous operation. The task result is <c>true</c> if the lab was successfully imported; otherwise, <c>false</c>.</returns>
         public async Task<bool> ImportLab(int serverId, IFormFile file)
         {
             var client = await apiEVEAuthService.AuthenticateAndCreateClient(serverId);
@@ -166,6 +195,13 @@ namespace BusinessLayer.Services.ApiEVEServices
             }
         }
 
+        /// <summary>
+        /// Imports a lab into the EVE-NG server.
+        /// </summary>
+        /// <param name="serverId">The unique identifier of the EVE-NG server.</param>
+        /// <param name="fileContent"> Content of the file </param>
+        /// <param name="filename"> Name of the file </param>
+        /// <returns>A task that represents the asynchronous operation. The task result is <c>true</c> if the lab was successfully imported; otherwise, <c>false</c>.</returns>
         public async Task<bool> ImportLab(int serverId, byte[] fileContent, string filename)
         {
             var client = await apiEVEAuthService.AuthenticateAndCreateClient(serverId);
@@ -173,10 +209,23 @@ namespace BusinessLayer.Services.ApiEVEServices
             {
                 return false;
             }
-            
-            return await apiEVELab.ImportLab(client.client, fileContent, filename);
+
+            try {
+                return await apiEVELab.ImportLab(client.client, fileContent, filename);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"ApiEVELabService - ImportLab - {e.Message}");
+                return false;
+            }
         }
-        
+
+        /// <summary>
+        /// Deletes a lab from the EVE-NG server.
+        /// </summary>
+        /// <param name="serverId">The unique identifier of the EVE-NG server.</param>
+        /// <param name="fileName"> Name of the file on server that needs to be deleted</param>
+        /// <returns>A task that represents the asynchronous operation. The task result is <c>true</c> if the lab was successfully deleted; otherwise, <c>false</c>.</returns>
         public async Task<bool> DeleteLab(int serverId, string fileName)
         {
             var client = await apiEVEAuthService.AuthenticateAndCreateClient(serverId);
@@ -184,9 +233,22 @@ namespace BusinessLayer.Services.ApiEVEServices
             {
                 return false;
             }
-            return await apiEVELab.DeleteLab(client.client, fileName);
+            try {
+                return await apiEVELab.DeleteLab(client.client, fileName);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"ApiEVELabService - DeleteLab - {e.Message}");
+                return false;
+            }
         }
 
+        /// <summary>
+        /// Checks the state of a lab by its name.
+        /// </summary>
+        /// <param name="serverId">The unique identifier of the EVE-NG server.</param>
+        /// <param name="labName"> Name of the lab that we want state of </param>
+        /// <returns>A task that represents the asynchronous operation. The task result is an integer representing the state of the specified lab.</returns>
         public async Task<int> StateOfLab(int serverId, string labName)
         {
             ApiEVENodeService service = new ApiEVENodeService();
