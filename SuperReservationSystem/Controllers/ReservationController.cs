@@ -1,5 +1,4 @@
-﻿using ApiCisco;
-using BusinessLayer.Interface;
+﻿using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using BusinessLayer.Services.ApiCiscoServices;
@@ -7,11 +6,13 @@ using BusinessLayer.Services.ApiEVEServices;
 using Microsoft.AspNetCore.Mvc;
 using SimpleLogger;
 using SuperReservationSystem.Models;
-using System.Linq;
 using System.Text;
 
 namespace SuperReservationSystem.Controllers
 {
+    /// <summary>
+    /// Controller for managing reservations.
+    /// </summary>
     public class ReservationController : Controller
     {
         ServerService serverService = new ServerService();
@@ -21,11 +22,16 @@ namespace SuperReservationSystem.Controllers
         ApiEVELabService labServiceEve = new ApiEVELabService();
         SimpleLogger.ILogger logger = FileLogger.Instance;
 
+        /// <summary>
+        /// Displays the list of reservations.
+        /// </summary>
+        /// <returns> An <see cref="IActionResult"/> that renders main reservations page </returns>
         public IActionResult Index()
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
 
+            
             var reservations = reservationService.GetAllReservations();          
             List<ReservationInformationModel> plannedReservations = new List<ReservationInformationModel>();
             List<ReservationInformationModel> allReservations = new List<ReservationInformationModel>();
@@ -34,7 +40,7 @@ namespace SuperReservationSystem.Controllers
                 ViewBag.Reservations = plannedReservations;
                 return View();
             }
-
+            // goes though all reservations and adds them to the list
             foreach (var reservation in reservations)
             {
                 var server = serverService.GetServerById(reservation.ServerId);
@@ -74,7 +80,13 @@ namespace SuperReservationSystem.Controllers
             return View();
         }
 
-
+        /// <summary>
+        /// Displays the reservation creation page.
+        /// </summary>
+        /// <param name="model"> Model of reservation where information about it are stored </param>
+        /// <param name="selectedServer"> indicate if server is selected and ID if it do </param>
+        /// <param name="labId"> ID of a lab </param>
+        /// <returns> An <see cref="Task{IActionResult}"/> that renders main create reservation page </returns>
         public async Task<IActionResult> Create(ReservationModel model, int? selectedServer, string? labId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -82,22 +94,26 @@ namespace SuperReservationSystem.Controllers
             var servers = serverService.GetAllServers();
             ViewBag.Servers = servers;
 
+            // if server is selected, get the labs for that server
             if (selectedServer.HasValue)
             {
                 model.ServerId = selectedServer.Value;
-                var serverType = serverService.GetServerType(selectedServer.Value);
+                var serverType = serverService.GetServerType(selectedServer.Value);               
                 if (serverType == "CML")
                 {
+                    // get the labs for that server
                     var res = await labServiceCisco.GetLabs(selectedServer.Value);
 
                     CiscoLabModel? labSelected = null;
                     if (labId != null)
                     {
+                        // get the lab info
                         labSelected = (await labServiceCisco.GetLabInfo(selectedServer.Value, labId)).lab;
                         if (labId != null && labSelected != null)
                             model.LabId = labId;
                     }
 
+                    //add labs to the list and view them on page if there are any
                     if (res.labs != null && res.labs.Count > 0)
                     {
                         ViewBag.Labs3 = new List<ILabModel>(res.labs);
@@ -109,7 +125,9 @@ namespace SuperReservationSystem.Controllers
                 }
                 else if (serverType == "EVE")
                 {
+                    // get the labs for that server
                     var res = await labServiceEve.GetLabs(selectedServer.Value);
+                    //add labs to the list and view them on page if there are any
                     if (res != null && res.Count > 0)
                     {
                         ViewBag.Labs3 = new List<ILabModel>(res);
@@ -124,6 +142,10 @@ namespace SuperReservationSystem.Controllers
             return View("Create", model);
         }
 
+        /// <summary>
+        /// Displays the reservation page for a specific user.
+        /// </summary>
+        /// <returns>  An <see cref="IActionResult"/> that renders page for user reservations </returns>
         public IActionResult UserReservation()
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -132,6 +154,12 @@ namespace SuperReservationSystem.Controllers
             var reservations = reservationService.GetReservationsByUserId(UserId);
             List<ReservationInformationModel> plannedReservations = new List<ReservationInformationModel>();
             List<ReservationInformationModel> expiredReservations = new List<ReservationInformationModel>();
+            if (reservations == null)
+            {
+                ViewBag.Reservations = plannedReservations;
+                ViewBag.ExpiredReservations = expiredReservations;
+                return View();
+            }
             foreach (var reservation in reservations)
             {
                 var server = serverService.GetServerById(reservation.ServerId);
@@ -171,6 +199,11 @@ namespace SuperReservationSystem.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Deletes a reservation by its ID.
+        /// </summary>
+        /// <param name="reservationId"> Id of the reservation </param>
+        /// <returns>  An <see cref="IActionResult"/> that redirects to user reservation and informs if reservation was deleted successfully </returns>
         public IActionResult DeleteReservation(int reservationId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -183,7 +216,12 @@ namespace SuperReservationSystem.Controllers
             return RedirectToAction("UserReservation", "Reservation");
         }
 
-
+        /// <summary>
+        /// Creates a reservation based on the provided model and selected server.
+        /// </summary>
+        /// <param name="reserve"> Model contains all information about reservation </param>
+        /// <param name="selectedServer"> indicate if server is selected and ID if it do </param>
+        /// <returns> An <see cref="IActionResult"/> that redirects to create or home page of reservations depends on if reservation was successful </returns>
         [HttpPost]
         public IActionResult MakeReservation(ReservationModel reserve, int? selectedServer)
         {
@@ -245,6 +283,11 @@ namespace SuperReservationSystem.Controllers
             return RedirectToAction("Index","Reservation");
         }
 
+        /// <summary>
+        /// Saves the reservation as an .ics file for the specified reservation ID.
+        /// </summary>
+        /// <param name="reservationId"> Id of the reservation </param>
+        /// <returns>  An <see cref="IActionResult"/> that shows dialog to save ics file </returns>
         public IActionResult SaveEvent(int reservationId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)

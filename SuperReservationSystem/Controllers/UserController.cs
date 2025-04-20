@@ -1,5 +1,4 @@
-﻿using ApiCisco;
-using BusinessLayer.Interface;
+﻿using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using BusinessLayer.Services.ApiCiscoServices;
@@ -9,6 +8,9 @@ using SuperReservationSystem.Models;
 
 namespace SuperReservationSystem.Controllers
 {
+    /// <summary>
+    /// Controller for managing user-related actions.
+    /// </summary>
     public class UserController : Controller
     {
         private readonly UserLabOwnershipService userLabOwnershipService = new UserLabOwnershipService();
@@ -17,6 +19,10 @@ namespace SuperReservationSystem.Controllers
         private readonly UserService userService = new UserService();
         private readonly ServerService serverService = new ServerService();
 
+        /// <summary>
+        /// Displays the settings page for the user.
+        /// </summary>
+        /// <returns> An <see cref="IActionResult"/> that renders the user settings view. </returns>
         public IActionResult Settings()
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -27,17 +33,30 @@ namespace SuperReservationSystem.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Displays the user lab ownership page.
+        /// </summary>
+        /// <returns>  A <see cref="Task{IActionResult}"/> that renders the view showing labs owned or assigned to the current user.  </returns>
         public async Task<IActionResult> UserLab()
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
 
+            // Get the user ID from the UserService
             var userId = userService.GetUserId(User.Identity?.Name ?? string.Empty);
+
+            if (userId == 0)
+            {
+                TempData["ErrorMessage"] = "User not found.";
+                return RedirectToAction("Index", "Home");
+            }
+            // Get all labs owned by the user
             var allUserLabs = userLabOwnershipService.GetAllUserLabsByUserID(userId);
 
             if (allUserLabs != null)
             {
                 var labsInfo = new List<(int, ILabModel)>(); // Tuple of server id and lab model
+                // Loop through each owned lab and get its information
                 foreach (var owned in allUserLabs)
                 {
                     var server = serverService.ServerExists(owned.ServerId);
@@ -61,7 +80,12 @@ namespace SuperReservationSystem.Controllers
             return View();
         }
 
-
+        /// <summary>
+        /// Handles the ownership of a lab by a user.
+        /// </summary>
+        /// <param name="serverID"> ID of server where lab is </param>
+        /// <param name="labID"> Lab ID user wants to own</param>
+        /// <returns> An <see cref="IActionResult"/> that redirects to different page </returns>
         public IActionResult OwnLab(int serverID, string labID)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -92,6 +116,12 @@ namespace SuperReservationSystem.Controllers
             return RedirectToAction("LabList", $"{serverType}", new { id = serverID });
         }
 
+        /// <summary>
+        /// Removes ownership of a lab from a user.
+        /// </summary>
+        /// <param name="serverId"> Server ID where a lab is</param>
+        /// <param name="labId"> Lab ID which user doesn't want to own anymore</param>
+        /// <returns> An <see cref="IActionResult"/> that redirects to different page </returns>
         public IActionResult RemoveOwnership(int serverId, string labId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -116,6 +146,11 @@ namespace SuperReservationSystem.Controllers
             return RedirectToAction("UserLab", "User");
         }
 
+        /// <summary>
+        /// Changes the password of the user.
+        /// </summary>
+        /// <param name="PassModel"> Model where old and new password is forwarded to </param>
+        /// <returns>  An <see cref="IActionResult"/> that renders user settings and message if it was successful or not </returns>
         public IActionResult ChangePassword(ChangePasswordModel PassModel)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -142,6 +177,11 @@ namespace SuperReservationSystem.Controllers
             return RedirectToAction("Settings", "User");
         }
 
+        /// <summary>
+        /// Adds a new user to the system.
+        /// </summary>
+        /// <param name="model"> Model where new user is stored </param>
+        /// <returns>  An <see cref="IActionResult"/> that renders user settings and message if it was successful or not </returns>
         public IActionResult AddUser(UserModel model)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -163,6 +203,10 @@ namespace SuperReservationSystem.Controllers
             return RedirectToAction("Settings", "User");
         }
 
+        /// <summary>
+        /// Displays the user management page.
+        /// </summary>
+        /// <returns>  An <see cref="IActionResult"/> that renders ManageUser page </returns>
         public IActionResult ManageUser()
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -183,6 +227,11 @@ namespace SuperReservationSystem.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Deactivates a user in the system.
+        /// </summary>
+        /// <param name="UserId"> ID of user to deactivate </param>
+        /// <returns>  An <see cref="IActionResult"/> that renders ManageUser and if it was successful or not </returns>
         public IActionResult DeactivateUser(int UserId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -204,6 +253,11 @@ namespace SuperReservationSystem.Controllers
             return RedirectToAction("ManageUser", "User");
         }
 
+        /// <summary>
+        /// Activates a user in the system.
+        /// </summary>
+        /// <param name="UserId"> ID of user to activate </param>
+        ///  <returns>  An <see cref="IActionResult"/> that renders ManageUser and if it was successful or not </returns>
         public IActionResult ActivateUser(int UserId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -225,6 +279,11 @@ namespace SuperReservationSystem.Controllers
             return RedirectToAction("ManageUser", "User");
         }
 
+        /// <summary>
+        /// Removes a user from the system.
+        /// </summary>
+        /// <param name="UserId"> ID of user to activate </param>
+        /// <returns>  An <see cref="IActionResult"/> that renders ManageUser and if it was successful or not </returns>
         public IActionResult RemoveUser(int UserId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
