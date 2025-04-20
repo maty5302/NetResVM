@@ -2,7 +2,10 @@
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @{
-	ViewData["Title"] = "My reservations";    
+	ViewData["Title"] = "My reservations";
+
+	var reservations = ((List<ReservationInformationModel>)ViewBag.PlannedReservations);
+	var expired = ((List<ReservationInformationModel>)ViewBag.ExpiredReservations);
 }
 <h1>@ViewData["Title"]</h1>
 <hr />
@@ -19,18 +22,24 @@
 			</tr>
 		</thead>
 		<tbody>
-			@if (ViewBag.PlannedReservations != null)
+			@if (reservations != null && reservations.Count>0)
 			{
-				@for (int i = 0; i < ((List<ReservationInformationModel>)ViewBag.PlannedReservations).Count; i++)
+				@for (int i = 0; i < reservations.Count; i++)
 				{
 					<tr>
-						<td>@ViewBag.PlannedReservations[i].ServerName - @ViewBag.PlannedReservations[i].ServerType </td>
-						<td>@ViewBag.PlannedReservations[i].LabId</td>
-						<td>@ViewBag.PlannedReservations[i].ReservationStart</td>
-						<td>@ViewBag.PlannedReservations[i].ReservationEnd</td>
-						<td><form method="post"><button class="btn btn-danger" formaction="@Url.Action("DeleteReservation","Reservation" , new {reservationId=@ViewBag.PlannedReservations[i].Id})"> <i class="bi bi-trash"></i> </button></form></td>
+						<td>@reservations[i].ServerName - @reservations[i].ServerType </td>
+						<td>@reservations[i].LabId</td>
+						<td>@reservations[i].ReservationStart</td>
+						<td>@reservations[i].ReservationEnd</td>
+						<td><form method="post"><button class="btn btn-danger" onclick="return confirm('Are you sure you want to delete a reservation? This operation is pernament!')"  formaction="@Url.Action("DeleteReservation","Reservation" , new {reservationId=@ViewBag.PlannedReservations[i].Id})"> <i class="bi bi-trash"></i> </button></form></td>
 					</tr>
 				}
+			}
+			else
+			{
+				<tr>
+					<td colspan="5" rowspan="5" class="text-center text-muted">No reservations available</td>
+				</tr>
 			}
 		</tbody>
 	</table>
@@ -47,18 +56,24 @@
 			</tr>
 		</thead>
 		<tbody>
-			@if (ViewBag.ExpiredReservations != null)
+			@if (expired != null && expired.Count>0)
 			{
-				@for (int i = 0; i < ((List<ReservationInformationModel>)ViewBag.ExpiredReservations).Count; i++)
+				@for (int i = 0; i < expired.Count; i++)
 				{
 					<tr>
-						<td>@ViewBag.ExpiredReservations[i].ServerName - @ViewBag.ExpiredReservations[i].ServerType </td>
-						<td>@ViewBag.ExpiredReservations[i].LabId</td>
-						<td>@ViewBag.ExpiredReservations[i].ReservationStart</td>
-						<td>@ViewBag.ExpiredReservations[i].ReservationEnd</td>
+						<td>@expired[i].ServerName - @expired[i].ServerType </td>
+						<td>@expired[i].LabId</td>
+						<td>@expired[i].ReservationStart</td>
+						<td>@expired[i].ReservationEnd</td>
 						<td><form method="post"><button class="btn btn-danger" formaction="@Url.Action("DeleteReservation","Reservation" , new {reservationId=@ViewBag.ExpiredReservations[i].Id})"> <i class="bi bi-trash"></i> </button></form></td>
 					</tr>
 				}
+			}
+			else
+			{
+				<tr>
+					<td colspan="5" rowspan="5" class="text-center text-muted">No reservations available</td>
+				</tr>
 			}
 		</tbody>
 	</table>

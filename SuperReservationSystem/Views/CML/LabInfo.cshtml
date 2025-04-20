@@ -29,26 +29,80 @@ else
 <p>Last modified: @lab.Last_modified</p>
 
 <form method="post">
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabList","CML", new {id=ViewBag.ServerID})">Back to Lab List</button>
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("MakeBackup","Backup",new {serverId=ViewBag.ServerID,labId=lab.Id,serverType="CML",fromServer=true})">Backup lab</button> @*locally or google drive*@
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("DownloadLab","CML",new{id=ViewBag.ServerID,serverName,labId=lab.Id})">Download lab</button>
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("Create","Reservation",new{selectedServer=ViewBag.ServerID,labId=lab.Id})">Reserve this lab</button>
-    <button class="btn btn-primary" type="submit" formaction="@Url.Action("LabNodeList","CML",new{serverID=ViewBag.ServerID, labId=lab.Id})">Show nodes</button> 
-    @if (ViewBag.Owned==true){
-        <button class="btn btn-primary" disabled>Own a lab</button>
-    }else{
-        <button class="btn btn-primary" type="submit" formaction="@Url.Action("OwnLab","User",new{serverID=ViewBag.ServerID,labId=lab.Id})">Own a lab</button>
-    }<br />
+    <div class="mb-3">
+        <div class="btn-group mb-2" role="group">
+            <button type="submit" class="btn btn-secondary"
+                    formaction="@Url.Action("LabList", "CML", new { id = ViewBag.ServerID })">
+                <i class="bi bi-arrow-left-circle"></i> Back to Lab List
+            </button>
+            <button type="submit" class="btn btn-primary"
+                    formaction="@Url.Action("LabNodeList", "CML", new { serverID = ViewBag.ServerID, labId = lab.Id })">
+                <i class="bi bi-diagram-3"></i> Show Nodes
+            </button>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <div class="btn-group mb-2" role="group">
+            <button type="submit" class="btn btn-primary"
+                    formaction="@Url.Action("MakeBackup", "Backup", new { serverId = ViewBag.ServerID, labId = lab.Id, serverType = "CML", fromServer = true })">
+                <i class="bi bi-cloud-arrow-up"></i> Backup Lab
+            </button>
+            <button type="submit" class="btn btn-primary"
+                    formaction="@Url.Action("DownloadLab", "CML", new { id = ViewBag.ServerID, serverName, labId = lab.Id })">
+                <i class="bi bi-download"></i> Download Lab
+            </button>
+            <button type="submit" class="btn btn-primary"
+                    formaction="@Url.Action("Create", "Reservation", new { selectedServer = ViewBag.ServerID, labId = lab.Id })">
+                <i class="bi bi-calendar-check"></i> Reserve This Lab
+            </button>
+            @if (ViewBag.Owned == true)
+            {
+                <button class="btn btn-outline-secondary" disabled>
+                    <i class="bi bi-person-check"></i> Own a Lab
+                </button>
+            }
+            else
+            {
+                <button type="submit" class="btn btn-primary"
+                        formaction="@Url.Action("OwnLab", "User", new { serverID = ViewBag.ServerID, labId = lab.Id })">
+                    <i class="bi bi-person-plus"></i> Own a Lab
+                </button>
+            }
+        </div>
+    </div>
+
+    
+    <div class="mb-3">
+        
+    </div>
     @*if lab owned*@ 
+
 
     @if (ViewBag.UserOwn == true || User.IsInRole("Admin"))
     {
-        <button class="btn btn-primary" type="submit" formaction="@Url.Action("StartLab","CML",new{id=ViewBag.ServerID,labId=lab.Id})">Start this lab</button>
-        <button class="btn btn-primary" type="submit" formaction="@Url.Action("StopLab","CML",new{id=ViewBag.ServerID,labId=lab.Id})">Stop the lab</button>
+        <div class="mb-3">
+            <div class="btn-group mb-2" role="group">
+                <button type="submit" class="btn btn-success"
+                        formaction="@Url.Action("StartLab", "CML", new { id = ViewBag.ServerID, labId = lab.Id })">
+                    <i class="bi bi-play-circle"></i> Start This Lab
+                </button>
+                <button type="submit" class="btn btn-warning"
+                        formaction="@Url.Action("StopLab", "CML", new { id = ViewBag.ServerID, labId = lab.Id })">
+                    <i class="bi bi-stop-circle"></i> Stop the Lab
+                </button>
+            </div>
+        </div>
     }
-    @*Admin only*@
+
     @if (User.IsInRole("Admin"))
     {
-        <button class="btn btn-danger" type="submit" formaction="@Url.Action("DeleteLab","CML",new{serverId=ViewBag.ServerID,labId=lab.Id})">Delete this lab</button>
+        <div class="mb-3">
+            <button type="submit" class="btn btn-danger"
+                    formaction="@Url.Action("DeleteLab", "CML", new { serverId = ViewBag.ServerID, labId = lab.Id })"
+                    onclick="return confirm('Are you sure you want to permanently delete this lab?')">
+                <i class="bi bi-trash"></i> Delete This Lab
+            </button>
+        </div>
     }
 </form>

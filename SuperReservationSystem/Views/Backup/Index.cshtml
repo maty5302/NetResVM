@@ -5,7 +5,7 @@
 <h1>@ViewData["Title"]</h1>
 <br/>
 <div>
-    @if(backups.Count==0)
+    @if(backups == null || backups.Count==0)
     {
         <p>No backups available</p>
     }
@@ -32,16 +32,25 @@
                     <td>@backup.CreatedAt</td>
                     <td>
                         <form method="post">
-                            @if (backup.ServerId == -1)
+                            @if (backup.ServerId == -1 || backup.ServerType == "EVE")
                             {
                                 <button class="btn btn-primary" disabled><i class="bi bi-arrow-clockwise"></i></button>
                             }
                             else
                             {
-                                <button type="submit" formaction="@Url.Action("RestoreBackup", "Backup", new { serverId = @backup.ServerId, labId = @backup.LabId, serverType = @backup.ServerType, filename = @backup.FileName })" class="btn btn-primary"><i class="bi bi-arrow-clockwise"></i></button>
+                                <button type="submit"
+                                        onclick="return confirm('Are you sure you want to restore this backup? This operation will overwrite the current lab state.')"
+                                        formaction="@Url.Action("RestoreBackup", "Backup", new { serverId = @backup.ServerId, labId = @backup.LabId, serverType = @backup.ServerType, filename = @backup.FileName })"
+                                        class="btn btn-primary">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
                             }
                             <button type="submit" formaction="@Url.Action("DownloadBackup", "Backup", new { labId = @backup.LabId, serverType = @backup.ServerType, filename = @backup.FileName })" class="btn btn-primary"><i class="bi bi-download"></i></button>
-                            <button type="submit" formaction="@Url.Action("DeleteBackup", "Backup", new { filename = @backup.FileName, labId = @backup.LabId, serverType = @backup.ServerType })" class="btn btn-danger"> <i class="bi bi-trash"></i></button>
+                            <button type="submit"
+                                    onclick="return confirm('Are you sure you want to delete this backup? This operation is pernament!')"
+                                    formaction="@Url.Action("DeleteBackup", "Backup", new { filename = @backup.FileName, labId = @backup.LabId, serverType = @backup.ServerType })"
+                                    class="btn btn-danger"> <i class="bi bi-trash"></i>
+                            </button>
                         </form>
                     </td>
                 </tr>
