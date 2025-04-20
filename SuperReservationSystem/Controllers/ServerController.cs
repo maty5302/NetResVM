@@ -89,7 +89,7 @@ namespace SuperReservationSystem.Controllers
             if (result)
                 TempData["SuccessMessage"] = "Server updated";
             else
-                TempData["SuccessMessage"] = "Server cannot be updated. See log.";
+                TempData["ErrorMessage"] = "Server cannot be updated. See log.";
 
             return RedirectToAction("Index", "Home");
         }
@@ -99,10 +99,15 @@ namespace SuperReservationSystem.Controllers
         /// </summary>
         /// <param name="server"> Model where information about server is stored for testing connection </param>
         /// <returns>  An <see cref="Task{IActionResult}"/> that renders Add page and message about success or failure of operation </returns>
-        public async Task<IActionResult> TestConnection(ServerModel server)
+        public async Task<IActionResult> TestConnection(ServerModel server, bool edit=false)
         {
-            if(server.Password == null)
+            if (server.Password == null)
+            {
+                TempData["ErrorMessage"] = "You need a password for testing connection.";
+                if (edit)
+                    return RedirectToAction("Edit", "Server", new { id = server.Id });
                 return View("Add", server);
+            }
             if (!ModelState.IsValid)
             {
                 return View("Error");
@@ -120,12 +125,20 @@ namespace SuperReservationSystem.Controllers
                 {
                     TempData["SuccessMessage"] = "Connection successful";
                     ViewBag.Tested = true;
-                    return View("Add", server);
+
+                    if(edit)
+                        return RedirectToAction("Edit", "Server", new { id = server.Id });
+                    else
+                        return View("Add", server);
                 }
                 else
                 {
                     TempData["ErrorMessage"] = "Connection failed. " + client.Message;
-                    return View("Add", server);
+
+                    if (edit)
+                        return RedirectToAction("Edit", "Server", new { id = server.Id });
+                    else
+                        return View("Add", server);
                 }
             }
             else if (server.ServerType == "EVE")
@@ -136,18 +149,27 @@ namespace SuperReservationSystem.Controllers
                 {
                     TempData["SuccessMessage"] = "Connection successful";
                     ViewBag.Tested = true;
-                    return View("Add", server);
+                    if (edit)
+                        return RedirectToAction("Edit", "Server", new { id = server.Id });
+                    else
+                        return View("Add", server);
                 }
                 else
                 {
                     TempData["ErrorMessage"] = "Connection failed. Invalid Credentials";
-                    return View("Add", server);
+                    if (edit)
+                        return RedirectToAction("Edit", "Server", new { id = server.Id });
+                    else
+                        return View("Add", server);
                 }
             }
             else
             {
                 TempData["ErrorMessage"] = "Server type is not selected or invalid ";
-                return View("Add", server);
+                if (edit)
+                    return RedirectToAction("Edit", "Server", new { id = server.Id });
+                else
+                    return View("Add", server);
             }
 
         }

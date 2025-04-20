@@ -237,5 +237,32 @@ namespace SuperReservationSystem.Controllers
             }
             return RedirectToAction("LabInfo", "EVE", new { id = serverId, labId = labId });
         }
+
+        /// <summary>
+        /// Deletes a lab.
+        /// </summary>
+        /// <param name="serverId"> ID of the server </param>
+        /// <param name="labId"> ID of the lab to stop </param>
+        /// <returns>  An <see cref="Task{IActionResult}"/> that renders LabList and tells if operation was successful </returns>
+        public async Task<IActionResult> DeleteLab(int serverId, string labId)
+        {
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "Login");
+            if (labId == null)
+            {
+                TempData["ErrorMessage"] = "Lab not found.";
+                return RedirectToAction("LabList", "EVE", new { id = serverId });
+            }
+            var res = await _apiEVELabService.DeleteLab(serverId, labId);
+            if (!res)
+            {
+                TempData["ErrorMessage"] = "Couldn't delete a lab";
+            }
+            else
+            {
+                TempData["SuccessMessage"] = "Lab deleted";
+            }
+            return RedirectToAction("LabList", "EVE", new { id = serverId });
+        }
     }
 }

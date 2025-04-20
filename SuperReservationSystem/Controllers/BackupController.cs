@@ -69,9 +69,9 @@ public class BackupController : Controller
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
         var owned = _labOwnershipService.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
-        if(!owned.owned)
+        if(!owned.userOwns)
         {
-            TempData["ErrorMessage"] = "Cannot restore lab backup... You do not own this lab.";
+            TempData["ErrorMessage"] = "Cannot restore lab backup... You don't own this lab.";
             return RedirectToAction("Index", "Backup");
         }
         var result = await _backupService.RestoreBackup(serverId,serverType, labId, filename);
@@ -98,9 +98,9 @@ public class BackupController : Controller
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
         var owned = _labOwnershipService.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
-        if(!owned.owned)
+        if(!owned.userOwns)
         {
-            TempData["ErrorMessage"] = "Cannot delete lab backup... You do not own this lab.";
+            TempData["ErrorMessage"] = "Cannot delete lab backup... You don't own this lab.";
             return RedirectToAction("Index", "Backup");
         }
         var result = _backupService.DeleteBackup(filename, labId, serverType);
