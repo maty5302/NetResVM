@@ -1,5 +1,6 @@
 ﻿@{
 	ViewBag.Title = @ViewBag.ServerName;
+	var labs = ViewBag.Labs as List<BusinessLayer.Models.EVELabModel>;
 }
 @model BusinessLayer.Models.EVELabModel
 <h1>@ViewBag.ServerName</h1>
@@ -19,16 +20,16 @@
 }
 <br />
 <div class="row ">
-    @if (ViewBag.Labs != null)
+    @if (labs != null && labs.Count>0)
     {
-        @for (int i = 0; i < ((List<BusinessLayer.Models.EVELabModel>)ViewBag.Labs).Count; i++)
+        @for (int i = 0; i < labs.Count; i++)
         {
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
                 <div class="card flex-fill d-flex flex-column">
-                    <a href="@Url.Action("LabInfo","EVE",new {id=ViewBag.ServerID, labId=ViewBag.Labs[i].Id})" class="card-link">
+                    <a href="@Url.Action("LabInfo","EVE",new {id=ViewBag.ServerID, labId=labs[i].Id})" class="card-link">
                         <div class="card-body" sstyle="height: 175px;">
-                            <h5 class="card-title">@ViewBag.Labs[i].Name</h5><hr />
-                            <span>Last modified: @ViewBag.Labs[i].Last_modified</span><br />
+                            <h5 class="card-title">@labs[i].Name</h5><hr />
+                            <span>Last modified: @labs[i].Last_modified</span><br />
                         </div>
                     </a>
                 </div>
@@ -38,5 +39,13 @@
                 <div class="w-100"></div>
             }
         }
+    }
+    else
+    {
+        <div class="col-12 text-center mt-4">
+            <div class="alert alert-info" role="alert">
+                No labs available on this server.
+            </div>
+        </div>
     }
 </div>
