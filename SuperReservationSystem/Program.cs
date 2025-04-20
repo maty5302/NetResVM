@@ -4,10 +4,17 @@ using TelnetConsole;
 
 namespace SuperReservationSystem
 {
-	public class Program
+    /// <summary>
+    /// Main entry point for the application.
+    /// </summary>
+    public class Program
 	{
 		private static BackgroundTask _backgroundTask = new BackgroundTask();
 
+        /// <summary>
+        /// Main method to start the application.
+        /// </summary>
+        /// <param name="args"></param>
         public static void Main(string[] args)
 		{		
             var builder = WebApplication.CreateBuilder(args);
@@ -29,13 +36,6 @@ namespace SuperReservationSystem
                 options.LoginPath = "/Login/Index";
                 options.LogoutPath = "/Login/Logout";
             });
-            //builder.WebHost.ConfigureKestrel(options =>
-            //{
-            //    options.ConfigureHttpsDefaults(httpsOptions =>
-            //    {
-            //        httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
-            //    });
-            //});
 
             var app = builder.Build();
 

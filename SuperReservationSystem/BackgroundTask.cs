@@ -2,11 +2,13 @@
 using BusinessLayer.Services.ApiCiscoServices;
 using BusinessLayer.Services.ApiEVEServices;
 using SimpleLogger;
-using System.Threading.Tasks;
 using ILogger = SimpleLogger.ILogger;
 
 namespace SuperReservationSystem
 {
+    /// <summary>
+    /// Class for background task that checks reservations and starts/stops them.
+    /// </summary>
     public class BackgroundTask
     {
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
