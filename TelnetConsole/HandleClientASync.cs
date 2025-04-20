@@ -7,8 +7,24 @@ using System.Threading.Tasks;
 
 namespace TelnetConsole
 {
+    /// <summary>
+    /// Class that handles the Telnet client connection.
+    /// </summary>
     internal static class HandleClientASync
     {
+        /// <summary>
+        /// Handles the client connection.
+        /// </summary>
+        /// <param name="client">The <see cref="TcpClient"/> representing the connected client.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        /// <remarks>
+        /// This method sets up stream readers and writers using ASCII encoding to communicate with the client.
+        /// It enters a loop where it reads input line-by-line:
+        /// - Terminates the connection if the input is null or "exit".
+        /// - Responds with help text if the input is "help".
+        /// - Otherwise, it executes the command using <c>ExecuteCommand</c> and returns the response.
+        /// All resources are properly disposed using <c>using</c> statements.
+        /// </remarks>
         public static async Task Handle(TcpClient client)
         {
             using(client)
@@ -34,6 +50,13 @@ namespace TelnetConsole
 
         }
 
+        /// <summary>
+        /// Executes the command received from the client.
+        /// </summary>
+        /// <param name="command">The command string sent by the client.</param>
+        /// <returns>
+        /// A response string based on the result of the executed command, or a help message if the command is invalid.
+        /// </returns>
         static string ExecuteCommand (string command)
         {
             
@@ -110,6 +133,10 @@ namespace TelnetConsole
             return "";
         }
 
+        /// <summary>
+        /// Generates the help text for the Telnet console commands.
+        /// </summary>
+        /// <returns> returns generated help for console to show </returns>
         private static string GetHelp()
         {
             //sb.AppendLine($"{"".PadRight(commandWidth)} | {"".PadRight(descriptionWidth)}");

@@ -10,9 +10,16 @@ using BusinessLayer.Services.ApiEVEServices;
 
 namespace TelnetConsole
 {
+    /// <summary>
+    /// Class that handles commands for managing servers, labs, and users.
+    /// </summary>
     internal static class Command
     {
         private static ServerService server = new ServerService();
+        /// <summary>
+        /// Lists all servers in the system.
+        /// </summary>
+        /// <returns> A response string based on the result of the ListServers </returns>
         public static string ListServers()
         {
             var list = server.GetAllServers();
@@ -28,6 +35,12 @@ namespace TelnetConsole
             }
             return sb.ToString();
         }
+
+        /// <summary>
+        /// Lists all labs on a specified server.
+        /// </summary>
+        /// <param name="server_id"> ID of server we want labs from </param>
+        /// <returns>  A response string based on the result of the ListLabs</returns>
         public static string ListLabs(string server_id)
         {
             int id = -1;
@@ -48,6 +61,17 @@ namespace TelnetConsole
                 return "";
         }
 
+        /// <summary>
+        /// Retrieves and formats a list of labs from a specific Cisco Modeling Labs (CML) server.
+        /// </summary>
+        /// <param name="server_id">The ID of the server from which to retrieve labs.</param>
+        /// <param name="sb">A <see cref="StringBuilder"/> used to accumulate the formatted lab information.</param>
+        /// <param name="idWidth">The width to pad the lab ID column.</param>
+        /// <param name="nameWidth">The width to pad the lab name column.</param>
+        /// <param name="dateWidth">The width to pad the last modified date column.</param>
+        /// <returns>
+        /// A formatted string representing the list of labs, or an error message if the labs could not be retrieved.
+        /// </returns>
         private static string ListCMLLabs(string server_id, StringBuilder sb, int idWidth, int nameWidth, int dateWidth)
         {
             ApiCiscoLabService service = new ApiCiscoLabService();
@@ -59,6 +83,17 @@ namespace TelnetConsole
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Retrieves and formats a list of labs from a specific EVE-NG server.
+        /// </summary>
+        /// <param name="server_id">The ID of the server from which to retrieve labs.</param>
+        /// <param name="sb">A <see cref="StringBuilder"/> used to accumulate the formatted lab information.</param>
+        /// <param name="idWidth">The width to pad the lab ID column.</param>
+        /// <param name="nameWidth">The width to pad the lab name column.</param>
+        /// <param name="dateWidth">The width to pad the last modified date column.</param>
+        /// <returns>
+        /// A formatted string representing the list of labs, or an error message if the labs could not be retrieved.
+        /// </returns>
         private static string ListEVELabs(string server_id, StringBuilder sb, int idWidth, int nameWidth, int dateWidth)
         {
             ApiEVELabService service = new ApiEVELabService();
@@ -71,6 +106,10 @@ namespace TelnetConsole
 
         }
 
+        /// <summary>
+        /// Lists all registered users in the system.
+        /// </summary>
+        /// <returns> A response string based on the result of the ListUsers</returns>
         public static string ListUsers()
         {
             int idWidth = 5, nameWidth = 15, activeWidth = 6;
@@ -88,6 +127,12 @@ namespace TelnetConsole
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Starts a lab on a specified server based on the server type.
+        /// </summary>
+        /// <param name="server_id"> ID of server where a lab to run is</param>
+        /// <param name="lab_id"> Lab ID which we want to run </param>
+        /// <returns> A string indicating success, failure, or an unknown server type. </returns>
         public static string StartLab(string server_id, string lab_id)
         {
             int id = -1;
@@ -103,6 +148,12 @@ namespace TelnetConsole
                 return "Unknown serverID";
         }
 
+        /// <summary>
+        /// Stops a lab on a specified server based on the server type.
+        /// </summary>
+        /// <param name="server_id"> ID of server where a lab to stop is</param>
+        /// <param name="lab_id"> Lab ID which we want to stop </param>
+        /// <returns> A string indicating success, failure, or an unknown server type. </returns>
         public static string StopLab(string server_id, string lab_id)
         {
             int id = -1;
@@ -118,6 +169,14 @@ namespace TelnetConsole
                 return "Unknown serverID";
         }
 
+        /// <summary>
+        /// Stops an EVE-NG lab by stopping all associated nodes.
+        /// </summary>
+        /// <param name="server_id">ID of the EVE-NG server.</param>
+        /// <param name="lab_id">ID of the lab to stop.</param>
+        /// <returns>
+        /// A string indicating whether the lab was stopped successfully or an error message.
+        /// </returns>
         private static string StopEVELab(string server_id, string lab_id)
         {
             ApiEVELabService labService = new ApiEVELabService();
@@ -131,6 +190,14 @@ namespace TelnetConsole
             return "Lab cannot be stopped";
         }
 
+        /// <summary>
+        /// Stops a Cisco Modeling Labs (CML) lab on the given server.
+        /// </summary>
+        /// <param name="server_id">ID of the CML server.</param>
+        /// <param name="lab_id">ID of the lab to stop.</param>
+        /// <returns>
+        /// A string indicating whether the lab was stopped successfully or an error message from the API.
+        /// </returns>
         private static string StopCMLLab(string server_id, string lab_id)
         {
             ApiCiscoLabService service = new ApiCiscoLabService();
@@ -141,6 +208,14 @@ namespace TelnetConsole
                 return "Lab stopped successfully";
         }
 
+        /// <summary>
+        /// Starts a Cisco Modeling Labs (CML) lab on the given server.
+        /// </summary>
+        /// <param name="server_id">ID of the CML server.</param>
+        /// <param name="lab_id">ID of the lab to start.</param>
+        /// <returns>
+        /// A string indicating whether the lab was started successfully or an error message from the API.
+        /// </returns>
         private static string StartCMLLab(string server_id, string lab_id) {
             ApiCiscoLabService service = new ApiCiscoLabService();
             var res = service.StartLab(int.Parse(server_id), lab_id).Result;
@@ -150,6 +225,14 @@ namespace TelnetConsole
                 return "Lab started successfully";
         }
 
+        /// <summary>
+        /// Starts an EVE-NG lab by starting all associated nodes.
+        /// </summary>
+        /// <param name="server_id">ID of the EVE-NG server.</param>
+        /// <param name="lab_id">ID of the lab to start.</param>
+        /// <returns>
+        /// A string indicating whether the lab was started successfully or an error message.
+        /// </returns>
         private static string StartEVELab(string server_id, string lab_id)
         {
             ApiEVELabService labService = new ApiEVELabService();
@@ -163,6 +246,11 @@ namespace TelnetConsole
             return "Lab cannot be started";
         }
 
+        /// <summary>
+        /// Deactivates a user by their ID.
+        /// </summary>
+        /// <param name="userId"> ID of user to deactivate</param>
+        /// <returns> A string indicating whether the operation was successful or not</returns>
         public static string DeactivateUser(int userId)
         {
             UserService userService = new UserService();
@@ -172,6 +260,11 @@ namespace TelnetConsole
             return $"User with ID {userId} deactivated";
         }
 
+        /// <summary>
+        /// Activates a user by their ID.
+        /// </summary>
+        /// <param name="userId"> ID of user to deactivate</param>
+        /// <returns> A string indicating whether the operation was successful or not</returns>
         public static string ActivateUser(int userId)
         {
             UserService userService = new UserService();
