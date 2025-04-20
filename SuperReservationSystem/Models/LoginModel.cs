@@ -2,12 +2,22 @@
 
 namespace SuperReservationSystem.Models
 {
+    /// <summary>
+    /// Model for the login page.
+    /// </summary>
     public class LoginModel
     {
+        /// <summary>
+        /// Username of the user.
+        /// </summary>
         [Required]
-        public string Username { get; set; }
+        public required string Username { get; set; }
+
+        /// <summary>
+        /// Password of the user.
+        /// </summary>
         [Required]
         [DataType(DataType.Password)]
-        public string Password { get; set; }
+        public required string Password { get; set; }
     }
 }
