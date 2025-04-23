@@ -71,8 +71,11 @@ namespace SuperReservationSystem
                 return Task.CompletedTask;
             });
 			FileLogger.Instance.Log("Application started.");
+            //create missing directories
+            Directory.CreateDirectory("logs");
+            Directory.CreateDirectory("backups");
             //background checking of reservations
-			_backgroundTask.Start();
+            _backgroundTask.Start();
 			//starts TelnetConsole
 			Task.Run(()=>TelnetConsole.TelnetConsole.StartListener());
 			//starts web app
