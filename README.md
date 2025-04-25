@@ -18,7 +18,9 @@ This project is available under the [GNU GPL v3](LICENSE) license.
 #### 1. Download and unzip archive for your operating system
 #### 2. Run install.sh or install.ps1
 
-Run script for installing dependencies and requirements (Select version of MS SQL 2022 Express). Install script install.sh is tested for Ubuntu 22.04 and newer. If you don't have this distro go to 2. Alternative.
+Run script for installing dependencies and requirements (Select version of MS SQL 2022 Express).
+
+> Install script install.sh is tested for Ubuntu 22.04 and newer. If you don't have this distro go to 2. Alternative.
 
 Linux
 ```bash
