@@ -70,7 +70,7 @@ In app directory find a file called `sqlconnection.json` and fill all connection
 
 Linux
 ```bash
-chmod +x SuperReservationSystem
+chmod +x NetResVM
 ./NetResVM
 ```
 
