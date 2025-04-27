@@ -71,12 +71,12 @@ In app directory find a file called `sqlconnection.json` and fill all connection
 Linux
 ```bash
 chmod +x SuperReservationSystem
-./SuperReservationSystem
+./NetResVM
 ```
 
 Windows
 ```powershell
-.\SuperReservationSystem.exe
+.\NetResVM.exe
 ```
 
 ## Features
