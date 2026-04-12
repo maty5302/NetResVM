@@ -11,10 +11,11 @@ public interface IVirtualizationAdapter
     
     Task<(bool Valid, string Message)> AuthenticateAsync(int id);
     //Task<HttpRequestMessage> LogoutAsync();
-    
-    Task<(List<LabDTO>? Labs, string Message)> GetLabsAsync();
-    
-    Task<(LabDTO? Lab, string Message)> GetLabInfoAsync(string labId);
+
+    Task<(List<LabDTO>? Labs, string Message)> GetLabsAsync(int serverId);
+
+
+    Task<(LabDTO? Lab, string Message)> GetLabInfoAsync(int serverId, string labId);
     
     Task<bool> ImportLab(int serverId, byte[] fileContent, string? filename = null);
     

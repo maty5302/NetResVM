@@ -1,4 +1,5 @@
 using ApiCisco.Client;
+using ApiCisco.Model;
 using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
 using BusinessLayer.Interface;
@@ -99,10 +100,17 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     /// <returns>
     /// A tuple containing a <see cref="CiscoLabModel"/> and a message string.
     /// </returns>
-    public async Task<(LabDTO? Lab, string Message)> GetLabInfoAsync(string labId)
+    public async Task<(LabDTO? Lab, string Message)> GetLabInfoAsync(int serverId, string labId)
     {
         if (_httpClient == null)
-            return (null, "Not authenticated to the server.");
+        {
+            var authResult = await AuthenticateAsync(serverId);
+            if (!authResult.Valid)
+            {
+                _logger.LogError($"CiscoCmlAdapter - ImportLab - Authentication failed: {authResult.Message}");
+                return (null, authResult.Message);
+            }
+        }
 
         try
         {
@@ -160,10 +168,17 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     /// <returns>
     /// A tuple containing a list of <see cref="LabDTO"/> and a message string.
     /// </returns>
-    public async Task<(List<LabDTO>? Labs, string Message)> GetLabsAsync()
+    public async Task<(List<LabDTO>? Labs, string Message)> GetLabsAsync(int serverId)
     {
         if (_httpClient == null)
-            return (null, "Not authenticated to the server.");
+        {
+            var authResult = await AuthenticateAsync(serverId);
+            if (!authResult.Valid)
+            {
+                _logger.LogError($"CiscoCmlAdapter - GetLabsAsync - Authentication failed: {authResult.Message}");
+                return (null, authResult.Message);
+            }
+        }
 
         try
         {
@@ -181,7 +196,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             // Go through each lab ID and fetch detailed info for each lab
             foreach (var id in labsIDs)
             {
-                var result = await GetLabInfoAsync(id);
+                var result = await GetLabInfoAsync(serverId, id);
 
                 if (result.Lab != null)
                 {
@@ -365,7 +380,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
                     return (false, "Authentication failed");
                 }
             }
-            var allLabs = await GetLabsAsync();
+            var allLabs = await GetLabsAsync(serverId);
             if (allLabs.Labs != null)
             {
                 foreach (var lab in allLabs.Labs)
