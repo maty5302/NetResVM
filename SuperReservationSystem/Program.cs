@@ -31,6 +31,7 @@ namespace SuperReservationSystem
             });
 
             // Dependency Injection for services
+            builder.Services.AddScoped<BusinessLayer.Services.BackupService>();
             builder.Services.AddScoped<BusinessLayer.Services.ServerService>();
             builder.Services.AddScoped<BusinessLayer.Services.PlatformManager>();
             builder.Services.AddScoped<IVirtualizationAdapter, CiscoCmlAdapter>();
