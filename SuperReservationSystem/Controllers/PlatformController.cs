@@ -65,7 +65,7 @@ namespace NetResVM.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
-                var labsResult = await adapter.GetLabsAsync();
+                var labsResult = await adapter.GetLabsAsync(serverId);
                 if (labsResult.Labs == null)
                 {
                     return View(new List<BusinessLayer.DTOs.LabDTO>());
@@ -117,7 +117,7 @@ namespace NetResVM.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
-                var labInfoResult = await adapter.GetLabInfoAsync(labId);
+                var labInfoResult = await adapter.GetLabInfoAsync(serverId,labId);
                 if (labInfoResult.Lab == null)
                 {
                     TempData["ErrorMessage"] = $"Lab with ID {labId} not found.";
