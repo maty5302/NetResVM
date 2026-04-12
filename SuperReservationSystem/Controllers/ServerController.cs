@@ -1,4 +1,6 @@
-﻿using BusinessLayer.MapperDT;
+﻿using BusinessLayer.Enum;
+using BusinessLayer.Interface;
+using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using BusinessLayer.Services.ApiCiscoServices;
@@ -15,7 +17,12 @@ namespace SuperReservationSystem.Controllers
         private ServerService serverService = new ServerService();
         private ApiCiscoAuthService authServiceCisco = new ApiCiscoAuthService();
         private ApiEVEAuthService authServiceEVE = new ApiEVEAuthService();
+        private readonly PlatformManager _platformManager;
 
+        public ServerController(PlatformManager platformManager)
+        {
+            _platformManager = platformManager;
+        }
         /// <summary>
         /// Displays the list of servers.
         /// </summary>
@@ -117,6 +124,33 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Server type is not selected";
                 return View("Add", server);
             }
+            if(server.Platform==PlatformType.Unknown)
+            {
+                TempData["ErrorMessage"] = "Platform type is not selected or not supported";
+                return View("Add", server);
+            }
+            IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
+            var authResult = await adapter.AuthenticateAsync(server.Id);
+            if (authResult.Valid)
+            {
+                TempData["SuccessMessage"] = "Connection successful";
+                ViewBag.Tested = true;
+
+                if (edit)
+                    return RedirectToAction("Edit", "Server", new { id = server.Id });
+                else
+                    return View("Add", server);
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Connection failed. " + authResult.Message;
+
+                if (edit)
+                    return RedirectToAction("Edit", "Server", new { id = server.Id });
+                else
+                    return View("Add", server);
+            }
+            // The code below is the old implementation before using IVirtualizationAdapter and PlatformManager. It is kept here for reference and can be removed after confirming that the new implementation works correctly.
             if (server.ServerType == "CML")
             {
                 // Check if the server is reachable for CML
@@ -189,14 +223,14 @@ namespace SuperReservationSystem.Controllers
             if (!ModelState.IsValid)
             {
                 return RedirectToAction("Add", "Server");
-            }
+            }           
 
             if (server.ServerType == "CML")
             {
                 // Check if the server is reachable for CML
-                var client = await authServiceCisco.ValidateCredentials(server.IpAddress, server.Username, server.Password);
-                if (client.Valid)
-                {
+                //var client = await authServiceCisco.ValidateCredentials(server.IpAddress, server.Username, server.Password);
+                //if (client.Valid)
+                //{
                     // Insert the server into the database
                     var ok = serverService.InsertServer(server);
                     if (ok)
@@ -207,12 +241,12 @@ namespace SuperReservationSystem.Controllers
                     // Redirect to the home page
                     ViewBag.Servers = serverService.GetAllServers();
                     return RedirectToAction("Index", "Home");
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Connection failed. " + client.Message;
-                    return View("Add", server);
-                }
+                //}
+                //else
+                //{
+                //    TempData["ErrorMessage"] = "Connection failed. " + client.Message;
+                //    return View("Add", server);
+                //}
 
             }
             else if (server.ServerType == "EVE")

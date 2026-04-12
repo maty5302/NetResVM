@@ -20,12 +20,14 @@ public interface IVirtualizationAdapter
     
     Task<bool> ImportLab(int serverId, IFormFile file);
     
-    Task<(byte[]? fileContent, string message)> DownloadLab(int serverId, string? labId, LabDTO? lab = null);
+    Task<(byte[]? FileContent, string ContentType, string FileName, string Message)> DownloadLab(int serverId, string? labId, LabDTO? lab = null);
     
     Task<(bool value, string message)> DeleteLab(int serverId, string labId);
     
     Task<(bool value, string message)> StartLabAsync(int serverId, string labId);
     
     Task<(bool value, string message)> StopLabAsync(int serverId, string labId);
-    
+
+    Task<(List<NodeDTO>? Nodes, string Message)> GetAllNodes(int serverId, string labId);
+
 }

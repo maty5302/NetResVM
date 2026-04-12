@@ -18,7 +18,7 @@
                             <span>Server type: @ViewBag.Servers[i].ServerType</span>
                             <hr />
                             <form method="post">
-                                <button class="btn btn-primary" type="submit" formaction="@Url.Action("Index",$"{ViewBag.Servers[i].ServerType}", new{id=@ViewBag.Servers[i].Id})">Connect to server</button>
+                                <button class="btn btn-primary" type="submit" formaction="@Url.Action("Index","Platform", new{serverId=@ViewBag.Servers[i].Id})">Connect to server</button>
                                 <!--Only for admin-->
                                 @if (User.IsInRole("Admin"))
                                 {

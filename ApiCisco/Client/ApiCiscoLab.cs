@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Text;
 
-namespace ApiCisco
+namespace ApiCisco.Client
 {
     /// <summary>
     /// Class used for making requests to server Cisco CML API about labs 

@@ -1,0 +1,77 @@
+@model List<BusinessLayer.DTOs.LabDTO>
+@{
+    ViewData["Title"] = ViewBag.ServerName ?? "Labs";
+}
+
+<h1>@(ViewBag.ServerName ?? "Labs")</h1>
+<hr />
+
+@if (User.Identity != null && User.IsInRole("Admin"))
+{
+    <form method="post" enctype="multipart/form-data" action="@Url.Action("ImportLab", "Platform", new { serverID = ViewBag.ServerId })">
+        <div class="row mb-3">
+            <div class="col-md-12 d-flex align-items-center">
+                <div class="flex-grow-1 me-3">
+                    <input type="file" class="form-control" id="fileUpload" name="file" accept=".yaml, .yml, .zip" />
+                </div>
+                <button type="submit" class="btn btn-primary">Import lab</button>
+            </div>
+        </div>
+    </form>
+}
+<br />
+
+<div class="row">
+    @if (Model != null && Model.Count > 0)
+    {
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            var lab = Model[i];
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
+                <div class="card flex-fill d-flex flex-column">
+                    @* Odkaz nyní směřuje na sjednocený PlatformController *@
+                    <a href="@Url.Action("LabInfo", "Platform", new { serverId = ViewBag.ServerId, labId = lab.Id })" class="card-link text-decoration-none text-dark">
+                        <div class="card-body" style="min-height: 175px;">
+                            <h5 class="card-title text-truncate" title="@lab.Name">@lab.Name</h5>
+                            <hr />
+                            
+                            @* Základní vlastnosti ze společného DTO *@
+                            <span class="badge bg-secondary mb-2">@lab.Status</span><br />
+                            
+                            @* Specifické vlastnosti z Metadata (pokud existují) *@
+                            @if (lab.Metadata.ContainsKey("LastModified") && !string.IsNullOrEmpty(lab.Metadata["LastModified"]))
+                            {
+                                <small class="text-muted d-block">Modified: @lab.Metadata["LastModified"]</small>
+                            }
+                            
+                            @if (lab.Metadata.ContainsKey("NodeCount"))
+                            {
+                                <small class="text-muted d-block">Nodes: @lab.Metadata["NodeCount"]</small>
+                            }
+                            
+                            @* Ukázka pro EVE-NG, kdyby tam mělo jiná data *@
+                            @if (lab.Metadata.ContainsKey("Author"))
+                            {
+                                <small class="text-muted d-block">Author: @lab.Metadata["Author"]</small>
+                            }
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            @* Zalamování řádků *@
+            @if ((i + 1) % 4 == 0)
+            {
+                <div class="w-100 d-none d-lg-block"></div>
+            }
+        }
+    }
+    else
+    {
+        <div class="col-12 text-center mt-4">
+            <div class="alert alert-info" role="alert">
+                No labs available on this server.
+            </div>
+        </div>
+    }
+</div>

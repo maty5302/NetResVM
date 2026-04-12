@@ -89,6 +89,23 @@ namespace BusinessLayer.Services
         }
 
         /// <summary>
+        /// Získá bezpečně pouze přihlašovací údaje k serveru pro potřeby adaptérů.
+        /// </summary>
+        public (string Url, string Username, string Password)? GetServerCredentials(int id)
+        {
+            // Zde využijeme tvou internal metodu, která se k heslu v modelu dostane
+            var server = GetServerByIdInternal(id);
+
+            if (server == null)
+            {
+                return null;
+            }
+
+            // Vrátíme pouze Tuple s potřebnými daty (heslo nejde do DTO, zůstává na backendu)
+            return (server.IpAddress, server.Username, server.Password);
+        }
+
+        /// <summary>
         /// Retrieves the type of a server by its unique identifier.
         /// </summary>
         /// <param name="id">The unique identifier (ID) of the server.</param>

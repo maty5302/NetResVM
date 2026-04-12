@@ -1,4 +1,4 @@
-﻿namespace ApiCisco
+﻿namespace ApiCisco.Client
 {
     /// <summary>
     /// Represents an HTTP client for interacting with the Cisco CML API.

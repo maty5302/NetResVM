@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace ApiCisco
+namespace ApiCisco.Client
 {
     /// <summary>
     /// This class is used for authentication with server CML API

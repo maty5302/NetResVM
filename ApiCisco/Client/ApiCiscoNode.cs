@@ -1,4 +1,4 @@
-﻿namespace ApiCisco
+﻿namespace ApiCisco.Client
 {
     /// <summary>
     /// Class used for making requests to server Cisco CML API about nodes of lab

@@ -1,3 +1,5 @@
+using ApiCisco;
+using BusinessLayer.Interface;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using SimpleLogger;
 using TelnetConsole;
@@ -27,7 +29,14 @@ namespace SuperReservationSystem
                 options.IdleTimeout = TimeSpan.FromMinutes(5);
                 options.Cookie.IsEssential = true;
             });
-			builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+
+            // Dependency Injection for services
+            builder.Services.AddScoped<BusinessLayer.Services.ServerService>();
+            builder.Services.AddScoped<BusinessLayer.Services.PlatformManager>();
+            builder.Services.AddScoped<IVirtualizationAdapter, CiscoCmlAdapter>();
+
+
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
 			.AddCookie(options =>
 			{
 				options.Cookie.Name = "AuthCookies";
