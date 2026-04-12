@@ -8,10 +8,14 @@ namespace SuperReservationSystem.Controllers;
 /// </summary>
 public class BackupController : Controller
 {
-    private readonly BackupService _backupService = new BackupService();
+    private readonly BackupService _backupService;
     private readonly UserLabOwnershipService _labOwnershipService = new UserLabOwnershipService();
     private readonly UserService _userService = new UserService();
 
+    public BackupController(BackupService backupService)
+    {
+        _backupService = backupService;
+    }
     /// <summary>
     /// Displays the list of backups.
     /// </summary>
@@ -41,7 +45,9 @@ public class BackupController : Controller
     {
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
-        var result = await _backupService.BackupLab(serverId, labId, serverType);
+
+
+        var result = await _backupService.BackupLab(serverId, labId);
         if (result.backup)
         {
             TempData["SuccessMessage"] = "Backup was successful.";

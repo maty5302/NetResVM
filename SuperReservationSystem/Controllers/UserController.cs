@@ -1,7 +1,8 @@
-﻿using BusinessLayer.Interface;
+﻿using BusinessLayer.DTOs;
+using BusinessLayer.Enum;
+using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
-using BusinessLayer.Services.ApiCiscoServices;
 using BusinessLayer.Services.ApiEVEServices;
 using Microsoft.AspNetCore.Mvc;
 using SuperReservationSystem.Models;
@@ -14,11 +15,15 @@ namespace SuperReservationSystem.Controllers
     public class UserController : Controller
     {
         private readonly UserLabOwnershipService userLabOwnershipService = new UserLabOwnershipService();
-        private readonly ApiCiscoLabService labServiceCisco = new ApiCiscoLabService();
+        private readonly PlatformManager _platformManager;
         private readonly ApiEVELabService labServiceEVE = new ApiEVELabService();
         private readonly UserService userService = new UserService();
         private readonly ServerService serverService = new ServerService();
 
+        public UserController(PlatformManager platformManager)
+        {
+            _platformManager = platformManager;
+        }
         /// <summary>
         /// Displays the settings page for the user.
         /// </summary>
@@ -52,32 +57,31 @@ namespace SuperReservationSystem.Controllers
             }
             // Get all labs owned by the user
             var allUserLabs = userLabOwnershipService.GetAllUserLabsByUserID(userId);
-
+            var labsInfo = new List<(int, LabDTO)>();// Tuple of server id and lab model
             if (allUserLabs != null)
             {
-                var labsInfo = new List<(int, ILabModel)>(); // Tuple of server id and lab model
+               
                 // Loop through each owned lab and get its information
                 foreach (var owned in allUserLabs)
                 {
                     var server = serverService.ServerExists(owned.ServerId);
                     var serverType = serverService.GetServerType(owned.ServerId);
-                    if (server && serverType=="CML")
-                    {                        
-                        var lab = await labServiceCisco.GetLabInfo(owned.ServerId, owned.LabId);
-                        if (lab.lab != null)
-                            labsInfo.Add((owned.ServerId, lab.lab));
-                    }
-                    else if(server && serverType=="EVE")
+                    System.Enum.TryParse<PlatformType>(serverType, out var platform);
+                    if(platform == PlatformType.Unknown)
                     {
-                        var lab = await labServiceEVE.GetLabInfoById(owned.ServerId, owned.LabId);
-                        if (lab != null)
-                            labsInfo.Add((owned.ServerId, lab));
+                        continue; // Skip if platform type is unknown
+                    }
+                    IVirtualizationAdapter adapter = _platformManager.GetAdapter(platform);
+                    if(server)
+                    {
+                        var lab = await adapter.GetLabInfoAsync(owned.ServerId, owned.LabId);
+                        if (lab.Lab != null)
+                            labsInfo.Add((owned.ServerId, lab.Lab));
                     }
                 }
-                ViewBag.Labs = labsInfo;
             }
 
-            return View();
+            return View(labsInfo);
         }
 
         /// <summary>

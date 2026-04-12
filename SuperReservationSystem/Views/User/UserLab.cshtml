@@ -1,57 +1,75 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model List<(int ServerId, BusinessLayer.DTOs.LabDTO Lab)>
 @{
     ViewData["Title"] = "My labs";
 }
+
 <h1>My labs</h1>
 <hr />
+
 <div class="row">
-    @if (ViewBag.Labs != null)
+    @if (Model != null && Model.Count > 0)
     {
-        var labs = (List<(int, BusinessLayer.Interface.ILabModel)>)ViewBag.Labs;
-        for (int i = 0; i < labs.Count; i++)
+        @for (int i = 0; i < Model.Count; i++)
         {
-            var labTuple = labs[i];
-            int serverID = labTuple.Item1;
-            var labModel = labTuple.Item2;
+            var serverId = Model[i].ServerId;
+            var lab = Model[i].Lab;
 
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
                 <div class="card flex-fill d-flex flex-column">
                     <div class="card-body d-flex flex-column justify-content-between">
-                        @if (labModel is BusinessLayer.Models.CiscoLabModel)
-                        {
-                            var ciscoModel = (BusinessLayer.Models.CiscoLabModel)labModel;
-                            <a href="@Url.Action("LabInfo", "CML", new { id = serverID, labId = labModel.Id })" class="card-link">
-                                <h5 class="card-title">@ciscoModel.Name</h5>
-                                <hr />
-                                <span>@ciscoModel.Description</span><br />
-                                <span>@ciscoModel.State</span><br />
-                                <span>@ciscoModel.Last_modified</span>
-                            </a>
-                        }
-                        else if(labModel is BusinessLayer.Models.EVELabModel)
-                        {
-                            var eveModel = (BusinessLayer.Models.EVELabModel)labModel;
-                            <a href="@Url.Action("LabInfo", "EVE", new { id = serverID, labId = labModel.Id })" class="card-link">
-                                <h5 class="card-title">@eveModel.Name</h5>
-                                <hr />
-                                <span>@eveModel.Description</span><br />
-                                <span>@eveModel.Filename</span>
-                            </a>
-                        }
-                        <form method="post">
-                            <button class="btn btn-danger mt-3 align-self-start" formaction="@Url.Action("RemoveOwnership","User",new {serverId=serverID,labId=labModel.Id})">Remove ownership</button>
+                        
+                        @* 1. Sjednocený odkaz na PlatformController *@
+                        <a href="@Url.Action("LabInfo", "Platform", new { serverId = serverId, labId = lab.Id })" class="card-link text-decoration-none text-dark">
+                            <h5 class="card-title text-truncate" title="@lab.Name">@lab.Name</h5>
+                            <hr />
+                            
+                            @* 2. Univerzální vlastnosti z LabDTO *@
+                            @if (!string.IsNullOrEmpty(lab.Description))
+                            {
+                                <span class="d-block text-truncate mb-2" title="@lab.Description">@lab.Description</span>
+                            }
+                            
+                            <span class="badge bg-secondary mb-2">@lab.Status</span><br />
+
+                            @* 3. Dynamická Metadata pro specifické vlastnosti (Filename, LastModified) *@
+                            @if (lab.Metadata != null)
+                            {
+                                if (lab.Metadata.TryGetValue("LastModified", out var lastMod) && !string.IsNullOrEmpty(lastMod))
+                                {
+                                    <small class="text-muted d-block"><i class="bi bi-clock"></i> Modified: @lastMod</small>
+                                }
+                                if (lab.Metadata.TryGetValue("Filename", out var filename) && !string.IsNullOrEmpty(filename))
+                                {
+                                    <small class="text-muted d-block"><i class="bi bi-file-earmark"></i> File: @filename</small>
+                                }
+                            }
+                        </a>
+                        
+                        @* 4. Tlačítko pro odebrání vlastnictví *@
+                        <form method="post" class="mt-3">
+                            <button type="submit" class="btn btn-danger w-100" 
+                                    formaction="@Url.Action("RemoveOwnership", "User", new { serverId = serverId, labId = lab.Id })">
+                                <i class="bi bi-trash"></i> Remove ownership
+                            </button>
                         </form>
+
                     </div>
                 </div>
             </div>
 
-            @* Add clearfix for rows dynamically *@
+            @* Zalamování řádků *@
             @if ((i + 1) % 4 == 0)
             {
-                <div class="w-100"></div>
+                <div class="w-100 d-none d-lg-block"></div>
             }
         }
+    }
+    else
+    {
+        <div class="col-12 text-center mt-4">
+            <div class="alert alert-info" role="alert">
+                You don't own any labs yet.
+            </div>
+        </div>
     }
 </div>

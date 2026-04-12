@@ -1,7 +1,8 @@
-﻿using BusinessLayer.Interface;
+﻿using BusinessLayer.DTOs;
+using BusinessLayer.Enum;
+using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
-using BusinessLayer.Services.ApiCiscoServices;
 using BusinessLayer.Services.ApiEVEServices;
 using Microsoft.AspNetCore.Mvc;
 using SimpleLogger;
@@ -18,9 +19,14 @@ namespace SuperReservationSystem.Controllers
         ServerService serverService = new ServerService();
         UserService userService = new UserService();
         ReservationService reservationService = new ReservationService();
-        ApiCiscoLabService labServiceCisco = new ApiCiscoLabService();
+        PlatformManager _platformManager;
         ApiEVELabService labServiceEve = new ApiEVELabService();
         SimpleLogger.ILogger logger = FileLogger.Instance;
+
+        public ReservationController(PlatformManager platformManager)
+        {
+            _platformManager = platformManager;
+        }
 
         /// <summary>
         /// Displays the list of reservations.
@@ -98,45 +104,76 @@ namespace SuperReservationSystem.Controllers
             if (selectedServer.HasValue)
             {
                 model.ServerId = selectedServer.Value;
-                var serverType = serverService.GetServerType(selectedServer.Value);               
-                if (serverType == "CML")
+                var serverType = serverService.GetServerType(selectedServer.Value);    
+                System.Enum.TryParse<PlatformType>(serverType, out var platformType);
+                if(platformType == PlatformType.Unknown)
                 {
-                    // get the labs for that server
-                    var res = await labServiceCisco.GetLabs(selectedServer.Value);
-
-                    CiscoLabModel? labSelected = null;
-                    if (labId != null)
+                    TempData["ErrorMessage"] = "Unknown platform type.";
+                    logger.LogError($"Unknown platform type: {serverType} for server ID: {selectedServer.Value}");
+                    return View("Create", model);
+                }
+                IVirtualizationAdapter adapter = _platformManager.GetAdapter(platformType);
+                var res = await adapter.GetLabsAsync(selectedServer.Value);
+                LabDTO? selected = null;
+                if(labId != null)
+                {
+                    var labInfo = await adapter.GetLabInfoAsync(selectedServer.Value,labId);
+                    if (labInfo.Lab != null)
                     {
-                        // get the lab info
-                        labSelected = (await labServiceCisco.GetLabInfo(selectedServer.Value, labId)).lab;
-                        if (labId != null && labSelected != null)
-                            model.LabId = labId;
-                    }
-
-                    //add labs to the list and view them on page if there are any
-                    if (res.labs != null && res.labs.Count > 0)
-                    {
-                        ViewBag.Labs3 = new List<ILabModel>(res.labs);
+                        selected = labInfo.Lab;
+                        model.LabId = labId;
                     }
                     else
                     {
-                        TempData["ErrorMessage"] = "Cannot connect to server. Try again..";
+                        TempData["ErrorMessage"] = "Cannot get lab info. Try again..";
+                        logger.LogError($"Cannot get lab info for lab ID: {labId} on server ID: {selectedServer.Value}. Message: {labInfo.Message}");
+                        return View("Create", model);
                     }
                 }
-                else if (serverType == "EVE")
+                if (res.Labs != null && res.Labs.Count > 0)
                 {
-                    // get the labs for that server
-                    var res = await labServiceEve.GetLabs(selectedServer.Value);
-                    //add labs to the list and view them on page if there are any
-                    if (res != null && res.Count > 0)
-                    {
-                        ViewBag.Labs3 = new List<ILabModel>(res);
-                    }
-                    else
-                    {
-                        TempData["ErrorMessage"] = "Cannot connect to server. Try again..";
-                    }
+                    ViewBag.Labs3 = new List<LabDTO>(res.Labs);
                 }
+
+
+                //    if (serverType == "CML")
+                //{
+                //    // get the labs for that server
+                //    var res = await labServiceCisco.GetLabs(selectedServer.Value);
+
+                //    CiscoLabModel? labSelected = null;
+                //    if (labId != null)
+                //    {
+                //        // get the lab info
+                //        labSelected = (await labServiceCisco.GetLabInfo(selectedServer.Value, labId)).lab;
+                //        if (labId != null && labSelected != null)
+                //            model.LabId = labId;
+                //    }
+
+                //    //add labs to the list and view them on page if there are any
+                //    if (res.labs != null && res.labs.Count > 0)
+                //    {
+                //        ViewBag.Labs3 = new List<ILabModel>(res.labs);
+                //    }
+                //    else
+                //    {
+                //        TempData["ErrorMessage"] = "Cannot connect to server. Try again..";
+                //    }
+                //}
+                //else if (serverType == "EVE")
+                //{
+                //    // get the labs for that server
+                //    var res = await labServiceEve.GetLabs(selectedServer.Value);
+                //    //add labs to the list and view them on page if there are any
+                //    if (res != null && res.Count > 0)
+                //    {
+                //        ViewBag.Labs3 = new List<ILabModel>(res);
+                //    }
+                //    else
+                //    {
+                //        TempData["ErrorMessage"] = "Cannot connect to server. Try again..";
+                //    }
+                //}
             }
 
             return View("Create", model);

@@ -1,3 +1,5 @@
+using BusinessLayer.Enum;
+
 namespace BusinessLayer.DTOs;
 
 /// <summary>
@@ -25,6 +27,23 @@ public class BackupDTO
     /// Gets or sets the type of server (e.g., Cisco, EVE, etc.).
     /// </summary>
     public string ServerType { get; set; }
+
+
+    public PlatformType Platform
+    {
+        get
+        {
+            // Druhý parametr 'true' ignoruje velikost písmen (např. "Cisco" vs "cisco")
+            return System.Enum.TryParse<PlatformType>(ServerType, true, out var platformType)
+                ? platformType
+                : default; // Vrací výchozí hodnotu enumu, pokud parsování selže
+        }
+        set
+        {
+            // Při nastavení enumu se automaticky aktualizuje stringová reprezentace
+            ServerType = value.ToString().ToLower(); // .ToLower() podle vaší konvence
+        }
+    }
 
     /// <summary>
     /// Gets or sets the name of the backup file.

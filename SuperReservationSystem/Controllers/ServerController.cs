@@ -3,7 +3,6 @@ using BusinessLayer.Interface;
 using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
-using BusinessLayer.Services.ApiCiscoServices;
 using BusinessLayer.Services.ApiEVEServices;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +14,6 @@ namespace SuperReservationSystem.Controllers
     public class ServerController : Controller
     {
         private ServerService serverService = new ServerService();
-        private ApiCiscoAuthService authServiceCisco = new ApiCiscoAuthService();
         private ApiEVEAuthService authServiceEVE = new ApiEVEAuthService();
         private readonly PlatformManager _platformManager;
 
@@ -75,7 +73,7 @@ namespace SuperReservationSystem.Controllers
             if(result)
                 TempData["SuccessMessage"] = "Server removed";
             else
-                TempData["SuccessMessage"] = "Server doesn't exist or something went wrong. See log.";
+                TempData["ErrorMessage"] = "Server doesn't exist or something went wrong. See log.";
             return RedirectToAction("Index", "Home");
         }
 
@@ -106,7 +104,7 @@ namespace SuperReservationSystem.Controllers
         /// </summary>
         /// <param name="server"> Model where information about server is stored for testing connection </param>
         /// <returns>  An <see cref="Task{IActionResult}"/> that renders Add page and message about success or failure of operation </returns>
-        public async Task<IActionResult> TestConnection(ServerModel server, bool edit=false)
+        public async Task<IActionResult> TestConnection(ServerModel server, bool edit = false)
         {
             if (server.Password == null)
             {
@@ -119,12 +117,12 @@ namespace SuperReservationSystem.Controllers
             {
                 return View("Error");
             }
-            if(server.ServerType == null)
+            if (server.ServerType == null)
             {
                 TempData["ErrorMessage"] = "Server type is not selected";
                 return View("Add", server);
             }
-            if(server.Platform==PlatformType.Unknown)
+            if (server.Platform == PlatformType.Unknown)
             {
                 TempData["ErrorMessage"] = "Platform type is not selected or not supported";
                 return View("Add", server);
@@ -150,62 +148,6 @@ namespace SuperReservationSystem.Controllers
                 else
                     return View("Add", server);
             }
-            // The code below is the old implementation before using IVirtualizationAdapter and PlatformManager. It is kept here for reference and can be removed after confirming that the new implementation works correctly.
-            if (server.ServerType == "CML")
-            {
-                // Check if the server is reachable for CML
-                var client = await authServiceCisco.ValidateCredentials(server.IpAddress, server.Username, server.Password);
-                if (client.Valid)
-                {
-                    TempData["SuccessMessage"] = "Connection successful";
-                    ViewBag.Tested = true;
-
-                    if(edit)
-                        return RedirectToAction("Edit", "Server", new { id = server.Id });
-                    else
-                        return View("Add", server);
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Connection failed. " + client.Message;
-
-                    if (edit)
-                        return RedirectToAction("Edit", "Server", new { id = server.Id });
-                    else
-                        return View("Add", server);
-                }
-            }
-            else if (server.ServerType == "EVE")
-            {
-                // Check if the server is reachable for EVE
-                var valid = await authServiceEVE.ValidateCredentials(server.IpAddress, server.Username, server.Password);
-                if (valid)
-                {
-                    TempData["SuccessMessage"] = "Connection successful";
-                    ViewBag.Tested = true;
-                    if (edit)
-                        return RedirectToAction("Edit", "Server", new { id = server.Id });
-                    else
-                        return View("Add", server);
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Connection failed. Invalid Credentials";
-                    if (edit)
-                        return RedirectToAction("Edit", "Server", new { id = server.Id });
-                    else
-                        return View("Add", server);
-                }
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Server type is not selected or invalid ";
-                if (edit)
-                    return RedirectToAction("Edit", "Server", new { id = server.Id });
-                else
-                    return View("Add", server);
-            }
-
         }
 
         /// <summary>

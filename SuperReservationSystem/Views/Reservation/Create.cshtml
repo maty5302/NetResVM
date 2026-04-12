@@ -20,7 +20,7 @@
 			<option value="">Select lab...</option>
 			@if (ViewBag.Labs3 != null){
 				
-				var labs = (List<BusinessLayer.Interface.ILabModel>)ViewBag.Labs3;
+				var labs = (List<BusinessLayer.DTOs.LabDTO>)ViewBag.Labs3;
 				foreach (var lab in labs)
 				{
 					@if (Model.LabId == lab.Id)
