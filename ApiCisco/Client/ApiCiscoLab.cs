@@ -149,9 +149,32 @@ namespace ApiCisco.Client
         /// </returns>
         public async Task<HttpResponseMessage> DeleteLab(ApiCiscoHttpClient user, string labId)
         {
-            var url = $"{user.Url}labs/{labId.Trim()}";
-            var response = await user.Client.DeleteAsync(url);
-            return response;
+            var baseUrl = user.Url.EndsWith("/") ? user.Url : user.Url + "/";
+            var cleanLabId = labId.Trim();
+
+            try
+            {
+                var wipeUrl = $"{baseUrl}labs/{cleanLabId}/wipe";
+
+                var wipeContent = new StringContent("{}", Encoding.UTF8, "application/json");
+                var wipeResponse = await user.Client.PutAsync(wipeUrl, wipeContent);
+
+                if (!wipeResponse.IsSuccessStatusCode)
+                {
+                    return wipeResponse;
+                }
+
+                await Task.Delay(2000);
+
+                var deleteUrl = $"{baseUrl}labs/{cleanLabId}";
+                var deleteResponse = await user.Client.DeleteAsync(deleteUrl);
+
+                return deleteResponse;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error during Wipe/Delete process: {ex.Message}");
+            }
         }
     }
 }
