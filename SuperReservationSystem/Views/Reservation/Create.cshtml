@@ -12,7 +12,7 @@
 		<option value="">Select server...</option>
 		@for (int i = 0; i < ((List<BusinessLayer.DTOs.ServerDTO>)ViewBag.Servers).Count; i++)
 		{
-			<option value="@ViewBag.Servers[i].Id">@ViewBag.Servers[i].Name</option>
+			<option value="@ViewBag.Servers[i].Id">@ViewBag.Servers[i].Name - @ViewBag.Servers[i].Platform</option>
 		})
 	</select>
 	<label>Lab:</label>
@@ -36,9 +36,9 @@
 			}
 	</select>
 	<label>From:</label>
-	<input type="datetime-local" id="date" asp-for="ReservationStart" class="form-control" value="" />	
+	<input type="datetime-local" id="date" asp-for="ReservationStart" class="form-control" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />	
 	<label>To:</label>
-	<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" value=""/>
+	<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" min="@DateTime.Now.AddHours(1).ToString("yyyy-MM-ddTHH:mm")" />
 	<br />
 		<button class="btn btn-primary" formaction="@Url.Action("MakeReservation","Reservation")">  <i class="bi bi-calendar-check"></i> Make reservation</button>
 	</form>

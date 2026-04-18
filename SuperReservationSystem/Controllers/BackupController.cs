@@ -58,7 +58,7 @@ public class BackupController : Controller
         }
 
         if (fromServer)
-            return RedirectToAction("LabInfo", $"{serverType}", new{id=serverId, labId=labId});
+            return RedirectToAction("LabInfo", "Platform", new{serverId=serverId, labId=labId});
         return RedirectToAction("Index", "Backup");
     }
 
@@ -104,7 +104,7 @@ public class BackupController : Controller
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
         var owned = _labOwnershipService.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
-        if(!owned.userOwns)
+        if(owned.owned && !owned.userOwns)
         {
             TempData["ErrorMessage"] = "Cannot delete lab backup... You don't own this lab.";
             return RedirectToAction("Index", "Backup");

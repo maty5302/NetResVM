@@ -95,6 +95,9 @@ namespace SuperReservationSystem.Controllers
         /// <returns> An <see cref="Task{IActionResult}"/> that renders main create reservation page </returns>
         public async Task<IActionResult> Create(ReservationModel model, int? selectedServer, string? labId)
         {
+            model.ReservationStart = DateTime.Now;
+            model.ReservationEnd = DateTime.Now.AddHours(1);
+            
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
             var servers = serverService.GetAllServers();
@@ -134,46 +137,12 @@ namespace SuperReservationSystem.Controllers
                 {
                     ViewBag.Labs3 = new List<LabDTO>(res.Labs);
                 }
-
-
-                //    if (serverType == "CML")
-                //{
-                //    // get the labs for that server
-                //    var res = await labServiceCisco.GetLabs(selectedServer.Value);
-
-                //    CiscoLabModel? labSelected = null;
-                //    if (labId != null)
-                //    {
-                //        // get the lab info
-                //        labSelected = (await labServiceCisco.GetLabInfo(selectedServer.Value, labId)).lab;
-                //        if (labId != null && labSelected != null)
-                //            model.LabId = labId;
-                //    }
-
-                //    //add labs to the list and view them on page if there are any
-                //    if (res.labs != null && res.labs.Count > 0)
-                //    {
-                //        ViewBag.Labs3 = new List<ILabModel>(res.labs);
-                //    }
-                //    else
-                //    {
-                //        TempData["ErrorMessage"] = "Cannot connect to server. Try again..";
-                //    }
-                //}
-                //else if (serverType == "EVE")
-                //{
-                //    // get the labs for that server
-                //    var res = await labServiceEve.GetLabs(selectedServer.Value);
-                //    //add labs to the list and view them on page if there are any
-                //    if (res != null && res.Count > 0)
-                //    {
-                //        ViewBag.Labs3 = new List<ILabModel>(res);
-                //    }
-                //    else
-                //    {
-                //        TempData["ErrorMessage"] = "Cannot connect to server. Try again..";
-                //    }
-                //}
+                else
+                {
+                    ViewBag.Labs3 = new List<LabDTO>();
+                    TempData["ErrorMessage"] = "No labs found for the selected server.";
+                    logger.LogWarning($"No labs found for server ID: {selectedServer.Value}. Message: {res.Message}");
+                }
             }
 
             return View("Create", model);
