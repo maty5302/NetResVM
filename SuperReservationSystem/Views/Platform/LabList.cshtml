@@ -30,9 +30,9 @@
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
                 <div class="card flex-fill d-flex flex-column">
                     @* Odkaz nyní směřuje na sjednocený PlatformController *@
-                    <a href="@Url.Action("LabInfo", "Platform", new { serverId = ViewBag.ServerId, labId = lab.Id })" class="card-link text-decoration-none text-dark">
-                        <div class="card-body" style="min-height: 175px;">
-                            <h5 class="card-title text-truncate" title="@lab.Name">@lab.Name</h5>
+                    <a href="@Url.Action("LabInfo", "Platform", new { serverId = ViewBag.ServerId, labId = lab.Id })" class="card-link text-decoration-none text-body">
+                        <div class="card-body" style="height: 175px;">
+                            <h5 class="card-title" title="@lab.Name">@lab.Name</h5>
                             <hr />
                             
                             @* Základní vlastnosti ze společného DTO *@

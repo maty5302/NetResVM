@@ -6,10 +6,10 @@ using BusinessLayer.Services;
 using BusinessLayer.Services.ApiEVEServices;
 using Microsoft.AspNetCore.Mvc;
 using SimpleLogger;
-using SuperReservationSystem.Models;
+using NetResVM.Models;
 using System.Text;
 
-namespace SuperReservationSystem.Controllers
+namespace NetResVM.Controllers
 {
     /// <summary>
     /// Controller for managing reservations.
@@ -59,6 +59,7 @@ namespace SuperReservationSystem.Controllers
                         Id = reservation.Id,
                         ServerName = server.Name,
                         ServerType = server.ServerType,
+                        Platform = server.Platform,
                         ServerId = server.Id,
                         LabId = reservation.LabId,
                         ReservationStart = reservation.ReservationStart,
@@ -95,8 +96,8 @@ namespace SuperReservationSystem.Controllers
         /// <returns> An <see cref="Task{IActionResult}"/> that renders main create reservation page </returns>
         public async Task<IActionResult> Create(ReservationModel model, int? selectedServer, string? labId)
         {
-            model.ReservationStart = DateTime.Now;
-            model.ReservationEnd = DateTime.Now.AddHours(1);
+            model.ReservationStart = DateTime.Now.AddMinutes(2);
+            model.ReservationEnd = DateTime.Now.AddMinutes(62);
             
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
@@ -178,6 +179,7 @@ namespace SuperReservationSystem.Controllers
                         Id = reservation.Id,
                         ServerName = server.Name,
                         ServerType = server.ServerType,
+                        Platform = server.Platform,
                         ServerId = server.Id,
                         LabId = reservation.LabId,
                         ReservationStart = reservation.ReservationStart,
@@ -191,6 +193,7 @@ namespace SuperReservationSystem.Controllers
                         Id = reservation.Id,
                         ServerName = server.Name,
                         ServerType = server.ServerType,
+                        Platform = server.Platform,
                         ServerId = server.Id,
                         LabId = reservation.LabId,
                         ReservationStart = reservation.ReservationStart,

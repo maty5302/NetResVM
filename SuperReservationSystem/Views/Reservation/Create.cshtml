@@ -25,20 +25,20 @@
 				{
 					@if (Model.LabId == lab.Id)
 					{
-						<option value="@lab.Id" selected>@lab.Name</option>
+						<option value="@lab.Id" selected>@lab.Name + @lab.Id</option>
 					}
 					else
 					{
-						<option value="@lab.Id">@lab.Name</option>
+						<option value="@lab.Id">@lab.Name + @lab.Id</option>
 					}
 				}
 
 			}
 	</select>
 	<label>From:</label>
-	<input type="datetime-local" id="date" asp-for="ReservationStart" class="form-control" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />	
+	<input type="datetime-local" id="date" asp-for="ReservationStart" class="form-control" min="@DateTime.Now.AddMinutes(2).ToString("yyyy-MM-ddTHH:mm")" />	
 	<label>To:</label>
-	<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" min="@DateTime.Now.AddHours(1).ToString("yyyy-MM-ddTHH:mm")" />
+	<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" min="@DateTime.Now.AddMinutes(62).ToString("yyyy-MM-ddTHH:mm")" />
 	<br />
 		<button class="btn btn-primary" formaction="@Url.Action("MakeReservation","Reservation")">  <i class="bi bi-calendar-check"></i> Make reservation</button>
 	</form>

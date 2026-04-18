@@ -1,4 +1,5 @@
-﻿@{
+﻿@using NetResVM.Models
+@{
 	var plannedReservations = (List<ReservationInformationModel>)ViewBag.PlannedReservations;
 }
 <div id="list-view">
@@ -20,7 +21,7 @@
 				@foreach (var reservation in plannedReservations)
 				{
 					<tr>
-						<td>@reservation.ServerName - @reservation.ServerType </td>
+						<td>@reservation.ServerName - @reservation.Platform </td>
 						<td>@reservation.LabId</td>
 						<td>@reservation.ReservationStart</td>
 						<td>@reservation.ReservationEnd</td>

@@ -19,7 +19,7 @@
                     <div class="card-body d-flex flex-column justify-content-between">
                         
                         @* 1. Sjednocený odkaz na PlatformController *@
-                        <a href="@Url.Action("LabInfo", "Platform", new { serverId = serverId, labId = lab.Id })" class="card-link text-decoration-none text-dark">
+                        <a href="@Url.Action("LabInfo", "Platform", new { serverId = serverId, labId = lab.Id })" class="card-link text-decoration-none text-body">
                             <h5 class="card-title text-truncate" title="@lab.Name">@lab.Name</h5>
                             <hr />
                             

@@ -1,6 +1,5 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@using NetResVM.Models
+
 @{
 	ViewData["Title"] = "My reservations";
 
@@ -27,7 +26,7 @@
 				@for (int i = 0; i < reservations.Count; i++)
 				{
 					<tr>
-						<td>@reservations[i].ServerName - @reservations[i].ServerType </td>
+						<td>@reservations[i].ServerName - @reservations[i].Platform </td>
 						<td>@reservations[i].LabId</td>
 						<td>@reservations[i].ReservationStart</td>
 						<td>@reservations[i].ReservationEnd</td>
@@ -61,7 +60,7 @@
 				@for (int i = 0; i < expired.Count; i++)
 				{
 					<tr>
-						<td>@expired[i].ServerName - @expired[i].ServerType </td>
+						<td>@expired[i].ServerName - @expired[i].Platform </td>
 						<td>@expired[i].LabId</td>
 						<td>@expired[i].ReservationStart</td>
 						<td>@expired[i].ReservationEnd</td>
