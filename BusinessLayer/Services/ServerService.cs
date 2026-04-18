@@ -173,6 +173,7 @@ namespace BusinessLayer.Services
             }
             try
             {
+                //this needs to be fixed ASAP
                 if (server.ServerType == "EVE" && !server.IpAddress.StartsWith("http")) 
                     server.IpAddress = "http://" + server.IpAddress;
                 else if (server.ServerType == "CML" && !server.IpAddress.StartsWith("http"))
@@ -203,7 +204,7 @@ namespace BusinessLayer.Services
             {
                 return false;
             }
-            if (server.Password == String.Empty)
+            if (server.Password == String.Empty || server.Password == null)
             {
                 server.Password = serverToUpdate.Password;
             }

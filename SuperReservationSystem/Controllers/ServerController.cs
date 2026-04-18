@@ -1,4 +1,5 @@
-﻿using BusinessLayer.Enum;
+﻿using ApiCisco;
+using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
@@ -117,18 +118,13 @@ namespace SuperReservationSystem.Controllers
             {
                 return View("Error");
             }
-            if (server.ServerType == null)
-            {
-                TempData["ErrorMessage"] = "Server type is not selected";
-                return View("Add", server);
-            }
             if (server.Platform == PlatformType.Unknown)
             {
                 TempData["ErrorMessage"] = "Platform type is not selected or not supported";
                 return View("Add", server);
             }
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
-            var authResult = await adapter.AuthenticateAsync(server.Id);
+            var authResult = await adapter.TestConnection(server.IpAddress, server.Username, server.Password);
             if (authResult.Valid)
             {
                 TempData["SuccessMessage"] = "Connection successful";
@@ -136,18 +132,13 @@ namespace SuperReservationSystem.Controllers
 
                 if (edit)
                     return RedirectToAction("Edit", "Server", new { id = server.Id });
-                else
-                    return View("Add", server);
+                return View("Add", server);
             }
-            else
-            {
-                TempData["ErrorMessage"] = "Connection failed. " + authResult.Message;
+            TempData["ErrorMessage"] = "Connection failed. " + authResult.Message;
 
-                if (edit)
-                    return RedirectToAction("Edit", "Server", new { id = server.Id });
-                else
-                    return View("Add", server);
-            }
+            if (edit)
+               return RedirectToAction("Edit", "Server", new { id = server.Id }); 
+            return View("Add", server);
         }
 
         /// <summary>
@@ -165,57 +156,24 @@ namespace SuperReservationSystem.Controllers
             if (!ModelState.IsValid)
             {
                 return RedirectToAction("Add", "Server");
-            }           
-
-            if (server.ServerType == "CML")
+            }       
+            IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
+            
+            var authResult = await adapter.TestConnection(server.IpAddress, server.Username, server.Password);
+            if (authResult.Valid)
             {
-                // Check if the server is reachable for CML
-                //var client = await authServiceCisco.ValidateCredentials(server.IpAddress, server.Username, server.Password);
-                //if (client.Valid)
-                //{
-                    // Insert the server into the database
-                    var ok = serverService.InsertServer(server);
-                    if (ok)
-                        TempData["SuccessMessage"] = "Server added successfully";
-                    else
-                        TempData["ErrorMessage"] = "Server cannot be added. See log.";
-
-                    // Redirect to the home page
-                    ViewBag.Servers = serverService.GetAllServers();
-                    return RedirectToAction("Index", "Home");
-                //}
-                //else
-                //{
-                //    TempData["ErrorMessage"] = "Connection failed. " + client.Message;
-                //    return View("Add", server);
-                //}
-
-            }
-            else if (server.ServerType == "EVE")
-            {
-                // Check if the server is reachable for EVE
-                var valid = await authServiceEVE.ValidateCredentials(server.IpAddress,server.Username, server.Password);
-                if (valid)
-                {
-                    // Insert the server into the database
-                    var insert = serverService.InsertServer(server);
-                    if(insert)
-                        TempData["SuccessMessage"] = "Server added successfully";
-                    else
-                        TempData["ErrorMessage"] = "Server cannot be added. See log.";
-
-                    // Redirect to the home page
-                    ViewBag.Servers = serverService.GetAllServers();
-                    return RedirectToAction("Index", "Home");
-                }
+                var ok = serverService.InsertServer(server);
+                if (ok)
+                    TempData["SuccessMessage"] = "Server added successfully";
                 else
-                {
-                    TempData["ErrorMessage"] = "Connection failed. Invalid Credentials";
-                    return View("Add", server);
-                }
-            }
-            else
+                    TempData["ErrorMessage"] = "Server cannot be added. See log.";
+                
+                ViewBag.Servers = serverService.GetAllServers();
                 return RedirectToAction("Index", "Home");
+            }
+            
+            TempData["ErrorMessage"] = "Connection failed. " + authResult.Message;
+            return View("Add", server);
         }
     }
 }

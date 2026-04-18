@@ -8,6 +8,7 @@ namespace BusinessLayer.Interface;
 public interface IVirtualizationAdapter
 {
     PlatformType PlatformName { get; }
+    Task<(bool Valid, string Message)>TestConnection(string ipAddress, string username, string password);
     
     Task<(bool Valid, string Message)> AuthenticateAsync(int id);
     //Task<HttpRequestMessage> LogoutAsync();

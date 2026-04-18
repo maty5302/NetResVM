@@ -38,6 +38,41 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
         _node = new ApiCiscoNode();
     }
     /// <summary>
+    /// Asynchronously tests the connection and authentication credentials against a Cisco CML server.
+    /// </summary>
+    /// <param name="ipAddress">The IP address or base URL of the target CML server.</param>
+    /// <param name="username">The username used to authenticate with the server.</param>
+    /// <param name="password">The password used to authenticate with the server.</param>
+    /// <returns>
+    /// A tuple containing a boolean <c>Valid</c> flag indicating whether the connection and authentication were successful, 
+    /// and a <c>Message</c> string providing descriptive feedback or specific error details based on the HTTP response.
+    /// </returns>
+    /// <returns></returns>
+    public async Task<(bool Valid, string Message)> TestConnection(string ipAddress, string username, string password)
+    {
+        try
+        {
+            var httpClient = new ApiCiscoHttpClient(ipAddress);
+            var response = await _authentication.Authenticate(httpClient, username, password);
+            if (response.StatusCode == HttpStatusCode.OK)
+                return (true, "Connection successful");
+            else if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.Forbidden)
+                return (false, "Invalid credentials");
+            else if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
+                return (false, "Service Unavailable");
+            else if (response.StatusCode == HttpStatusCode.RequestTimeout)
+                return (false, "Request Timeout");
+            else
+                return (false, "Unknown error..");
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"CiscoCmlAdapter - TestConnection - Unknown error - {e.Message}");
+            return (false, "Unknown error..");
+        }
+    }
+    
+    /// <summary>
     /// Asynchronously attempts to authenticate to the server identified by the specified ID and returns the result of
     /// the authentication attempt.
     /// </summary>
