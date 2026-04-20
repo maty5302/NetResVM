@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace BusinessLayer.Models
+namespace ApiEVE.Models
 {
     /// <summary>
     /// Represents a model for an EVE node with its configuration and status.

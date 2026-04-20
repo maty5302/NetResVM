@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net;
 
-namespace ApiEVE
+namespace ApiEVE.Client
 {
     /// <summary>
     /// Provides methods for managing nodes in a lab in the EVE API, including retrieving node information, starting, and stopping nodes.

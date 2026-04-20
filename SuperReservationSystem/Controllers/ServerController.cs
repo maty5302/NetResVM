@@ -4,7 +4,6 @@ using BusinessLayer.Interface;
 using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
-using BusinessLayer.Services.ApiEVEServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace SuperReservationSystem.Controllers
@@ -15,7 +14,6 @@ namespace SuperReservationSystem.Controllers
     public class ServerController : Controller
     {
         private ServerService serverService = new ServerService();
-        private ApiEVEAuthService authServiceEVE = new ApiEVEAuthService();
         private readonly PlatformManager _platformManager;
 
         public ServerController(PlatformManager platformManager)

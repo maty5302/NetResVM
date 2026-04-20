@@ -1,7 +1,6 @@
 using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
 using BusinessLayer.Interface;
-using BusinessLayer.Services.ApiEVEServices;
 using DataLayer;
 using SimpleLogger;
 
@@ -12,7 +11,6 @@ namespace BusinessLayer.Services;
 /// </summary>
 public class BackupService
 {
-    private readonly ApiEVELabService _apiEve;
     private readonly LocalBackupStorage _localBackupStorage;
     private readonly ServerService _serverService;
     private readonly PlatformManager _platformManager;
@@ -20,8 +18,7 @@ public class BackupService
 
     public BackupService(PlatformManager platformManager)
     {
-        _platformManager = platformManager;   
-        _apiEve = new ApiEVELabService();
+        _platformManager = platformManager; 
         _localBackupStorage = new LocalBackupStorage();
         _serverService = new ServerService();
         _logger = FileLogger.Instance;

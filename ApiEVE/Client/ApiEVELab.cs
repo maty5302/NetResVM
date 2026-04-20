@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace ApiEVE
+namespace ApiEVE.Client
 {
     /// <summary>
     /// Provides methods to interact with the EVE API for lab management, including retrieving, exporting, importing, and deleting labs.

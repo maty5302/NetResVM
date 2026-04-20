@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace ApiEVE
+namespace ApiEVE.Client
 {
     /// <summary>
     // /// Provides authentication services for the EVE API, including login and logout operations.

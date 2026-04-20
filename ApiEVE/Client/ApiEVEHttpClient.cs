@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace ApiEVE
+namespace ApiEVE.Client
 {
     /// <summary>
     /// Provides an HTTP client for interacting with the EVE API, managing cookies and authentication.

@@ -1,4 +1,5 @@
 using ApiCisco;
+using ApiEVE;
 using BusinessLayer.Interface;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using SimpleLogger;
@@ -35,6 +36,7 @@ namespace SuperReservationSystem
             builder.Services.AddScoped<BusinessLayer.Services.ServerService>();
             builder.Services.AddScoped<BusinessLayer.Services.PlatformManager>();
             builder.Services.AddScoped<IVirtualizationAdapter, CiscoCmlAdapter>();
+            builder.Services.AddScoped<IVirtualizationAdapter, EveNGAdapter>();
 
 
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

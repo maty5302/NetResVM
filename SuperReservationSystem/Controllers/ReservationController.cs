@@ -3,7 +3,6 @@ using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
-using BusinessLayer.Services.ApiEVEServices;
 using Microsoft.AspNetCore.Mvc;
 using SimpleLogger;
 using NetResVM.Models;
@@ -20,7 +19,6 @@ namespace NetResVM.Controllers
         UserService userService = new UserService();
         ReservationService reservationService = new ReservationService();
         PlatformManager _platformManager;
-        ApiEVELabService labServiceEve = new ApiEVELabService();
         SimpleLogger.ILogger logger = FileLogger.Instance;
 
         public ReservationController(PlatformManager platformManager)
@@ -74,6 +72,7 @@ namespace NetResVM.Controllers
                     Id = reservation.Id,
                     ServerName = server.Name,
                     ServerType = server.ServerType,
+                    Platform = server.Platform,
                     ServerId = server.Id,
                     LabId = reservation.LabId,
                     ReservationStart = reservation.ReservationStart,
@@ -108,15 +107,14 @@ namespace NetResVM.Controllers
             if (selectedServer.HasValue)
             {
                 model.ServerId = selectedServer.Value;
-                var serverType = serverService.GetServerType(selectedServer.Value);    
-                System.Enum.TryParse<PlatformType>(serverType, out var platformType);
-                if(platformType == PlatformType.Unknown)
+                var platform = serverService.GetServerType(selectedServer.Value);
+                if(platform == PlatformType.Unknown)
                 {
                     TempData["ErrorMessage"] = "Unknown platform type.";
-                    logger.LogError($"Unknown platform type: {serverType} for server ID: {selectedServer.Value}");
+                    logger.LogError($"Unknown platform type: {platform} for server ID: {selectedServer.Value}");
                     return View("Create", model);
                 }
-                IVirtualizationAdapter adapter = _platformManager.GetAdapter(platformType);
+                IVirtualizationAdapter adapter = _platformManager.GetAdapter(platform);
                 var res = await adapter.GetLabsAsync(selectedServer.Value);
                 LabDTO? selected = null;
                 if(labId != null)

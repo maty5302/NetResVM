@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ApiEVE\ApiEVE.csproj" />
     <ProjectReference Include="..\DataLayer\DataLayer.csproj" />
   </ItemGroup>
 

@@ -3,6 +3,7 @@ using BusinessLayer.Models;
 using BusinessLayer.MapperDT;
 using SimpleLogger;
 using BusinessLayer.DTOs;
+using BusinessLayer.Enum;
 
 namespace BusinessLayer.Services
 {
@@ -112,19 +113,19 @@ namespace BusinessLayer.Services
         /// <returns>
         /// The server type as a string if the server exists; otherwise, an empty string.
         /// </returns>
-        public string GetServerType(int id)
+        public PlatformType GetServerType(int id)
         {
             try
             {
                 var server=GetServerByIdInternal(id);
                 if (server == null)
-                    return "";
-                return server.ServerType;
+                    return PlatformType.Unknown;
+                return server.Platform;
 
             }
             catch (Exception)
             {
-                return "";
+                return PlatformType.Unknown;
             }
         }
 

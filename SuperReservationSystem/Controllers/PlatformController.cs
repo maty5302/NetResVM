@@ -16,11 +16,16 @@ namespace NetResVM.Controllers
             _platformManager = platformManager;
             _serverService = serverService;
         }
+
         /// <summary>
-        /// 
+        /// Redirects the user to the lab list page for the specified server, or to the login page if the user is not
+        /// authenticated.
         /// </summary>
-        /// <param name="serverId"></param>
-        /// <returns></returns>
+        /// <remarks>If the user is not authenticated, an error message is set in TempData before
+        /// redirecting to the login page.</remarks>
+        /// <param name="serverId">The unique identifier of the server for which to display the lab list.</param>
+        /// <returns>A redirect result to the lab list page if the user is authenticated; otherwise, a redirect result to the
+        /// login page.</returns>
         public IActionResult Index(int serverId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -30,11 +35,19 @@ namespace NetResVM.Controllers
             }
             return RedirectToAction("LabList", "Platform", new { serverId = serverId });
         }
+
+
         /// <summary>
-        /// 
+        /// Displays a list of labs available on the specified server.
         /// </summary>
-        /// <param name="serverId"></param>
-        /// <returns></returns>
+        /// <remarks>If the user is not authenticated, the method redirects to the login page. If the
+        /// server is not found or the platform is unsupported, or if authentication fails, an error message is set and
+        /// the user is redirected to the home page. The returned view contains the list of labs for the specified
+        /// server, or an empty list if no labs are found.</remarks>
+        /// <param name="serverId">The unique identifier of the server from which to retrieve the list of labs.</param>
+        /// <returns>An <see cref="IActionResult"/> that renders the lab list view if successful; otherwise, a redirect to the
+        /// appropriate page with an error message if the server is not found, authentication fails, or the platform is
+        /// unsupported.</returns>
         public async Task<IActionResult> LabList(int serverId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -58,7 +71,7 @@ namespace NetResVM.Controllers
                 }
                 IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
 
-                var response = adapter.AuthenticateAsync(server.Id).Result;
+                var response = await adapter.AuthenticateAsync(server.Id);
                 if (!response.Valid)
                 {
                     TempData["ErrorMessage"] = $"Authentication failed: {response.Message}";
@@ -68,7 +81,7 @@ namespace NetResVM.Controllers
                 var labsResult = await adapter.GetLabsAsync(serverId);
                 if (labsResult.Labs == null)
                 {
-                    return View(new List<BusinessLayer.DTOs.LabDTO>());
+                    return View(new List<LabDTO>());
                 }
                 ViewBag.ServerId = serverId;
                 ViewBag.ServerName = server.Name;
@@ -81,12 +94,18 @@ namespace NetResVM.Controllers
                 return RedirectToAction("Index", "Home");
             }
         }
+
+
         /// <summary>
-        /// 
+        /// Displays detailed information about a specific lab on the selected server.
         /// </summary>
-        /// <param name="serverId"></param>
-        /// <param name="labId"></param>
-        /// <returns></returns>
+        /// <remarks>Redirects to the login page if the user is not authenticated. If the server or lab is
+        /// not found, or if authentication fails, the user is redirected with an error message. Only supported platform
+        /// types are processed.</remarks>
+        /// <param name="serverId">The unique identifier of the server hosting the lab.</param>
+        /// <param name="labId">The unique identifier of the lab to display information for.</param>
+        /// <returns>A view displaying the lab details if found and accessible; otherwise, a redirect to an appropriate page with
+        /// an error message.</returns>
         public async Task<IActionResult> LabInfo(int serverId, string labId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -110,7 +129,7 @@ namespace NetResVM.Controllers
                 }
                 IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
 
-                var response = adapter.AuthenticateAsync(server.Id).Result;
+                var response = await adapter.AuthenticateAsync(server.Id);
                 if (!response.Valid)
                 {
                     TempData["ErrorMessage"] = $"Authentication failed: {response.Message}";
@@ -135,6 +154,7 @@ namespace NetResVM.Controllers
                 return RedirectToAction("Index", "Home");
             }
         }
+
         /// <summary>
         /// Imports a lab configuration file.
         /// </summary>
@@ -173,6 +193,7 @@ namespace NetResVM.Controllers
             return RedirectToAction("LabList", "Platform", new { serverId = serverId });
 
         }
+
         /// <summary>
         /// Asynchronously downloads a virtualization lab topology or export file from the specified server.
         /// The file format (e.g., .yaml for CML, .zip for EVE-NG) is automatically determined by the underlying platform adapter.
@@ -201,7 +222,11 @@ namespace NetResVM.Controllers
             }
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
             ViewBag.ServerID = serverId;
-
+            if (labDto == null || string.IsNullOrEmpty(labDto.Id))
+            {
+                var labResult = await adapter.GetLabInfoAsync(serverId, labId);
+                labDto = labResult.Lab;
+            }
             var data = await adapter.DownloadLab(serverId, labId, labDto);
             if (data.FileContent == null)
             {
@@ -210,6 +235,7 @@ namespace NetResVM.Controllers
             }
             return File(data.FileContent, data.ContentType, data.FileName);
         }
+
         /// <summary>
         /// Deletes a lab identified by the specified server and lab identifiers and redirects to the lab list view.
         /// </summary>
@@ -248,6 +274,7 @@ namespace NetResVM.Controllers
             }
             return RedirectToAction("LabList", "Platform", new { serverId = serverId });
         }
+
         /// <summary>
         /// Starts the specified lab on the given server and redirects to the lab information page or an appropriate
         /// error page.
@@ -286,6 +313,7 @@ namespace NetResVM.Controllers
             }
             return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
         }
+
         /// <summary>
         /// Stops the specified lab on the given server and redirects to the lab information page with a status message.
         /// </summary>
@@ -323,6 +351,7 @@ namespace NetResVM.Controllers
             }
             return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
         }
+
         /// <summary>
         /// Retrieves and displays the list of nodes for a specified lab on a given server.
         /// </summary>

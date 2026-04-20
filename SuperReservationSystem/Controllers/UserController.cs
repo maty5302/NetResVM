@@ -3,7 +3,6 @@ using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
-using BusinessLayer.Services.ApiEVEServices;
 using Microsoft.AspNetCore.Mvc;
 using SuperReservationSystem.Models;
 
@@ -16,7 +15,6 @@ namespace SuperReservationSystem.Controllers
     {
         private readonly UserLabOwnershipService userLabOwnershipService = new UserLabOwnershipService();
         private readonly PlatformManager _platformManager;
-        private readonly ApiEVELabService labServiceEVE = new ApiEVELabService();
         private readonly UserService userService = new UserService();
         private readonly ServerService serverService = new ServerService();
 
@@ -65,8 +63,7 @@ namespace SuperReservationSystem.Controllers
                 foreach (var owned in allUserLabs)
                 {
                     var server = serverService.ServerExists(owned.ServerId);
-                    var serverType = serverService.GetServerType(owned.ServerId);
-                    System.Enum.TryParse<PlatformType>(serverType, out var platform);
+                    var platform = serverService.GetServerType(owned.ServerId);
                     if(platform == PlatformType.Unknown)
                     {
                         continue; // Skip if platform type is unknown
