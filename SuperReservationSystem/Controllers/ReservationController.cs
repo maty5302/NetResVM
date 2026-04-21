@@ -56,7 +56,6 @@ namespace NetResVM.Controllers
                     {
                         Id = reservation.Id,
                         ServerName = server.Name,
-                        ServerType = server.ServerType,
                         Platform = server.Platform,
                         ServerId = server.Id,
                         LabId = reservation.LabId,
@@ -71,7 +70,6 @@ namespace NetResVM.Controllers
                 {
                     Id = reservation.Id,
                     ServerName = server.Name,
-                    ServerType = server.ServerType,
                     Platform = server.Platform,
                     ServerId = server.Id,
                     LabId = reservation.LabId,
@@ -176,7 +174,6 @@ namespace NetResVM.Controllers
                     {
                         Id = reservation.Id,
                         ServerName = server.Name,
-                        ServerType = server.ServerType,
                         Platform = server.Platform,
                         ServerId = server.Id,
                         LabId = reservation.LabId,
@@ -190,7 +187,6 @@ namespace NetResVM.Controllers
                     {
                         Id = reservation.Id,
                         ServerName = server.Name,
-                        ServerType = server.ServerType,
                         Platform = server.Platform,
                         ServerId = server.Id,
                         LabId = reservation.LabId,

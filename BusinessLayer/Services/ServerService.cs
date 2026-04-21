@@ -4,6 +4,7 @@ using BusinessLayer.MapperDT;
 using SimpleLogger;
 using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
+using BusinessLayer.Extensions;
 
 namespace BusinessLayer.Services
 {
@@ -174,13 +175,14 @@ namespace BusinessLayer.Services
             }
             try
             {
-                //this needs to be fixed ASAP
-                if (server.ServerType == "EVE" && !server.IpAddress.StartsWith("http")) 
-                    server.IpAddress = "http://" + server.IpAddress;
-                else if (server.ServerType == "CML" && !server.IpAddress.StartsWith("http"))
-                    server.IpAddress = "https://" + server.IpAddress;
+                var protocol = PlatformTypeExtensions.GetSettings(server.Platform).DefaultProtocol;
+                if (!server.IpAddress.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                {
+                    server.IpAddress = protocol + server.IpAddress;
+                }
+
                 string ip = new Uri(server.IpAddress).Host; //To get the IP address from the URL
-                _gateway.InsertServer(server.ServerType, server.Name, ip, server.Username, server.Password);
+                _gateway.InsertServer(server.Platform.ToString(), server.Name, ip, server.Username, server.Password);
                 _logger.Log($"Server with name {server.Name} has been inserted.");
                 return true;
             }
@@ -211,7 +213,7 @@ namespace BusinessLayer.Services
             }
             try
             {
-                _gateway.UpdateServer(server.Id, server.ServerType, server.Name, server.IpAddress, server.Username, server.Password);
+                _gateway.UpdateServer(server.Id, server.Platform.ToString(), server.Name, server.IpAddress, server.Username, server.Password);
                 _logger.Log($"Server with id {server.Id} has been updated.");
                 return true;
             }

@@ -15,8 +15,8 @@
                 <input type="hidden" asp-for="Id" />
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold" asp-for="ServerType">Server type:</label>
-                    <select asp-for="ServerType" class="form-select" 
+                    <label class="form-label fw-bold" asp-for="Platform">Server type:</label>
+                    <select asp-for="Platform" class="form-select" 
                             asp-items="@(Html.GetEnumSelectList<PlatformType>().Where(e => e.Value != "0"))">
                     </select>
                 </div>

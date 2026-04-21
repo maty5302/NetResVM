@@ -17,11 +17,11 @@ public class LocalBackupStorage
     /// <param name="serverType"> Type of the server, which is used for path </param>
     /// <param name="labId"> ID of a lab </param>
     /// <param name="fileContent"> File that needs to be saved </param>
-    public async void SaveBackup(string serverType, string labId, byte[] fileContent)
+    /// <param name="fileExtension"> File extension for the backup file </param>
+    public async void SaveBackup(string serverType, string labId, byte[] fileContent, string fileExtension)
     {
-        string extension= serverType == "CML" ? ".yaml" : ".zip";
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        string fileName = $"{serverType}-{labId}-{timestamp}{extension}";
+        string fileName = $"{serverType}-{labId}-{timestamp}{fileExtension}";
         string filePath = Path.Combine(_backupPath, serverType, labId, fileName);
 
         Directory.CreateDirectory(Path.GetDirectoryName(filePath));

@@ -13,28 +13,9 @@ namespace BusinessLayer.DTOs
         public required int Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the type of the server (e.g., "cisco", "eve-ng").
+        /// Gets or sets the type of the server (e.g., "cml", "eve").
         /// </summary>
-        public required string ServerType { get; set; }
-
-        /// <summary>
-        /// Gets or sets the PlatformType strongly-typed enum based on ServerType.
-        /// </summary>
-        public PlatformType Platform
-        {
-            get
-            {
-                // Druhý parametr 'true' ignoruje velikost písmen (např. "Cisco" vs "cisco")
-                return System.Enum.TryParse<PlatformType>(ServerType, true, out var platformType)
-                    ? platformType
-                    : default; // Vrací výchozí hodnotu enumu, pokud parsování selže
-            }
-            set
-            {
-                // Při nastavení enumu se automaticky aktualizuje stringová reprezentace
-                ServerType = value.ToString().ToLower(); // .ToLower() podle vaší konvence
-            }
-        }
+        public PlatformType Platform {  get; set; }
 
         /// <summary>
         /// Gets or sets the display name of the server.

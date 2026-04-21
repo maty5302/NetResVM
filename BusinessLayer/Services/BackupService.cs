@@ -1,5 +1,6 @@
 using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
+using BusinessLayer.Extensions;
 using BusinessLayer.Interface;
 using DataLayer;
 using SimpleLogger;
@@ -16,11 +17,11 @@ public class BackupService
     private readonly PlatformManager _platformManager;
     private readonly ILogger _logger;
 
-    public BackupService(PlatformManager platformManager)
+    public BackupService(PlatformManager platformManager, ServerService serverService)
     {
         _platformManager = platformManager; 
         _localBackupStorage = new LocalBackupStorage();
-        _serverService = new ServerService();
+        _serverService = serverService;
         _logger = FileLogger.Instance;
     }
 
@@ -48,7 +49,8 @@ public class BackupService
             return (false, "Unknown platform");
         }
         IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
-        
+        var settings = PlatformTypeExtensions.GetSettings(server.Platform);
+
         var labInfo = await adapter.GetLabInfoAsync(serverId,labId);
         if(labInfo.Lab == null)
         {
@@ -58,7 +60,7 @@ public class BackupService
         var response = await adapter.DownloadLab(serverId, labId, labInfo.Lab);
         if(response.FileContent != null)
         {
-            _localBackupStorage.SaveBackup(server.ServerType, labId, response.FileContent);
+            _localBackupStorage.SaveBackup(server.Platform.ToString(), labId, response.FileContent, settings.FileExtension);
             return (true, "Backup successful");
         }
         else
@@ -90,9 +92,9 @@ public class BackupService
         {
             ServerDTO? matchingServer = null;
             // Find the server that matches the backup
+            System.Enum.TryParse<PlatformType>(backup.ServerType, true, out var platformType);
             foreach (var server in servers)
-            {
-                System.Enum.TryParse<PlatformType>(backup.ServerType, true, out var platformType);
+            {                
                 if (server.Platform != platformType)
                     continue;
 
@@ -130,7 +132,7 @@ public class BackupService
                     ServerId = matchingServer.Id,
                     ServerName = matchingServer.Name,
                     LabId = backup.LabId,
-                    ServerType = backup.ServerType,
+                    Platform = matchingServer.Platform,
                     FileName = backup.FileName,
                     FullPath = backup.FullPath,
                     CreatedAt = backup.CreatedAt
@@ -144,7 +146,7 @@ public class BackupService
                     ServerId = -1,
                     ServerName = "Unknown",
                     LabId = backup.LabId,
-                    ServerType = backup.ServerType,
+                    Platform = platformType,
                     FileName = backup.FileName,
                     FullPath = backup.FullPath,
                     CreatedAt = backup.CreatedAt
@@ -155,56 +157,24 @@ public class BackupService
         return backupDTOs;
     }
 
-
-    //public async Task<bool> RestoreBackup(int serverId, string serverType, string labId, string fileName)
-    //{
-    //    var file = await _localBackupStorage.GetBackup(serverType, labId, fileName);
-    //    if (file != null)
-    //    {
-    //        if (serverType == "CML")
-    //        {
-    //            var res = await _apiCisco.ImportLab(serverId, file);
-    //            if (res)
-    //            {
-    //                _localBackupStorage.DeleteBackup(serverType, labId, fileName);
-    //                return true;
-    //            }
-
-    //            return false;
-    //        }
-    //        else if (serverType == "EVE")
-    //        {
-    //            return await _apiEve.ImportLab(serverId, file, fileName);
-    //        }
-    //    }
-
-    //    return false;
-    //}
-
     /// <summary>
     /// Asynchronously restores a backup for a specified server and lab.
     /// </summary>
     /// <param name="serverId">The unique identifier (ID) of the server where the lab is hosted.</param>
-    /// <param name="serverType">The type of the server (e.g., CML, EVE-NG).</param>
+    /// <param name="platform">The type of the server (e.g., CML, EVE-NG).</param>
     /// <param name="labId">The unique identifier (ID) of the lab to restore the backup for.</param>
     /// <param name="fileName">The name of the backup file to restore.</param>
     /// <returns>
     /// <c>true</c> if the backup was successfully restored; otherwise, <c>false</c>.
     /// </returns>
-    public async Task<bool> RestoreBackup(int serverId, string serverType, string labId, string fileName)
+    public async Task<bool> RestoreBackup(int serverId, PlatformType platform, string labId, string fileName)
     {
         try
         {
-            var file = await _localBackupStorage.GetBackup(serverType, labId, fileName);
+            var file = await _localBackupStorage.GetBackup(platform.ToString(), labId, fileName);
             if (file == null)
             {
                 _logger.LogWarning($"BackupService - RestoreBackup: Backup file {fileName} not found.");
-                return false;
-            }
-
-            if (!System.Enum.TryParse<PlatformType>(serverType, out var platform))
-            {
-                _logger.LogError($"BackupService - RestoreBackup: Unsupported platform type '{serverType}'.");
                 return false;
             }
 
@@ -221,7 +191,7 @@ public class BackupService
 
             if (importResult)
             {
-                _localBackupStorage.DeleteBackup(serverType, labId, fileName);
+                _localBackupStorage.DeleteBackup(platform.ToString(), labId, fileName);
 
                 _logger.Log($"BackupService - RestoreBackup: Successfully restored {fileName} to server {serverId}.");
                 return true;
@@ -244,27 +214,27 @@ public class BackupService
     /// </summary>
     /// <param name="fileName">The name of the backup file to delete.</param>
     /// <param name="labId">The unique identifier (ID) of the lab associated with the backup.</param>
-    /// <param name="serverType">The type of the server (e.g., CML, EVE-NG) where the backup is stored.</param>
+    /// <param name="platform">The type of the server (e.g., CML, EVE-NG) where the backup is stored.</param>
     /// <returns>
     /// <c>true</c> if the backup was successfully deleted; otherwise, <c>false</c>.
     /// </returns>
-    public bool DeleteBackup(string fileName, string labId, string serverType)
+    public bool DeleteBackup(string fileName, string labId, PlatformType platform)
     {
-        return _localBackupStorage.DeleteBackup(serverType, labId, fileName);
+        return _localBackupStorage.DeleteBackup(platform.ToString(), labId, fileName);
     }
 
     /// <summary>
     /// Asynchronously downloads a backup file for a specific lab and server.
     /// </summary>
-    /// <param name="serverType">The type of the server (e.g., CML, EVE-NG, etc.) hosting the backup.</param>
+    /// <param name="platform">The type of the server (e.g., CML, EVE-NG, etc.) hosting the backup.</param>
     /// <param name="labId">The unique identifier (ID) of the lab associated with the backup.</param>
     /// <param name="fileName">The name of the backup file to download.</param>
     /// <returns>
     /// A byte array containing the backup file if successfully downloaded; otherwise, an empty byte array or <c>null</c> if an error occurs.
     /// </returns>
-    public async Task<byte[]> DownloadBackup(string serverType, string labId, string fileName)
+    public async Task<byte[]> DownloadBackup(PlatformType platform, string labId, string fileName)
     {
-        var file = await _localBackupStorage.GetBackup(serverType, labId, fileName);
+        var file = await _localBackupStorage.GetBackup(platform.ToString(), labId, fileName);
         if (file != null)
         {
             return file;

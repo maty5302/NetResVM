@@ -1,3 +1,4 @@
+using BusinessLayer.Enum;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -67,10 +68,10 @@ public class BackupController : Controller
     /// </summary>
     /// <param name="serverId"> ID of the server </param>
     /// <param name="labId"> ID of lab to restore backup for</param>
-    /// <param name="serverType"> Type of the server </param>
+    /// <param name="platform"> Type of the server </param>
     /// <param name="filename"> Name of the file </param>
     /// <returns>  An <see cref="IActionResult"/> that renders main backup page and message about success or failure of operation</returns>
-    public async Task<IActionResult> RestoreBackup(int serverId, string labId, string serverType, string filename)
+    public async Task<IActionResult> RestoreBackup(int serverId, string labId, PlatformType platform, string filename)
     {
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
@@ -80,7 +81,7 @@ public class BackupController : Controller
             TempData["ErrorMessage"] = "Cannot restore lab backup... You don't own this lab.";
             return RedirectToAction("Index", "Backup");
         }
-        var result = await _backupService.RestoreBackup(serverId,serverType, labId, filename);
+        var result = await _backupService.RestoreBackup(serverId, platform, labId, filename);
         if (result)
         {
             TempData["SuccessMessage"] = "Restore was successful.";
@@ -97,9 +98,9 @@ public class BackupController : Controller
     /// </summary>
     /// <param name="filename"> Name of the file to delete </param>
     /// <param name="labId"> ID of lab to delete backup for</param>
-    /// <param name="serverType"> Type of the server </param>
+    /// <param name="platform"> Type of the server </param>
     /// <returns>  An <see cref="IActionResult"/> that renders main backup page and message about success or failure of operation</returns>
-    public IActionResult DeleteBackup(string filename, string labId, string serverType)
+    public IActionResult DeleteBackup(string filename, string labId, PlatformType platform)
     {
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
@@ -109,7 +110,7 @@ public class BackupController : Controller
             TempData["ErrorMessage"] = "Cannot delete lab backup... You don't own this lab.";
             return RedirectToAction("Index", "Backup");
         }
-        var result = _backupService.DeleteBackup(filename, labId, serverType);
+        var result = _backupService.DeleteBackup(filename, labId, platform);
         if (result)
         {
             TempData["SuccessMessage"] = "Backup was deleted.";
@@ -126,13 +127,13 @@ public class BackupController : Controller
     /// </summary>
     /// <param name="filename"> Name of the file to download </param>
     /// <param name="labId"> ID of lab to download backup for</param>
-    /// <param name="serverType"> Type of the server </param>
+    /// <param name="platform"> Type of the server </param>
     /// <returns>  An <see cref="IActionResult"/> that renders main backup page and message about success or failure of operation</returns>
-    public async Task<IActionResult> DownloadBackup(string filename, string labId, string serverType)
+    public async Task<IActionResult> DownloadBackup(string filename, string labId, PlatformType platform)
     {
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
-        var file = await _backupService.DownloadBackup(serverType, labId, filename);
+        var file = await _backupService.DownloadBackup(platform, labId, filename);
         if (file.Length > 0)
         {
             return File(file, "application/octet-stream", filename);
