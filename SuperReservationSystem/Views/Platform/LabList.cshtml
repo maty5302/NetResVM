@@ -86,3 +86,20 @@
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        setInterval(async function () {
+            try {
+                const response = await fetch('@Url.Action("CheckServerStatus", "Platform", new { serverId = ViewBag.ServerId })');
+                const data = await response.json();
+
+                if (data.isOnline === false) {
+                    window.location.href = '@Url.Action("Index", "Home")?error=connection_lost';
+                }
+            } catch (error) {
+                console.error("Status check failed", error);
+            }
+        }, 15000);
+    </script>
+}

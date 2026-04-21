@@ -31,5 +31,10 @@ namespace BusinessLayer.DTOs
         /// Gets or sets the username used to authenticate with the server.
         /// </summary>
         public required string Username { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the entity is currently online.
+        /// </summary>
+        public bool IsOnline { get; set; } 
     }
 }
