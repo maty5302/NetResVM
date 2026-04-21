@@ -1,5 +1,9 @@
 ﻿namespace BusinessLayer.DTOs
 {
+    /// <summary>
+    /// Represents a data transfer object for a laboratory, containing identifying information, descriptive details,
+    /// status, and associated metadata.
+    /// </summary>
     public class LabDTO
     {
         /// <summary>

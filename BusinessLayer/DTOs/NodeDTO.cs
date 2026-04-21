@@ -1,5 +1,9 @@
 ﻿namespace BusinessLayer.DTOs
 {
+    /// <summary>
+    /// Represents a data transfer object that encapsulates information about a node, including its identifier, name,
+    /// status, hardware resources, and associated metadata.
+    /// </summary>
     public class NodeDTO
     {
         /// <summary>
