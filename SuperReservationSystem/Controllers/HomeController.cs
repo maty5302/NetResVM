@@ -11,16 +11,18 @@ namespace SuperReservationSystem.Controllers
     public class HomeController : Controller
 	{
 		private readonly ILogger<HomeController> _logger;
-		private ServerService serverService = new ServerService();
+        private readonly ServerService _serverService;
 
         /// <summary>
         /// Constructor for the HomeController class.
         /// </summary>
         /// <param name="logger"></param>
-        public HomeController(ILogger<HomeController> logger)
+        /// <param name="serverService"></param>
+        public HomeController(ILogger<HomeController> logger, ServerService serverService)
 		{
 			_logger = logger;
-		}
+            _serverService = serverService;
+        }
 
         /// <summary>
         /// Displays the main page of the application.
@@ -30,7 +32,7 @@ namespace SuperReservationSystem.Controllers
 		{			
 			if (User.Identity != null && !User.Identity.IsAuthenticated)
 				return RedirectToAction("Index","Login");			
-            ViewBag.Servers = serverService.GetAllServers();
+            ViewBag.Servers = _serverService.GetAllServers();
             return View();
 		}
 

@@ -14,6 +14,10 @@
         /// Gets or sets the description of the lab.
         /// </summary>
         public string Description { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the current status as a string value.
+        /// </summary>
         public string Status { get; set; } = string.Empty;
 
         /// <summary>
