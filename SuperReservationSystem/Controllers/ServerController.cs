@@ -13,12 +13,13 @@ namespace SuperReservationSystem.Controllers
     /// </summary>
     public class ServerController : Controller
     {
-        private ServerService serverService = new ServerService();
+        private readonly ServerService _serverService;
         private readonly PlatformManager _platformManager;
 
-        public ServerController(PlatformManager platformManager)
+        public ServerController(PlatformManager platformManager, ServerService serverService)
         {
             _platformManager = platformManager;
+            _serverService = serverService;
         }
         /// <summary>
         /// Displays the list of servers.
@@ -46,7 +47,7 @@ namespace SuperReservationSystem.Controllers
             if (!User.IsInRole("Admin"))
                 return RedirectToAction("Index", "Home");
 
-            var server = serverService.GetServerById(id);
+            var server = _serverService.GetServerById(id);
             if (server == null)
             {
                 TempData["ErrorMessage"] = "Server not found.";
@@ -68,7 +69,7 @@ namespace SuperReservationSystem.Controllers
             if (!User.IsInRole("Admin"))
                 return RedirectToAction("Index","Home");
 
-            var result = serverService.RemoveServer(id);
+            var result = _serverService.RemoveServer(id);
             if(result)
                 TempData["SuccessMessage"] = "Server removed";
             else
@@ -89,7 +90,7 @@ namespace SuperReservationSystem.Controllers
             if (!User.IsInRole("Admin"))
                 return RedirectToAction("Index", "Home");
 
-            var result = serverService.UpdateServer(server);
+            var result = _serverService.UpdateServer(server);
             if (result)
                 TempData["SuccessMessage"] = "Server updated";
             else
@@ -160,13 +161,13 @@ namespace SuperReservationSystem.Controllers
             var authResult = await adapter.TestConnection(server.IpAddress, server.Username, server.Password);
             if (authResult.Valid)
             {
-                var ok = serverService.InsertServer(server);
+                var ok = _serverService.InsertServer(server);
                 if (ok)
                     TempData["SuccessMessage"] = "Server added successfully";
                 else
                     TempData["ErrorMessage"] = "Server cannot be added. See log.";
                 
-                ViewBag.Servers = serverService.GetAllServers();
+                ViewBag.Servers = _serverService.GetAllServers();
                 return RedirectToAction("Index", "Home");
             }
             

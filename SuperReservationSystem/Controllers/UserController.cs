@@ -13,14 +13,17 @@ namespace SuperReservationSystem.Controllers
     /// </summary>
     public class UserController : Controller
     {
-        private readonly UserLabOwnershipService userLabOwnershipService = new UserLabOwnershipService();
+        private readonly UserLabOwnershipService _userLabOwnershipService;
         private readonly PlatformManager _platformManager;
-        private readonly UserService userService = new UserService();
-        private readonly ServerService serverService = new ServerService();
+        private readonly UserService _userService;
+        private readonly ServerService _serverService;
 
-        public UserController(PlatformManager platformManager)
+        public UserController(PlatformManager platformManager, UserLabOwnershipService userLabOwnershipService, UserService userService, ServerService serverService)
         {
             _platformManager = platformManager;
+            _userLabOwnershipService = userLabOwnershipService;
+            _userService = userService;
+            _serverService = serverService;
         }
         /// <summary>
         /// Displays the settings page for the user.
@@ -31,7 +34,7 @@ namespace SuperReservationSystem.Controllers
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
 
-            ViewBag.UserAuthType = userService.GetAuthorizationType(User.Identity?.Name ?? string.Empty);
+            ViewBag.UserAuthType = _userService.GetAuthorizationType(User.Identity?.Name ?? string.Empty);
 
             return View();
         }
@@ -46,7 +49,7 @@ namespace SuperReservationSystem.Controllers
                 return RedirectToAction("Index", "Login");
 
             // Get the user ID from the UserService
-            var userId = userService.GetUserId(User.Identity?.Name ?? string.Empty);
+            var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
 
             if (userId == 0)
             {
@@ -54,7 +57,7 @@ namespace SuperReservationSystem.Controllers
                 return RedirectToAction("Index", "Home");
             }
             // Get all labs owned by the user
-            var allUserLabs = userLabOwnershipService.GetAllUserLabsByUserID(userId);
+            var allUserLabs = _userLabOwnershipService.GetAllUserLabsByUserID(userId);
             var labsInfo = new List<(int, LabDTO)>();// Tuple of server id and lab model
             if (allUserLabs != null)
             {
@@ -62,8 +65,8 @@ namespace SuperReservationSystem.Controllers
                 // Loop through each owned lab and get its information
                 foreach (var owned in allUserLabs)
                 {
-                    var server = serverService.ServerExists(owned.ServerId);
-                    var platform = serverService.GetServerType(owned.ServerId);
+                    var server = _serverService.ServerExists(owned.ServerId);
+                    var platform = _serverService.GetServerType(owned.ServerId);
                     if(platform == PlatformType.Unknown)
                     {
                         continue; // Skip if platform type is unknown
@@ -94,27 +97,26 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
                 return RedirectToAction("Login", "Home");
             }
-            var server = serverService.ServerExists(serverID);
+            var server = _serverService.ServerExists(serverID);
             if (!server)
             {
                 TempData["ErrorMessage"] = "Server not found.";
                 return RedirectToAction("Index", "Home");
             }
-            var serverType = serverService.GetServerType(serverID);
             UserLabOwnershipModel model = new UserLabOwnershipModel
             {
                 ServerId = serverID,
                 LabId = labID,
-                UserId = userService.GetUserId(User.Identity?.Name ?? string.Empty)
+                UserId = _userService.GetUserId(User.Identity?.Name ?? string.Empty)
             };
-            var lab = userLabOwnershipService.InsertUserLabOwnership(model);
+            var lab = _userLabOwnershipService.InsertUserLabOwnership(model);
             if (lab.Item1)
             {
                 TempData["SuccessMessage"] = "Lab owned successfully.";
-                return RedirectToAction("LabInfo", $"{serverType}", new { id = serverID, labId = labID });
+                return RedirectToAction("LabInfo", "Platform", new { serverId = serverID, labId = labID });
             }
             TempData["ErrorMessage"] = lab.Item2;
-            return RedirectToAction("LabList", $"{serverType}", new { id = serverID });
+            return RedirectToAction("LabList", "Platform", new { serverId = serverID });
         }
 
         /// <summary>
@@ -130,14 +132,14 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
                 return RedirectToAction("Login", "Home");
             }
-            var userId = userService.GetUserId(User.Identity?.Name ?? string.Empty);
+            var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
             UserLabOwnershipModel model = new UserLabOwnershipModel
             {
                 ServerId = serverId,
                 LabId = labId,
                 UserId = userId
             };
-            var lab = userLabOwnershipService.DeleteUserLabOwnership(model);
+            var lab = _userLabOwnershipService.DeleteUserLabOwnership(model);
             if (lab)
             {
                 TempData["SuccessMessage"] = "Lab ownership removed successfully.";
@@ -159,7 +161,7 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
                 return RedirectToAction("Login", "Home");
             }
-            if (!userService.ValidateCredentials(User.Identity.Name, PassModel.oldPassword))
+            if (!_userService.ValidateCredentials(User.Identity.Name, PassModel.oldPassword))
             {
                 TempData["ErrorMessage"] = "Old password is incorrect.";
                 return RedirectToAction("Settings", "User");
@@ -169,7 +171,7 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Passwords do not match.";
                 return RedirectToAction("Settings", "User");
             }
-            if (userService.UpdateUser(userService.GetUserId(User.Identity.Name), PassModel.newPassword))
+            if (_userService.UpdateUser(_userService.GetUserId(User.Identity.Name), PassModel.newPassword))
             {
                 TempData["SuccessMessage"] = "Password changed successfully.";
                 return RedirectToAction("Settings", "User");
@@ -195,7 +197,7 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Password is required for local account.";
                 return RedirectToAction("Settings", "User");
             }
-            if (userService.AddUser(model.Username, model.Password, "student", model.AuthorizationType, model.Active))
+            if (_userService.AddUser(model.Username, model.Password, "student", model.AuthorizationType, model.Active))
             {
                 TempData["SuccessMessage"] = "User added successfully.";
                 return RedirectToAction("Settings", "User");
@@ -220,7 +222,7 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Access denied. Admin role required.";
                 return RedirectToAction("Index", "Home");
             }
-            var users = userService.GetAllUsersInfo();
+            var users = _userService.GetAllUsersInfo();
             if (users != null)
             {
                 ViewBag.Users = users;
@@ -245,7 +247,7 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Access denied. Admin role required.";
                 return RedirectToAction("Index", "Home");
             }
-            if (userService.UpdateUser(UserId,false))
+            if (_userService.UpdateUser(UserId,false))
             {
                 TempData["SuccessMessage"] = "User deactivated successfully.";
                 return RedirectToAction("ManageUser", "User");
@@ -271,7 +273,7 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Access denied. Admin role required.";
                 return RedirectToAction("Index", "Home");
             }
-            if (userService.UpdateUser(UserId, true))
+            if (_userService.UpdateUser(UserId, true))
             {
                 TempData["SuccessMessage"] = "User activated successfully.";
                 return RedirectToAction("ManageUser", "User");
@@ -297,7 +299,7 @@ namespace SuperReservationSystem.Controllers
                 TempData["ErrorMessage"] = "Access denied. Admin role required.";
                 return RedirectToAction("Index", "Home");
             }
-            if (userService.RemoveUser(UserId))
+            if (_userService.RemoveUser(UserId))
             {
                 TempData["SuccessMessage"] = "User removed successfully.";
                 return RedirectToAction("ManageUser", "User");

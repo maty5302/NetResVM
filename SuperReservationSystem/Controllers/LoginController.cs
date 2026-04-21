@@ -12,7 +12,12 @@ namespace SuperReservationSystem.Controllers
     /// </summary>
     public class LoginController : Controller
     {
-        private UserService userService = new UserService();
+        private UserService _userService;
+
+        public LoginController(UserService userService)
+        {
+            _userService = userService;
+        }
 
         /// <summary>
         /// Displays the login page.
@@ -37,13 +42,13 @@ namespace SuperReservationSystem.Controllers
             if (ModelState.IsValid && !User.Identity.IsAuthenticated)
             {
                 // Check if the user is already authenticated
-                if (userService.ValidateCredentials(user.Username,user.Password))
+                if (_userService.ValidateCredentials(user.Username,user.Password))
                 {
                     // Create the claims for the user
                     var claims = new List<Claim>
                     {
                     new Claim(ClaimTypes.Name, user.Username),
-                    new Claim(ClaimTypes.Role, userService.GetRole(user.Username)) 
+                    new Claim(ClaimTypes.Role, _userService.GetRole(user.Username)) 
 					};
                     // Create the claims identity and sign in the user
                     var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -60,7 +65,7 @@ namespace SuperReservationSystem.Controllers
         /// <summary>
         /// Handles the logout process.
         /// </summary>
-        /// <returns> An <see cref="Task{IActionResult}"/> that renders login page and sing out user</returns>
+        /// <returns> An <see cref="Task{IActionResult}"/> that renders login page and signs out user</returns>
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

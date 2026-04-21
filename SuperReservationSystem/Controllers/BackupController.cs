@@ -10,12 +10,14 @@ namespace SuperReservationSystem.Controllers;
 public class BackupController : Controller
 {
     private readonly BackupService _backupService;
-    private readonly UserLabOwnershipService _labOwnershipService = new UserLabOwnershipService();
-    private readonly UserService _userService = new UserService();
+    private readonly UserLabOwnershipService _labOwnershipService;
+    private readonly UserService _userService;
 
-    public BackupController(BackupService backupService)
+    public BackupController(BackupService backupService, UserService userService, UserLabOwnershipService labOwnershipService)
     {
         _backupService = backupService;
+        _userService = userService;
+        _labOwnershipService = labOwnershipService;
     }
     /// <summary>
     /// Displays the list of backups.

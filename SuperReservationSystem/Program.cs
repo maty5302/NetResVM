@@ -12,8 +12,6 @@ namespace SuperReservationSystem
     /// </summary>
     public class Program
 	{
-		private static BackgroundTask _backgroundTask = new BackgroundTask();
-
         /// <summary>
         /// Main method to start the application.
         /// </summary>
@@ -34,10 +32,16 @@ namespace SuperReservationSystem
             // Dependency Injection for services
             builder.Services.AddScoped<BusinessLayer.Services.BackupService>();
             builder.Services.AddScoped<BusinessLayer.Services.ServerService>();
+            builder.Services.AddScoped<BusinessLayer.Services.ReservationService>();
+            builder.Services.AddScoped<BusinessLayer.Services.UserService>();
+            builder.Services.AddScoped<BusinessLayer.Services.UserLabOwnershipService>();
+
+
             builder.Services.AddScoped<BusinessLayer.Services.PlatformManager>();
             builder.Services.AddScoped<IVirtualizationAdapter, CiscoCmlAdapter>();
             builder.Services.AddScoped<IVirtualizationAdapter, EveNGAdapter>();
 
+            builder.Services.AddSingleton<BackgroundTask>();
 
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
 			.AddCookie(options =>
@@ -87,7 +91,8 @@ namespace SuperReservationSystem
             Directory.CreateDirectory("logs");
             Directory.CreateDirectory("backups");
             //background checking of reservations
-            _backgroundTask.Start();
+            var backgroundTask = app.Services.GetRequiredService<BackgroundTask>();
+            backgroundTask.Start();
 			//starts TelnetConsole
 			Task.Run(()=>TelnetConsole.TelnetConsole.StartListener());
 			//starts web app

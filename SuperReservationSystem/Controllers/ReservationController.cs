@@ -15,15 +15,17 @@ namespace NetResVM.Controllers
     /// </summary>
     public class ReservationController : Controller
     {
-        ServerService serverService = new ServerService();
-        UserService userService = new UserService();
-        ReservationService reservationService = new ReservationService();
-        PlatformManager _platformManager;
-        SimpleLogger.ILogger logger = FileLogger.Instance;
-
-        public ReservationController(PlatformManager platformManager)
+        private readonly ServerService _serverService;
+        private readonly UserService _userService;
+        private readonly ReservationService _reservationService;
+        private readonly PlatformManager _platformManager;
+        private readonly SimpleLogger.ILogger _logger = FileLogger.Instance;
+        public ReservationController(PlatformManager platformManager, ServerService serverService, UserService userService, ReservationService reservationService)
         {
             _platformManager = platformManager;
+            _serverService = serverService;
+            _userService = userService;
+            _reservationService = reservationService;
         }
 
         /// <summary>
@@ -36,7 +38,7 @@ namespace NetResVM.Controllers
                 return RedirectToAction("Index", "Login");
 
             
-            var reservations = reservationService.GetAllReservations();          
+            var reservations = _reservationService.GetAllReservations();          
             List<ReservationInformationModel> plannedReservations = new List<ReservationInformationModel>();
             List<ReservationInformationModel> allReservations = new List<ReservationInformationModel>();
             if (reservations == null)
@@ -47,10 +49,10 @@ namespace NetResVM.Controllers
             // goes though all reservations and adds them to the list
             foreach (var reservation in reservations)
             {
-                var server = serverService.GetServerById(reservation.ServerId);
+                var server = _serverService.GetServerById(reservation.ServerId);
                 if (server == null)
                     continue;
-                var user = userService.GetUsername(reservation.UserId);
+                var user = _userService.GetUsername(reservation.UserId);
                 if (reservation.ReservationEnd > DateTime.Now)
                     plannedReservations.Add(new ReservationInformationModel
                     {
@@ -98,18 +100,18 @@ namespace NetResVM.Controllers
             
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
-            var servers = serverService.GetAllServers();
+            var servers = _serverService.GetAllServers();
             ViewBag.Servers = servers;
 
             // if server is selected, get the labs for that server
             if (selectedServer.HasValue)
             {
                 model.ServerId = selectedServer.Value;
-                var platform = serverService.GetServerType(selectedServer.Value);
+                var platform = _serverService.GetServerType(selectedServer.Value);
                 if(platform == PlatformType.Unknown)
                 {
                     TempData["ErrorMessage"] = "Unknown platform type.";
-                    logger.LogError($"Unknown platform type: {platform} for server ID: {selectedServer.Value}");
+                    _logger.LogError($"Unknown platform type: {platform} for server ID: {selectedServer.Value}");
                     return View("Create", model);
                 }
                 IVirtualizationAdapter adapter = _platformManager.GetAdapter(platform);
@@ -126,7 +128,7 @@ namespace NetResVM.Controllers
                     else
                     {
                         TempData["ErrorMessage"] = "Cannot get lab info. Try again..";
-                        logger.LogError($"Cannot get lab info for lab ID: {labId} on server ID: {selectedServer.Value}. Message: {labInfo.Message}");
+                        _logger.LogError($"Cannot get lab info for lab ID: {labId} on server ID: {selectedServer.Value}. Message: {labInfo.Message}");
                         return View("Create", model);
                     }
                 }
@@ -138,7 +140,7 @@ namespace NetResVM.Controllers
                 {
                     ViewBag.Labs3 = new List<LabDTO>();
                     TempData["ErrorMessage"] = "No labs found for the selected server.";
-                    logger.LogWarning($"No labs found for server ID: {selectedServer.Value}. Message: {res.Message}");
+                    _logger.LogWarning($"No labs found for server ID: {selectedServer.Value}. Message: {res.Message}");
                 }
             }
 
@@ -153,8 +155,8 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
-            var UserId = userService.GetUserId(User.Identity.Name);
-            var reservations = reservationService.GetReservationsByUserId(UserId);
+            var UserId = _userService.GetUserId(User.Identity.Name);
+            var reservations = _reservationService.GetReservationsByUserId(UserId);
             List<ReservationInformationModel> plannedReservations = new List<ReservationInformationModel>();
             List<ReservationInformationModel> expiredReservations = new List<ReservationInformationModel>();
             if (reservations == null)
@@ -165,10 +167,10 @@ namespace NetResVM.Controllers
             }
             foreach (var reservation in reservations)
             {
-                var server = serverService.GetServerById(reservation.ServerId);
+                var server = _serverService.GetServerById(reservation.ServerId);
                 if (server == null)
                     continue;
-                var user = userService.GetUsername(reservation.UserId);
+                var user = _userService.GetUsername(reservation.UserId);
                 if (reservation.ReservationEnd > DateTime.Now)
                     plannedReservations.Add(new ReservationInformationModel
                     {
@@ -211,7 +213,7 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
-            var reservation = reservationService.DeleteReservation(reservationId);
+            var reservation = _reservationService.DeleteReservation(reservationId);
             if (reservation)
                 TempData["SuccessMessage"] = "Reservation deleted.";
             else
@@ -230,11 +232,11 @@ namespace NetResVM.Controllers
         {
             if (User.Identity!=null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
-            var UserId = userService.GetUserId(User.Identity.Name);
+            var UserId = _userService.GetUserId(User.Identity.Name);
             if (!selectedServer.HasValue && selectedServer == 0 || selectedServer==null)
             {
                 TempData["ErrorMessage"] = "Server not selected.";
-                logger.LogWarning("Server not selected, while creating reservation");
+                _logger.LogWarning("Server not selected, while creating reservation");
                 return RedirectToAction("Create");
             }
             else
@@ -242,32 +244,32 @@ namespace NetResVM.Controllers
             if (reserve.LabId == null)
             {
                 TempData["ErrorMessage"] = "Lab not selected.";
-                logger.LogWarning("Lab not selected, while creating reservation");
+                _logger.LogWarning("Lab not selected, while creating reservation");
                 return RedirectToAction("Create", new { reserve, selectedServer });
             }
             if (reserve.ReservationStart >= reserve.ReservationEnd || reserve.ReservationStart < DateTime.Now)
             {
                 TempData["ErrorMessage"] = "Invalid reservation time.";
-                logger.LogWarning("Invalid reservation time, while creating reservation");
+                _logger.LogWarning("Invalid reservation time, while creating reservation");
                 return RedirectToAction("Create", new { reserve, selectedServer });
             }
             if(reserve.ReservationStart.AddHours(1) > reserve.ReservationEnd)
             {
                 TempData["ErrorMessage"] = "Reservation must be at least 1 hour.";
-                logger.LogWarning("Reservation must be at least 1 hour, while creating reservation");
+                _logger.LogWarning("Reservation must be at least 1 hour, while creating reservation");
                 return RedirectToAction("Create", new { reserve, selectedServer });
             }
             //reservation only that day
             if(reserve.ReservationStart.Date != reserve.ReservationEnd.Date)
             {
                 TempData["ErrorMessage"] = "Reservation start and end must be on the same day.";
-                logger.LogWarning("Reservation must be on the same day, while creating reservation");
+                _logger.LogWarning("Reservation must be on the same day, while creating reservation");
                 return RedirectToAction("Create", new {reserve,selectedServer});
             }
             if (reserve.UserId == -1)
             {
                 TempData["ErrorMessage"] = "User not selected.";
-                logger.LogWarning("User not selected, while creating reservation");
+                _logger.LogWarning("User not selected, while creating reservation");
                 return RedirectToAction("Create");
             }
             var reservation = new ReservationModel
@@ -278,7 +280,7 @@ namespace NetResVM.Controllers
                 ReservationEnd = reserve.ReservationEnd,
                 UserId = UserId
             };
-            var result = reservationService.MakeReservation(reservation);
+            var result = _reservationService.MakeReservation(reservation);
             if (result)
                 TempData["SuccessMessage"] = "Reservation created.";
             else
@@ -295,7 +297,7 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
-            var reservation = reservationService.SaveReservation(reservationId);
+            var reservation = _reservationService.SaveReservation(reservationId);
 
             return File(Encoding.UTF8.GetBytes(reservation.ToString()), "text/calendar", "reservation.ics");
         }
