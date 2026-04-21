@@ -12,6 +12,16 @@ using System.Text;
 using System.Text.Json;
 namespace ApiEVE;
 
+/// <summary>
+/// Provides an adapter for integration with the EVE-NG platform, enabling the management of labs and their nodes via
+/// a standardized interface for virtualization platforms.
+/// </summary>
+/// <remarks>The EveNGAdapter class implements the IVirtualizationAdapter interface and provides asynchronous methods for
+/// authentication, lab management (including import, export, deletion, and download), node management, and testing the connection to
+/// the EVE-NG server. All operations are designed to handle common errors and return meaningful results and
+/// messages for the user. The adapter automatically performs authentication when necessary and logs errors and warnings using
+/// an internal logger. The class is intended for use in applications that need to programmatically manage labs in
+/// the EVE-NG environment.</remarks>
 public class EveNGAdapter : IVirtualizationAdapter
 {
     private readonly ApiEVEAuthentication _authentication;
@@ -22,6 +32,12 @@ public class EveNGAdapter : IVirtualizationAdapter
     private readonly ILogger _logger = FileLogger.Instance;
     public PlatformType PlatformName => PlatformType.EVE;
 
+    /// <summary>
+    /// Initializuje novou instanci třídy EveNGAdapter s výchozími instancemi potřebných API klientů.
+    /// </summary>
+    /// <remarks>Tento konstruktor nastavuje interní závislosti na výchozí implementace API klientů pro
+    /// autentizaci, laboratoře a uzly. Použijte tento konstruktor, pokud nepotřebujete vlastní konfiguraci těchto
+    /// klientů.</remarks>
     public EveNGAdapter()
     {
         _authentication = new ApiEVEAuthentication();
@@ -172,6 +188,16 @@ public class EveNGAdapter : IVirtualizationAdapter
         return (null, "", "", "Lab not found.");
     }
 
+    /// <summary>
+    /// Asynchronously retrieves all nodes for the specified lab from the server.
+    /// </summary>
+    /// <remarks>If authentication fails or the nodes cannot be retrieved, the returned list will be null and
+    /// the message will indicate the error. The method logs errors for failed authentication and retrieval
+    /// attempts.</remarks>
+    /// <param name="serverId">The identifier of the server to authenticate and retrieve nodes from.</param>
+    /// <param name="labId">The identifier of the lab whose nodes are to be retrieved.</param>
+    /// <returns>A tuple containing a list of NodeDTO objects representing the nodes if successful; otherwise, null. The tuple
+    /// also includes a message describing the result of the operation.</returns>
     public async Task<(List<NodeDTO>? Nodes, string Message)> GetAllNodes(int serverId, string labId)
     {
         if (_httpClient == null)
@@ -590,5 +616,40 @@ public class EveNGAdapter : IVirtualizationAdapter
             _logger.LogError($"EveNGAdapter - TestConnection - Unknown error - {e.Message}");
             return (false, "Unknown error..");
         }
+    }
+
+    /// <summary>
+    /// Retrieves the current state of the specified lab by checking the status of its nodes.
+    /// </summary>
+    /// <remarks>If authentication fails or no nodes are found in the lab, the method returns null. The
+    /// returned state is based on the status of the lab's nodes and is case-insensitive.</remarks>
+    /// <param name="serverId">The identifier of the server hosting the lab. Must correspond to a valid, accessible server.</param>
+    /// <param name="labId">The unique identifier of the lab whose state is to be determined. Cannot be null or empty.</param>
+    /// <returns>A string representing the state of the lab. Returns "RUNNING" if any node is running, "STOPPED" if all nodes are
+    /// stopped, or null if the lab cannot be accessed or contains no nodes.</returns>
+    public async Task<string?> StateOfLab(int serverId, string labId)
+    {
+        if (_httpClient == null)
+        {
+            var authResult = await AuthenticateAsync(serverId);
+            if (!authResult.Valid)
+            {
+                _logger.LogError($"EveNGAdapter - StopLabAsync - Authentication failed: {authResult.Message}");
+                return null;
+            }
+        }
+        var nodes = await GetAllNodes(serverId, labId);
+        if (nodes.Nodes == null || nodes.Nodes.Count == 0)
+        {
+            _logger.LogError("EveNGAdapter - StopLabAsync - No nodes found to stop.");
+            return null;
+        }
+        foreach (var node in nodes.Nodes)
+        {
+            if (node.Status == "Running") // Node is running
+                return node.Status.ToUpper();
+        }
+        // All nodes are stopped
+        return "STOPPED";
     }
 }

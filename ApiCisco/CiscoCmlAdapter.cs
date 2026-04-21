@@ -28,8 +28,18 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     private readonly ApiCiscoNode _node;
 
     private readonly ILogger _logger = FileLogger.Instance;
+
+    /// <summary>
+    /// Gets the platform type associated with this instance.
+    /// </summary>
     public PlatformType PlatformName => PlatformType.CML;
 
+    /// <summary>
+    /// Initializes a new instance of the CiscoCmlAdapter class with default dependencies for authentication, HTTP
+    /// communication, lab management, and node management.
+    /// </summary>
+    /// <remarks>This constructor sets up the adapter with default implementations for interacting with Cisco
+    /// CML APIs. Use this constructor when custom dependency injection is not required.</remarks>
     public CiscoCmlAdapter()
     {
         _authentication = new ApiCiscoAuthentication();
@@ -170,6 +180,13 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             if (ciscoLab == null)
                 return (null, "Failed to parse lab data.");
 
+            var labState = ciscoLab.State ?? "Unknown";
+            if (labState == "")
+                return (null, "Lab state is unknown.");
+            else if (labState=="DEFINED_ON_CORE")
+            {
+                labState = "STOPPED";
+            }
             // PŘEVOD CiscoLabModel -> LabDTO
             var dto = new LabDTO
             {
@@ -553,5 +570,42 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
         nodeDTO.Metadata.Add("DataVolume", node.DataVolume?.ToString() ?? "0");
 
         return nodeDTO;
+    }
+
+    /// <summary>
+    /// Retrieves the current state of the specified lab from the server asynchronously.
+    /// </summary>
+    /// <remarks>If authentication fails or the lab state cannot be retrieved, the method returns null and
+    /// logs an error. The returned state string has any quotation marks removed.</remarks>
+    /// <param name="serverId">The identifier of the server to connect to for retrieving the lab state.</param>
+    /// <param name="labId">The unique identifier of the lab whose state is to be retrieved.</param>
+    /// <returns>A string representing the current state of the lab, or null if the state could not be retrieved.</returns>
+    public async Task<string?> StateOfLab(int serverId, string labId)
+    {
+        try
+        {
+            if (_httpClient == null)
+            {
+                var authResult = await AuthenticateAsync(serverId);
+                if (!authResult.Valid)
+                {
+                    _logger.LogError($"CiscoCmlAdapter - StopLabAsync - Authentication failed: {authResult.Message}");
+                    return null;
+                }
+            }
+            var labState = await _ciscoLab.StateOfLab(_httpClient, labId);
+            if(labState == null)
+            {                 
+                _logger.LogError($"CiscoCmlAdapter - StateOfLab - Couldn't retrieve state of lab {labId}.");
+                return null;
+            }
+            return labState.Replace("\"", "");
+
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"CiscoCmlAdapter - StateOfLab - Error: {e.Message}");
+            return null;
+        }
     }
 }
