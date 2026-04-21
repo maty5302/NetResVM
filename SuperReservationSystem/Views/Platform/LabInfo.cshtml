@@ -18,7 +18,18 @@ else
             <h4>General Details</h4>
             <p><strong>Lab ID:</strong> @Model.Id</p>
             <p><strong>Lab Name:</strong> @Model.Name</p>
-            <p><strong>Status:</strong> <span class="badge bg-secondary">@Model.Status</span></p>
+
+            @{
+                string badgeClass = (Model.Status ?? "").ToUpper() switch
+                {
+                    "STARTED" or "RUNNING" => "bg-success", // Green
+                    "STOPPED" => "bg-danger",               // Red
+                    "UNKNOWN" => "bg-warning text-dark",    // Yellow
+                    _ => "bg-secondary"                     // Gray (Fallback for anything else)
+                };                     
+            }
+
+            <p><strong>Status:</strong> <span class="badge @badgeClass">@Model.Status</span></p>
             
             @if (!string.IsNullOrEmpty(Model.Description))
             {
@@ -46,7 +57,7 @@ else
         <div class="mb-3">
             <div class="btn-group mb-2" role="group">
                 <button type="submit" class="btn btn-secondary"
-                        formaction="@Url.Action("LabList", "Platform", new { id = ViewBag.ServerId })">
+                        formaction="@Url.Action("LabList", "Platform", new { serverId = ViewBag.ServerId })">
                     <i class="bi bi-arrow-left-circle"></i> Back to Lab List
                 </button>
                 <button type="submit" class="btn btn-info"
@@ -57,7 +68,9 @@ else
         </div>
 
         <div class="mb-3">
-            <div class="btn-group mb-2" role="group">                
+           
+            <div class="btn-group mb-2" role="group">  
+                 @if(ViewBag.UserOwn == true){
                 <button type="submit" class="btn btn-primary"
                         formaction="@Url.Action("MakeBackup", "Backup", new { serverId = ViewBag.ServerId, labId = Model.Id, serverType = ViewBag.PlatformName, fromServer = true })">
                     <i class="bi bi-cloud-arrow-up"></i> Backup Lab
@@ -71,6 +84,11 @@ else
                     <i class="bi bi-calendar-check"></i> Reserve This Lab
                 </button>
                 
+                @* fix and implement collaborator management later *@
+                <button class="btn btn-outline-secondary" disabled>
+                     <i class="bi bi-person-plus"></i> Add Collaborator
+                </button>
+                }
                 @* Vlastnictví laboratoře *@
                 @if (ViewBag.Owned == true)
                 {
@@ -85,23 +103,6 @@ else
                         <i class="bi bi-person-plus"></i> Own a Lab
                     </button>
                 }
-                @if (ViewBag.UserOwn == true || User.IsInRole("Admin"))
-                    {
-                        <button type="submit" class="btn btn-outline-secondary"
-                                formaction="@Url.Action("ReleaseLab", "User", new { serverId = ViewBag.ServerId, labId = Model.Id })">
-                            <i class="bi bi-person-x"></i> Release Lab
-                        </button>
-                    }
-                    else
-                    {
-                        <button class="btn btn-outline-secondary" disabled>
-                            <i class="bi bi-person-x"></i> Release Lab
-                        </button>
-                    }
-                    @* fix and implement collaborator management later *@
-                    <button class="btn btn-outline-secondary" disabled>
-                        <i class="bi bi-person-plus"></i> Add Collaborator
-                    </button>
             </div>
         </div>
 

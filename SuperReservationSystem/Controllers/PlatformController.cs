@@ -10,11 +10,15 @@ namespace NetResVM.Controllers
     {
         private readonly PlatformManager _platformManager;
         private readonly ServerService _serverService;
+        private readonly UserService _userService;
+        private readonly UserLabOwnershipService _userLabOwnership;
 
-        public PlatformController(PlatformManager platformManager, ServerService serverService)
+        public PlatformController(PlatformManager platformManager, ServerService serverService, UserService userService, UserLabOwnershipService userLabOwnership)
         {
             _platformManager = platformManager;
             _serverService = serverService;
+            _userService = userService;
+            _userLabOwnership = userLabOwnership;
         }
 
         /// <summary>
@@ -142,10 +146,13 @@ namespace NetResVM.Controllers
                     TempData["ErrorMessage"] = $"Lab with ID {labId} not found.";
                     return RedirectToAction("LabList", "Platform", new { serverId = serverId });
                 }
+                var owned = _userLabOwnership.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
 
                 ViewBag.ServerId = serverId;
                 ViewBag.ServerName = server.Name;
                 ViewBag.PlatformName = adapter.PlatformName.ToString();
+                ViewBag.Owned = owned.owned;
+            ViewBag.UserOwn = owned.userOwns;
                 return View(labInfoResult.Lab);
             }
             catch (Exception ex)

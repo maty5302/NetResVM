@@ -36,7 +36,18 @@
                             <hr />
                             
                             @* Základní vlastnosti ze společného DTO *@
-                            <span class="badge bg-secondary mb-2">@lab.Status</span><br />
+
+                             @{
+                                 string badgeClass = (lab.Status ?? "").ToUpper() switch
+                                 {
+                                     "STARTED" or "RUNNING" => "bg-success", // Green
+                                     "STOPPED" => "bg-danger",               // Red
+                                     "UNKNOWN" => "bg-warning text-dark",    // Yellow
+                                     _ => "bg-secondary"                     // Gray (Fallback for anything else)
+                                 };                     
+                             }
+
+                            <span class="badge @badgeClass mb-2">@lab.Status</span><br />
                             
                             @* Specifické vlastnosti z Metadata (pokud existují) *@
                             @if (lab.Metadata.ContainsKey("LastModified") && !string.IsNullOrEmpty(lab.Metadata["LastModified"]))

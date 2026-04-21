@@ -29,7 +29,17 @@
                                 <span class="d-block text-truncate mb-2" title="@lab.Description">@lab.Description</span>
                             }
                             
-                            <span class="badge bg-secondary mb-2">@lab.Status</span><br />
+                            @{
+                                string badgeClass = (lab.Status ?? "").ToUpper() switch
+                                {
+                                    "STARTED" or "RUNNING" => "bg-success", // Green
+                                    "STOPPED" => "bg-danger",               // Red
+                                    "UNKNOWN" => "bg-warning text-dark",    // Yellow
+                                    _ => "bg-secondary"                     // Gray (Fallback for anything else)
+                                };
+                            }
+
+                            <span class="badge @badgeClass mb-2">@lab.Status</span><br />
 
                             @* 3. Dynamická Metadata pro specifické vlastnosti (Filename, LastModified) *@
                             @if (lab.Metadata != null)
