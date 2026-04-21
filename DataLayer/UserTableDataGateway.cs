@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataLayer.Interface;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -11,7 +12,7 @@ namespace DataLayer
     /// <summary>
     /// This class is responsible for interacting with the User table in the database.
     /// </summary>
-    public class UserTableDataGateway
+    public class UserTableDataGateway : IUserTableDataGateway
     {
         /// <summary>
         /// This method retrieves a user by their username from the database and returns it as a DataTable.

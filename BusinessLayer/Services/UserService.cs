@@ -5,6 +5,7 @@ using SimpleLogger;
 using System.DirectoryServices.Protocols;
 using BusinessLayer.DTOs;
 using System.Runtime.InteropServices;
+using DataLayer.Interface;
 
 namespace BusinessLayer.Services
 {
@@ -13,11 +14,15 @@ namespace BusinessLayer.Services
     /// </summary>
     public class UserService
     {
-        private readonly UserTableDataGateway _userTableDataGateway;
+        private readonly IUserTableDataGateway _userTableDataGateway;
         private static ILogger _logger = FileLogger.Instance;
-        public UserService()
+
+        public UserService(IUserTableDataGateway userTableDataGateway)
         {
-            _userTableDataGateway = new UserTableDataGateway();
+            _userTableDataGateway = userTableDataGateway;
+        }
+        public UserService() : this(new UserTableDataGateway())
+        {
         }
 
         /// <summary>
@@ -360,6 +365,22 @@ namespace BusinessLayer.Services
         {
             try
             {
+                if(password == null)
+                {
+                    _logger.LogWarning("Password cannot be null.");
+                    return false;
+                }
+                if(password.Length == 0)
+                {
+                    _logger.LogWarning("Password cannot be empty.");
+                    return false;
+                }
+                if(password.Contains(" "))
+                {
+                    _logger.LogWarning("Password cannot contain spaces.");
+                    return false;
+                }
+
                 var user = _userTableDataGateway.GetUserById(id);
                 if (user.Rows.Count == 0)
                 {
