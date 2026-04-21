@@ -11,6 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ApiCisco\ApiCisco.csproj" />
+    <ProjectReference Include="..\ApiEVE\ApiEVE.csproj" />
     <ProjectReference Include="..\BusinessLayer\BusinessLayer.csproj" />
   </ItemGroup>
 
