@@ -1,6 +1,6 @@
-﻿using BusinessLayer.Services;
-using BusinessLayer.Services.ApiCiscoServices;
-using BusinessLayer.Services.ApiEVEServices;
+﻿using BusinessLayer.Enum;
+using BusinessLayer.Interface;
+using BusinessLayer.Services;
 using SimpleLogger;
 using ILogger = SimpleLogger.ILogger;
 
@@ -12,181 +12,162 @@ namespace SuperReservationSystem
     public class BackgroundTask
     {
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private readonly ReservationService _reservationService = new ReservationService();
-        private readonly ServerService _serverService = new ServerService();
-        private readonly ApiEVELabService _apiEVELabService = new ApiEVELabService();
-        private readonly ApiEVENodeService _apiEVENodeService = new ApiEVENodeService();
-        private readonly ApiCiscoLabService _apiCiscoLabService = new ApiCiscoLabService();
         private readonly ILogger _logger = FileLogger.Instance;
+        private readonly IServiceProvider _serviceProvider;
 
-        /// <summary>
-        /// Starts Reservation of a lab by stopping all of them before.
-        /// </summary>
-        /// <param name="serverType"> Type of server (CML or EVE) </param>
-        /// <param name="serverID"> ID of server </param>
-        /// <param name="labId"> ID of a lab within server specified by ID </param>
-        private async void StartReservation(string serverType, int serverID, string labId)
+        public BackgroundTask(IServiceProvider serviceProvider)
         {
-            if(serverType=="CML")
+            _serviceProvider = serviceProvider;
+        }
+        
+        /// <summary>
+        /// Attempts to start a reservation for the specified lab on the given platform and server.
+        /// </summary>
+        /// <remarks>If the lab is already started or running, no action is taken. If the lab is stopped,
+        /// all labs on the server are stopped before attempting to start the specified lab. Errors are logged if the
+        /// lab state is unknown or if labs cannot be retrieved.</remarks>
+        /// <param name="platformManager">The platform manager used to obtain the appropriate virtualization adapter for the operation. Cannot be
+        /// null.</param>
+        /// <param name="serverType">The type of platform server on which the lab resides.</param>
+        /// <param name="serverID">The unique identifier of the server hosting the lab.</param>
+        /// <param name="labId">The identifier of the lab to start the reservation for. Cannot be null.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        private async Task StartReservation(PlatformManager platformManager, PlatformType serverType, int serverID, string labId)
+        {
+            IVirtualizationAdapter adapter = platformManager.GetAdapter(serverType);
+            var labState = await adapter.StateOfLab(serverID, labId);
+            if (labState == null)
             {
-                var labState = await _apiCiscoLabService.GetState(serverID, labId);
-                if (labState != null && labState == "STARTED")
+                _logger.LogError($"Lab {labId} in unknown state. Cannot perform the operation");
+            }
+            else if(labState == "STARTED" || labState == "RUNNING")
+            {
+                _logger.Log($"Lab {labId} already started");
+            }
+            else if (labState == "STOPPED")
+            {
+                var labs = await adapter.GetLabsAsync(serverID);
+                if(labs.Labs == null)
                 {
-                    _logger.Log($"Lab {labId} already started");
+                    _logger.LogError($"Labs on server {serverID} could not be retrieved. Cannot perform the operation");
+                    return;
                 }
-                else if (labState != null && labState == "STOPPED")
+                foreach (var lab in labs.Labs)
                 {
+                    _logger.Log($"Stopping lab {lab.Id} on server {serverID} before starting reservation");
+                    await adapter.StopLabAsync(serverID, lab.Id);                    
+                }
+                var res = await adapter.StartLabAsync(serverID, labId);
+                if (res.value)
+                    _logger.Log($"Lab {labId} on server {serverID} started");
+                else
+                    _logger.LogWarning($"Lab {labId} on server {serverID} could not be started");
 
-                    var stopped = await _apiCiscoLabService.StopAllLabs(serverID);
-                    if (stopped.value)
-                    {
-                        var res = await _apiCiscoLabService.StartLab(serverID, labId);
-                        if (res.Item1)
-                            _logger.Log($"Lab {labId} on server {serverID} started");
-                        else
-                            _logger.LogWarning($"Lab {labId} on server {serverID} could not be started");
-                    }
-                    else
-                        _logger.LogWarning($"All labs on server {serverID} could not be stopped");
-                }
-                else
-                    _logger.LogError($"Lab {labId} in unknown state. Cannot perform the operation");
             }
-            else if(serverType=="EVE")
-            {
-                var eve = await _apiEVELabService.GetLabInfoById(serverID, labId);
-                if (eve != null)
-                {
-                    var status = await _apiEVELabService.StateOfLab(serverID, eve.Name);
-                    if (status == 0)
-                    {
-                        var res = await _apiEVENodeService.StartAllNodes(serverID, eve.Filename);
-                        if (res)
-                            _logger.Log($"Lab {labId} on server {serverID} started");
-                        else
-                            _logger.LogWarning($"Lab {labId} on server {serverID} could not be started");
-                    }
-                    else if (status == 2)
-                    {
-                        _logger.Log($"Lab {labId} already started");
-                    }
-                    else
-                        _logger.LogError($"Lab {labId} in unknown state. Cannot perform the operation");
-                }
-                else
-                    _logger.LogError($"Could not find a lab {labId} on {serverID} - {serverType}");
-            }
-            else
-                _logger.LogError($"Unknown server type {serverType}. Skipping..");
+             else
+                _logger.LogError($"Lab {labId} in unknown state. Cannot perform the operation");
         }
 
         /// <summary>
-        /// Stops reservation that is running on a server.
+        /// Attempts to stop a lab reservation on the specified platform and server.
         /// </summary>
-        /// <param name="serverType"> Type of server (CML or EVE) </param>
-        /// <param name="serverID"> ID of server </param>
-        /// <param name="labId"> ID of a lab within server specified by ID </param>
-        private async void StopReservation(string serverType,int serverId, string labId)
+        /// <remarks>If the lab is already stopped, a log entry is created indicating no action was taken.
+        /// If the lab is in an unknown state, an error is logged and no stop operation is attempted.</remarks>
+        /// <param name="platformManager">The platform manager used to obtain the appropriate virtualization adapter.</param>
+        /// <param name="serverType">The type of platform server on which the lab is running.</param>
+        /// <param name="serverId">The unique identifier of the server hosting the lab.</param>
+        /// <param name="labId">The unique identifier of the lab to stop.</param>
+        /// <returns>A task that represents the asynchronous stop operation.</returns>
+        private async Task StopReservation(PlatformManager platformManager,PlatformType serverType,int serverId, string labId)
         {
-            if (serverType == "CML")
+            IVirtualizationAdapter adapter = platformManager.GetAdapter(serverType);
+            var labState = await adapter.StateOfLab(serverId, labId);
+            if (labState == "STARTED" || labState == "RUNNING")
             {
-                var labState = await _apiCiscoLabService.GetState(serverId, labId);
-                if (labState != null && labState == "STARTED")
-                {
-                    var res = await _apiCiscoLabService.StopLab(serverId, labId);
-                    if (res.value)
-                        _logger.Log($"Lab {labId} on server {serverId} stopped");
-                    else
-                        _logger.LogWarning($"Lab {labId} on server {serverId} could not be stopped");
-                }
-                else if(labState != null && labState =="STOPPED")
-                {
-                    _logger.LogWarning($"Lab {labId} on server {serverId} already stopped");
-                }
+                var res = await adapter.StopLabAsync(serverId, labId);
+                if (res.value)
+                    _logger.Log($"Lab {labId} on server {serverId} stopped");
                 else
-                    _logger.LogError($"Lab {labId} in unknown state. Cannot perform the operation");
+                    _logger.LogWarning($"Lab {labId} on server {serverId} could not be stopped");
 
             }
-            else if(serverType =="EVE")
+            else if (labState == "STOPPED")
             {
-                var eve = await _apiEVELabService.GetLabInfoById(serverId, labId);
-                if (eve != null)
-                {
-                    var status = await _apiEVELabService.StateOfLab(serverId, eve.Name);
-                    if (status == 2)
-                    {
-                        var res = await _apiEVENodeService.StopAllNodes(serverId, eve.Filename);
-                        if (res)
-                        {
-                            _logger.Log($"Lab {labId} on server {serverId} stopped");
-                        }
-                        else
-                            _logger.LogWarning($"Lab {labId} on server {serverId} could not be stopped");
-                    }
-                    else if(status==0)
-                    {
-                        _logger.Log($"Lab {labId} already stopped.");
-                    }
-                    else
-                        _logger.LogError($"Lab {labId} in unknown state. Cannot perform the operation");
-                }
-                else
-                    _logger.LogError($"Could not find a lab {labId} on {serverId} - {serverType}");
+                _logger.Log($"Lab {labId} already stopped.");
             }
-            else
-                _logger.LogError($"Unknown server type {serverType}. Skipping..");
+            else {
+                _logger.LogError($"Lab {labId} in unknown state. Cannot perform the operation");
+            }
         }
 
         /// <summary>
-        /// Checks all reservations for each server. Can also delete expired reservations and calls method for starting and stopping reservations.
+        /// Checks all current reservations and performs necessary actions such as starting or stopping reservations
+        /// based on their scheduled times and removing expired reservations.
         /// </summary>
-        private void CheckReservations()
+        /// <remarks>This method retrieves all reservations and processes each one according to its
+        /// schedule. Reservations that have expired for more than six months are deleted. Reservations are started or
+        /// stopped based on the current time relative to their scheduled start and end times. Logging is performed for
+        /// key actions and errors. This method is intended to be called periodically to maintain reservation
+        /// state.</remarks>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        private async Task CheckReservations()
         {
             try
             {
-                var reservations = _reservationService.GetAllReservations();
-
-                var time = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0);
-                _logger.Log($"Checking reservations..{time}");
-                if (reservations != null)
+                using (var scope = _serviceProvider.CreateScope())
                 {
-                    foreach (var reservation in reservations)
+                    var reservationService = scope.ServiceProvider.GetRequiredService<ReservationService>();
+                    var serverService = scope.ServiceProvider.GetRequiredService<ServerService>();
+                    var platformManager = scope.ServiceProvider.GetRequiredService<PlatformManager>();
+
+                    var reservations = reservationService.GetAllReservations();
+                    var time = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0);
+
+                    _logger.Log($"Checking reservations..{time}");
+
+                    if (reservations != null)
                     {
-                        //getting type of server for start correct actions for each type of server
-                        var serverType = _serverService.GetServerType(reservation.ServerId);
-                        if (serverType == "" || serverType == null)
+                        foreach (var reservation in reservations)
                         {
-                            _logger.LogError("Server not found.");
-                            continue;
-                        }
-                        //delete expire reservations after 6 months by default
-                        if (reservation.ReservationEnd.AddMonths(6) < DateTime.Now)
-                        {
-                            _reservationService.DeleteReservation(reservation.Id);
-                        }
-                        //checking if reservation has to be started, if so then start it
-                        if ((reservation.ReservationStart == time || (reservation.ReservationStart < time && reservation.ReservationEnd > time)))
-                        {
-                            StartReservation(serverType, reservation.ServerId, reservation.LabId);
-                        }
-                        //checking if reservation is already over, if so then stops it
-                        if (reservation.ReservationEnd <= time && reservation.ReservationEnd.AddMinutes(5) > time)
-                        {
-                            StopReservation(serverType, reservation.ServerId, reservation.LabId);
+                            var serverType = serverService.GetServerType(reservation.ServerId);
+                            if (serverType == PlatformType.Unknown)
+                            {
+                                _logger.LogError("Server not found or Unknown platform.");
+                                continue;
+                            }
+                            if (reservation.ReservationEnd.AddMonths(6) < DateTime.Now)
+                            {
+                                reservationService.DeleteReservation(reservation.Id);
+                            }
+                            if ((reservation.ReservationStart == time || (reservation.ReservationStart < time && reservation.ReservationEnd > time)))
+                            {
+                                await StartReservation(platformManager, serverType, reservation.ServerId, reservation.LabId);
+                            }
+                            if (reservation.ReservationEnd <= time && reservation.ReservationEnd.AddMinutes(5) > time)
+                            {
+                                await StopReservation(platformManager, serverType, reservation.ServerId, reservation.LabId);
+                            }
                         }
                     }
-                }
-                else
-                    _logger.LogWarning("No reservations were found...");
+                    else
+                    {
+                        _logger.LogWarning("No reservations were found...");
+                    }
+                } 
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
+                _logger.LogError($"CheckReservations failed: {e.Message}");
             }
         }
+
         /// <summary>
-        /// Starts a background task which checks reservations every minute.
+        /// Starts the background process that periodically checks reservations until cancellation is requested.
         /// </summary>
+        /// <remarks>This method initiates an asynchronous loop that runs in the background. The process
+        /// continues to execute until the associated cancellation token is triggered. If called multiple times without
+        /// stopping the previous process, multiple background tasks may be started. Ensure proper cancellation to avoid
+        /// resource leaks.</remarks>
         public void Start()
         {
             Task.Run(async () =>
@@ -194,21 +175,25 @@ namespace SuperReservationSystem
                 while (!_cancellationTokenSource.Token.IsCancellationRequested)
                 {
                     try
-                    {   // Check reservations every minute
-                        CheckReservations();
-                        await Task.Delay(TimeSpan.FromMinutes(1), _cancellationTokenSource.Token);
+                    {
+                        DateTime now = DateTime.Now;
+                        DateTime nextMinute = now.AddMinutes(1).AddSeconds(-now.Second).AddMilliseconds(-now.Millisecond);
+
+                        TimeSpan delay = nextMinute - now;
+
+                        await Task.Delay(delay, _cancellationTokenSource.Token);
+                        await CheckReservations();
                     }
                     catch (TaskCanceledException)
-                    {                        
+                    {
                         _logger.LogWarning("Task was cancelled");
                     }
                     catch (Exception ex)
                     {
-                        // Log or handle exceptions
                         _logger.LogError(ex.Message);
                     }
                 }
-            },_cancellationTokenSource.Token);
+            }, _cancellationTokenSource.Token);
         }
         /// <summary>
         /// Stops the background task by cancelling token
