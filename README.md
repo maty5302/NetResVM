@@ -127,3 +127,14 @@ System administrators have the ability to manage user accounts. This includes cr
 3. Clicking on that button takes you to manage users page where you can either delete or deactivate/activate user. 
 
 ![Manage user page](assets/readme/manage-users.png)
+
+### Server selection with Online status
+The Server Selection dashboard acts as the main entry point for users to connect to their virtualization environments (Cisco CML or EVE-NG). It provides a clear, card-based overview of all registered servers.
+
+* **Real-time Status Monitoring:** Each server card displays a dynamic `Online` or `Offline` status badge, powered by asynchronous background ping checks to prevent users from attempting to connect to dead servers.
+* **Platform Identification:** Instantly identifies the underlying virtualization platform (e.g., CML or EVE) for each node.
+* **Quick Administrative Actions:** Admins have direct access to edit configurations or delete server connections directly from the grid using intuitive icon buttons.
+* **Seamless Navigation:** A primary "Connect to server" button routes the user directly to the selected server's lab environment.
+* **Easy Expansion:** A dedicated, full-width action area at the bottom allows administrators to quickly add new server connections to the infrastructure.
+
+![Server Selection Home](assets/readme/server-selection-online-status.png)
