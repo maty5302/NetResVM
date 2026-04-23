@@ -5,13 +5,14 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DataLayer.Interface;
 
 namespace DataLayer
 {
     /// <summary>
     /// This class is responsible for interacting with the Server table in the database.
     /// </summary>
-    public class ServerTableDataGateway
+    public class ServerTableDataGateway : IServerTableDataGateway
     {
         /// <summary>
         /// Retrieves all servers from the Server table.
