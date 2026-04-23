@@ -5,6 +5,7 @@ using SimpleLogger;
 using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
 using BusinessLayer.Extensions;
+using DataLayer.Interface;
 
 namespace BusinessLayer.Services
 {
@@ -13,12 +14,16 @@ namespace BusinessLayer.Services
     /// </summary>
     public class ServerService
     {
-        private readonly ServerTableDataGateway _gateway;
+        private readonly IServerTableDataGateway _gateway;
         private static ILogger _logger = FileLogger.Instance;
-
-        public ServerService()
+        
+        public ServerService(IServerTableDataGateway gateway)
         {
-            _gateway = new ServerTableDataGateway();
+            _gateway = gateway;
+        }
+        
+        public ServerService() : this(new ServerTableDataGateway())
+        {
         }
 
         /// <summary>
@@ -162,7 +167,7 @@ namespace BusinessLayer.Services
             var servers = GetAllServers();
             if (servers != null)
             {
-                if(servers.Any(servers => servers.Name == server.Name))
+                if(servers.Any(servers => servers.Name == server.Name) || servers.Any(servers => servers.IpAddress == server.IpAddress))
                 {
                     _logger.LogWarning($"Server with name {server.Name} already exists.");
                     return false;
