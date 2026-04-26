@@ -4,6 +4,7 @@ using BusinessLayer.Interface;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.NetworkInformation;
+using System.Linq;
 
 namespace NetResVM.Controllers
 {
@@ -149,6 +150,10 @@ namespace NetResVM.Controllers
                 }
                 var owned = _userLabOwnership.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
 
+                var ownersList = _userLabOwnership.GetAllUserLabsByLabId(labId);
+                var owners = (from item in ownersList
+                              select _userService.GetUsername(item.UserId)).ToList();
+                ViewBag.Owners = owners;
                 ViewBag.ServerId = serverId;
                 ViewBag.ServerName = server.Name;
                 ViewBag.PlatformName = adapter.PlatformName.ToString();
@@ -161,6 +166,60 @@ namespace NetResVM.Controllers
                 TempData["ErrorMessage"] = ex.Message;
                 return RedirectToAction("Index", "Home");
             }
+        }
+
+
+        public async Task<IActionResult> AddCollaborator(int serverId, string labId, string collaboratorUsername)
+        {
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "Login");
+
+            try
+            {
+                var server = _serverService.GetServerById(serverId);
+                if (server == null)
+                {
+                    TempData["ErrorMessage"] = "Server not found.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                if (server.Platform == PlatformType.Unknown)
+                {
+                    TempData["ErrorMessage"] = "Unsupported platform type.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                int collaboratorId = _userService.GetUserId(collaboratorUsername);
+                if (collaboratorId == -1)
+                {
+                    TempData["ErrorMessage"] = "User not found.";
+                    return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+                }
+
+                var ownershipRecord = new BusinessLayer.Models.UserLabOwnershipModel
+                {
+                    UserId = collaboratorId,
+                    LabId = labId,
+                    ServerId = serverId
+                };
+
+
+                var result = _userLabOwnership.InsertUserLabOwnership(ownershipRecord);
+
+                // Zpracování výsledku (result.Item1 je true/false, result.Item2 je zpráva z tvé Service)
+                if (result.Item1)
+                {
+                    TempData["SuccessMessage"] = $"User {collaboratorUsername} has been successfully added as a collaborator.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = result.Item2;
+                }
+            }
+            catch (Exception ex) {
+                    TempData["ErrorMessage"] = $"An error occurred: {ex.Message}";
+                }
+            return RedirectToAction("LabInfo","Platform", new { serverId = serverId ,labId = labId});
         }
 
         /// <summary>

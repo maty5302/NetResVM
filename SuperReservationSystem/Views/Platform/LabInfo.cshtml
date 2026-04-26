@@ -18,7 +18,20 @@ else
             <h4>General Details</h4>
             <p><strong>Lab ID:</strong> @Model.Id</p>
             <p><strong>Lab Name:</strong> @Model.Name</p>
-
+            <p>
+                @{
+					var owners = ViewBag.Owners as IEnumerable<string>;
+                }
+                <strong>Lab Owners:</strong>
+                @if (owners != null && owners.Any())
+                {
+                    @string.Join(", ", owners)
+                }
+                else
+                {
+                    <span class="text-muted"><em>None</em></span>
+                }
+            </p>
             @{
                 string badgeClass = (Model.Status ?? "").ToUpper() switch
                 {
@@ -85,10 +98,9 @@ else
                     <i class="bi bi-calendar-check"></i> Reserve This Lab
                 </button>
                 
-                @* fix and implement collaborator management later *@
-                <button class="btn btn-outline-secondary" disabled>
-                     <i class="bi bi-person-plus"></i> Add Collaborator
-                </button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCollaboratorModal">
+                        <i class="bi bi-person-plus"></i> Add Collaborator
+                    </button>
                 }
                 @* Vlastnictví laboratoře *@
                 @if (ViewBag.Owned == true)
@@ -154,3 +166,32 @@ else
         }, 15000);
     </script>
 }
+
+<div class="modal fade" id="addCollaboratorModal" tabindex="-1" aria-labelledby="addCollaboratorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCollaboratorModalLabel">Add Collaborator</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form method="post" action="@Url.Action("AddCollaborator", "Platform")">
+                <div class="modal-body">
+                    <p>Enter the username of the person you want to grant access to this lab.</p>
+                    
+                    <input type="hidden" name="serverId" value="@ViewBag.ServerId" />
+                    <input type="hidden" name="labId" value="@Model.Id" />
+                    
+                    <div class="mb-3">
+                        <label for="collaboratorUsername" class="form-label fw-bold">Username:</label>
+                        <input type="text" class="form-control" id="collaboratorUsername" name="collaboratorUsername" required placeholder="e.g. novakj" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

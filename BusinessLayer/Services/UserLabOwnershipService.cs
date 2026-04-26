@@ -53,6 +53,30 @@ namespace BusinessLayer.Services
         }
 
         /// <summary>
+        /// Retrieves all user lab ownership records associated with the specified lab identifier.
+        /// </summary>
+        /// <param name="labId">The unique identifier of the lab for which to retrieve user ownership records. Cannot be null or empty.</param>
+        /// <returns>A list of user lab ownership models for the specified lab. Returns null if an error occurs during retrieval.</returns>
+        public List<UserLabOwnershipModel>? GetAllUserLabsByLabId(string labId)
+        {
+            try
+            {
+                var all = new List<UserLabOwnershipModel>();
+                var table = _gateway.GetAllUserLabsByLabId(labId);
+                foreach (System.Data.DataRow row in table.Rows)
+                {
+                    all.Add(UserLabOwnershipMapper.Map(row));
+                }
+                return all;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Checks whether a lab is already owned and whether it is owned by a specific user.
         /// </summary>
         /// <param name="userId">The ID of the user to check ownership for.</param>

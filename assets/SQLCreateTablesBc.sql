@@ -67,7 +67,7 @@ BEGIN
         LabID VARCHAR(255) NOT NULL,
         ServerID INT NOT NULL,
         UserID INT NOT NULL,
-        CONSTRAINT PK_OwnedLab PRIMARY KEY (LabID, ServerID),
+        CONSTRAINT PK_OwnedLab PRIMARY KEY (LabID, ServerID, UserID),
         CONSTRAINT FK_OwnedLab_Server FOREIGN KEY (ServerID) REFERENCES Server(ServerID),
         CONSTRAINT FK_OwnedLab_User FOREIGN KEY (UserID) REFERENCES [User](UserID)
     );

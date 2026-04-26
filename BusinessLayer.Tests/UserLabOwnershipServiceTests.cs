@@ -6,6 +6,7 @@ using BusinessLayer.Models;
 using BusinessLayer.Services;
 using DataLayer.Interface;
 using Moq;
+using NuGet.Frameworks;
 using Xunit;
 
 namespace BusinessLayer.Tests;
@@ -67,7 +68,46 @@ public class UserLabOwnershipServiceTests
         Assert.IsType<List<UserLabOwnershipModel>>(result);
         Assert.Empty(result);   
     }
-    
+
+    #endregion
+
+    #region GetAllUserLabsByLabId Tests
+
+    [Fact]
+    public void GetUserLabsByLabId_WithValidLab_ShouldReturnAllUserLabs()
+    {
+        var datatable = new DataTable();
+        datatable.Columns.Add("UserID", typeof(int));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Rows.Add(1, "LabA", 101);
+        datatable.Rows.Add(2, "LabA", 101);
+
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByLabId("LabA")).Returns(datatable);
+
+        var result = _labOwnershipService.GetAllUserLabsByLabId("LabA");
+        Assert.NotNull(result);
+        Assert.IsType<List<UserLabOwnershipModel>>(result);
+        Assert.Equal(2, result.Count);
+        Assert.Contains(result, r => r.LabId == "LabA" && r.ServerId == 101 && r.UserId == 1);
+        Assert.Contains(result, r => r.LabId == "LabA" && r.ServerId == 101 && r.UserId == 2);
+    }
+
+    [Fact]
+    public void GetUserLabsByLabId_WithInvalidLab_ShouldReturnEmptyList()
+    {
+        var datatable = new DataTable();
+        datatable.Columns.Add("UserID", typeof(int));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Columns.Add("ServerID", typeof(int));
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByLabId("NonExistentLab")).Returns(datatable);
+
+        var result = _labOwnershipService.GetAllUserLabsByLabId("NonExistentLab");
+        Assert.NotNull(result);
+        Assert.IsType<List<UserLabOwnershipModel>>(result);
+        Assert.Empty(result);
+    }
+
     #endregion
 
     #region IsLabAlreadyOwned Tests
