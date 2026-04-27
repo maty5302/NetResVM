@@ -4,9 +4,10 @@ using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
+using NetResVM.Models;
 using SuperReservationSystem.Models;
 
-namespace SuperReservationSystem.Controllers
+namespace NetResVM.Controllers
 {
     /// <summary>
     /// Controller for managing user-related actions.

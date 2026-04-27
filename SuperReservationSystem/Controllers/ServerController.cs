@@ -1,12 +1,11 @@
-﻿using ApiCisco;
-using BusinessLayer.Enum;
+﻿using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace SuperReservationSystem.Controllers
+namespace NetResVM.Controllers
 {
     /// <summary>
     /// Controller for managing servers.

@@ -116,22 +116,22 @@ namespace NetResVM.Controllers
                 }
                 IVirtualizationAdapter adapter = _platformManager.GetAdapter(platform);
                 var res = await adapter.GetLabsAsync(selectedServer.Value);
-                LabDTO? selected = null;
-                if(labId != null)
-                {
-                    var labInfo = await adapter.GetLabInfoAsync(selectedServer.Value,labId);
-                    if (labInfo.Lab != null)
-                    {
-                        selected = labInfo.Lab;
-                        model.LabId = labId;
-                    }
-                    else
-                    {
-                        TempData["ErrorMessage"] = "Cannot get lab info. Try again..";
-                        _logger.LogError($"Cannot get lab info for lab ID: {labId} on server ID: {selectedServer.Value}. Message: {labInfo.Message}");
-                        return View("Create", model);
-                    }
-                }
+                //LabDTO? selected = null;
+                // if(labId != null)
+                // {
+                //     var labInfo = await adapter.GetLabInfoAsync(selectedServer.Value,labId);
+                //     if (labInfo.Lab != null)
+                //     {
+                //         //selected = labInfo.Lab;
+                //         model.LabId = labId;
+                //     }
+                //     else
+                //     {
+                //         TempData["ErrorMessage"] = "Cannot get lab info. Try again..";
+                //         _logger.LogError($"Cannot get lab info for lab ID: {labId} on server ID: {selectedServer.Value}. Message: {labInfo.Message}");
+                //         return View("Create", model);
+                //     }
+                // }
                 if (res.Labs != null && res.Labs.Count > 0)
                 {
                     ViewBag.Labs3 = new List<LabDTO>(res.Labs);

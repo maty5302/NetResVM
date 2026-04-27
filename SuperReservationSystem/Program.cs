@@ -1,11 +1,14 @@
 using ApiCisco;
 using ApiEVE;
 using BusinessLayer.Interface;
+using BusinessLayer.Services;
+using DataLayer;
+using DataLayer.Interface;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using SimpleLogger;
-using TelnetConsole;
+using SuperReservationSystem;
 
-namespace SuperReservationSystem
+namespace NetResVM
 {
     /// <summary>
     /// Main entry point for the application.
@@ -30,6 +33,8 @@ namespace SuperReservationSystem
             });
 
             // Dependency Injection for services
+            builder.Services.AddScoped<IServerService, ServerService>();
+            builder.Services.AddScoped<ILocalBackupStorage, LocalBackupStorage>();
             builder.Services.AddScoped<BusinessLayer.Services.BackupService>();
             builder.Services.AddScoped<BusinessLayer.Services.ServerService>();
             builder.Services.AddScoped<BusinessLayer.Services.ReservationService>();
@@ -37,6 +42,7 @@ namespace SuperReservationSystem
             builder.Services.AddScoped<BusinessLayer.Services.UserLabOwnershipService>();
 
 
+            builder.Services.AddScoped<IPlatformManager, PlatformManager>();
             builder.Services.AddScoped<BusinessLayer.Services.PlatformManager>();
             builder.Services.AddScoped<IVirtualizationAdapter, CiscoCmlAdapter>();
             builder.Services.AddScoped<IVirtualizationAdapter, EveNGAdapter>();

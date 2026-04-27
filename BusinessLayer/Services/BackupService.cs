@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
 using BusinessLayer.Extensions;
@@ -25,13 +26,6 @@ public class BackupService
         _serverService = serverService;
         _logger = FileLogger.Instance;
     }
-    // public BackupService(PlatformManager platformManager, ServerService serverService)
-    // {
-    //     _platformManager = platformManager; 
-    //     _localBackupStorage = new LocalBackupStorage();
-    //     _serverService = serverService;
-    //     _logger = FileLogger.Instance;
-    // }
 
     /// <summary>
     /// Asynchronously creates a backup of a lab for a specified server.

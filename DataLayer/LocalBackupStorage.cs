@@ -1,12 +1,14 @@
+using DataLayer.Interface;
+
 namespace DataLayer;
 /// <summary>
 /// Class that handels local backup storage.
 /// </summary>
-public class LocalBackupStorage
+public class LocalBackupStorage : ILocalBackupStorage
 {
     private readonly string _backupPath;
     
-    public LocalBackupStorage()
+    public LocalBackupStorage() 
     {
         _backupPath = Path.Combine(Directory.GetCurrentDirectory(), "backups");
     }

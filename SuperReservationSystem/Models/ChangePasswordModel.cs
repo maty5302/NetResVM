@@ -1,4 +1,4 @@
-﻿namespace SuperReservationSystem.Models
+﻿namespace NetResVM.Models
 {
     /// <summary>
     /// Model for changing the password.

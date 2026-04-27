@@ -1,10 +1,10 @@
-﻿using BusinessLayer.Services;
+﻿using System.Diagnostics;
+using System.Net.NetworkInformation;
+using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
 using SuperReservationSystem.Models;
-using System.Diagnostics;
-using System.Net.NetworkInformation;
 
-namespace SuperReservationSystem.Controllers
+namespace NetResVM.Controllers
 {
     /// <summary>
     /// Controller for managing the home page and server management.

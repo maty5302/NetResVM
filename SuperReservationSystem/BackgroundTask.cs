@@ -4,7 +4,7 @@ using BusinessLayer.Services;
 using SimpleLogger;
 using ILogger = SimpleLogger.ILogger;
 
-namespace SuperReservationSystem
+namespace NetResVM
 {
     /// <summary>
     /// Class for background task that checks reservations and starts/stops them.

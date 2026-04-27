@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace SuperReservationSystem.Models
+namespace NetResVM.Models
 {
     /// <summary>
     /// Model for the login page.

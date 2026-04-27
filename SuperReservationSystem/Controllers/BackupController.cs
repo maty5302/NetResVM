@@ -2,7 +2,7 @@ using BusinessLayer.Enum;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace SuperReservationSystem.Controllers;
+namespace NetResVM.Controllers;
 
 /// <summary>
 /// Controller for managing backups.
