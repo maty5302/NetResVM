@@ -5,6 +5,7 @@ using SimpleLogger;
 using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
 using BusinessLayer.Extensions;
+using BusinessLayer.Interface;
 using DataLayer.Interface;
 
 namespace BusinessLayer.Services
@@ -12,7 +13,7 @@ namespace BusinessLayer.Services
     /// <summary>
     /// Service class for managing server operations.
     /// </summary>
-    public class ServerService
+    public class ServerService : IServerService
     {
         private readonly IServerTableDataGateway _gateway;
         private static ILogger _logger = FileLogger.Instance;

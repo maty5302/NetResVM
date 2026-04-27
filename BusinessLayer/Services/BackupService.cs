@@ -3,6 +3,7 @@ using BusinessLayer.Enum;
 using BusinessLayer.Extensions;
 using BusinessLayer.Interface;
 using DataLayer;
+using DataLayer.Interface;
 using SimpleLogger;
 
 namespace BusinessLayer.Services;
@@ -12,18 +13,25 @@ namespace BusinessLayer.Services;
 /// </summary>
 public class BackupService
 {
-    private readonly LocalBackupStorage _localBackupStorage;
-    private readonly ServerService _serverService;
-    private readonly PlatformManager _platformManager;
+    private readonly ILocalBackupStorage _localBackupStorage;
+    private readonly IServerService _serverService;
+    private readonly IPlatformManager _platformManager;
     private readonly ILogger _logger;
 
-    public BackupService(PlatformManager platformManager, ServerService serverService)
+    public BackupService(IPlatformManager platformManager, IServerService serverService, ILocalBackupStorage localBackupStorage)
     {
-        _platformManager = platformManager; 
-        _localBackupStorage = new LocalBackupStorage();
+        _platformManager = platformManager;
+        _localBackupStorage = localBackupStorage;
         _serverService = serverService;
         _logger = FileLogger.Instance;
     }
+    // public BackupService(PlatformManager platformManager, ServerService serverService)
+    // {
+    //     _platformManager = platformManager; 
+    //     _localBackupStorage = new LocalBackupStorage();
+    //     _serverService = serverService;
+    //     _logger = FileLogger.Instance;
+    // }
 
     /// <summary>
     /// Asynchronously creates a backup of a lab for a specified server.
@@ -32,8 +40,8 @@ public class BackupService
     /// <param name="labId">The unique identifier (ID) of the lab to back up.</param>
     /// <returns>
     /// A tuple containing:
-    /// <c>backup</c> – <c>true</c> if the backup was successfully created; otherwise, <c>false</c>,
-    /// <c>Message</c> – a string message providing additional details (e.g., success or error description).
+    /// <c>backup</c> ï¿½ <c>true</c> if the backup was successfully created; otherwise, <c>false</c>,
+    /// <c>Message</c> ï¿½ a string message providing additional details (e.g., success or error description).
     /// </returns>
     public async Task<(bool backup, string Message)> BackupLab(int serverId, string labId)
     {
@@ -105,17 +113,17 @@ public class BackupService
                     if (!authResult.Valid)
                     {
                         _logger.LogWarning($"BackupService - Authentication failed for server {server.Name}: {authResult.Message}");
-                        continue; // Zkusíme další server v seznamu
+                        continue; // Zkusï¿½me dalï¿½ï¿½ server v seznamu
                     }
 
-                    // 3. Dotaz na laboratoø pomocí sjednoceného rozhraní
+                    // 3. Dotaz na laboratoï¿½ pomocï¿½ sjednocenï¿½ho rozhranï¿½
                     var labResult = await adapter.GetLabInfoAsync(server.Id, backup.LabId);
 
-                    // 4. Pokud nám adaptér vrátil laboratoø (není null), našli jsme správný server!
+                    // 4. Pokud nï¿½m adaptï¿½r vrï¿½til laboratoï¿½ (nenï¿½ null), naï¿½li jsme sprï¿½vnï¿½ server!
                     if (labResult.Lab != null)
                     {
                         matchingServer = server;
-                        break; // Ukonèíme prohledávání serverù pro tuto konkrétní zálohu
+                        break; // Ukonï¿½ï¿½me prohledï¿½vï¿½nï¿½ serverï¿½ pro tuto konkrï¿½tnï¿½ zï¿½lohu
                     }
                 }
                 catch (Exception ex)
@@ -126,7 +134,7 @@ public class BackupService
 
             if (matchingServer != null)
             {
-                // Laboratoø na serveru existuje = pøidáme validní záznam
+                // Laboratoï¿½ na serveru existuje = pï¿½idï¿½me validnï¿½ zï¿½znam
                 backupDTOs.Add(new BackupDTO
                 {
                     ServerId = matchingServer.Id,
@@ -140,7 +148,7 @@ public class BackupService
             }
             else
             {
-                // Laboratoø už na žádném známém serveru neexistuje (Unknown server)
+                // Laboratoï¿½ uï¿½ na ï¿½ï¿½dnï¿½m znï¿½mï¿½m serveru neexistuje (Unknown server)
                 backupDTOs.Add(new BackupDTO
                 {
                     ServerId = -1,

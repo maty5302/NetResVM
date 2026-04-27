@@ -3,7 +3,7 @@ using BusinessLayer.Interface;
 
 namespace BusinessLayer.Services
 {
-    public class PlatformManager
+    public class PlatformManager : IPlatformManager
     {
         private readonly IEnumerable<IVirtualizationAdapter> _adapters;
 
