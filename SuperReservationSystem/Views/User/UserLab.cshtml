@@ -1,9 +1,9 @@
 ﻿@model List<(int ServerId, BusinessLayer.DTOs.LabDTO Lab)>
 @{
-    ViewData["Title"] = "My labs";
+    ViewData["Title"] = @Localizer["MyLabLayout"];
 }
 
-<h1>My labs</h1>
+<h1>@Localizer["MyLabLayout"]</h1>
 <hr />
 
 <div class="row">
@@ -59,7 +59,7 @@
                         <form method="post" class="mt-3">
                             <button type="submit" class="btn btn-danger w-100" 
                                     formaction="@Url.Action("RemoveOwnership", "User", new { serverId = serverId, labId = lab.Id })">
-                                <i class="bi bi-trash"></i> Remove ownership
+                                <i class="bi bi-trash"></i> @Localizer["RemoveOwnership"]
                             </button>
                         </form>
 
@@ -78,7 +78,7 @@
     {
         <div class="col-12 text-center mt-4">
             <div class="alert alert-info" role="alert">
-                You don't own any labs yet.
+                @Localizer["NoOwnedLab"]
             </div>
         </div>
     }

@@ -14,7 +14,7 @@
                 <div class="flex-grow-1 me-3">
                     <input type="file" class="form-control" id="fileUpload" name="file" accept=".yaml, .yml, .zip" />
                 </div>
-                <button type="submit" class="btn btn-primary">Import lab</button>
+                <button type="submit" class="btn btn-primary">@Localizer["ImportLab"]</button>
             </div>
         </div>
     </form>
@@ -46,24 +46,37 @@
                                      _ => "bg-secondary"                     // Gray (Fallback for anything else)
                                  };                     
                              }
-
-                            <span class="badge @badgeClass mb-2">@lab.Status</span><br />
                             
+                            @if (lab.Status.ToLower() == "started" || lab.Status.ToLower() == "running")
+                            {
+                                <span class="badge @badgeClass mb-2">@Localizer["StartedState"]</span>
+                                <br/>
+                            }
+                            else if(lab.Status.ToLower() == "stopped")
+                            {
+                                <span class="badge @badgeClass mb-2">@Localizer["StoppedState"]</span>
+                                <br/>
+                            }
+                            else
+                            {
+                                <span class="badge @badgeClass mb-2">@Localizer["UnknownState"]</span>
+                                <br/>
+                            }
                             @* Specifické vlastnosti z Metadata (pokud existují) *@
                             @if (lab.Metadata.ContainsKey("LastModified") && !string.IsNullOrEmpty(lab.Metadata["LastModified"]))
                             {
-                                <small class="text-muted d-block">Modified: @lab.Metadata["LastModified"]</small>
+                                <small class="text-muted d-block">@Localizer["ModifiedLab"]: @lab.Metadata["LastModified"]</small>
                             }
                             
                             @if (lab.Metadata.ContainsKey("NodeCount"))
                             {
-                                <small class="text-muted d-block">Nodes: @lab.Metadata["NodeCount"]</small>
+                                <small class="text-muted d-block">@Localizer["NodesCount"]: @lab.Metadata["NodeCount"]</small>
                             }
                             
                             @* Ukázka pro EVE-NG, kdyby tam mělo jiná data *@
                             @if (lab.Metadata.ContainsKey("Author"))
                             {
-                                <small class="text-muted d-block">Author: @lab.Metadata["Author"]</small>
+                                <small class="text-muted d-block">@Localizer["AuthorLab"]: @lab.Metadata["Author"]</small>
                             }
                         </div>
                     </a>

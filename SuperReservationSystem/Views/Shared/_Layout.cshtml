@@ -24,21 +24,23 @@
                     <ul class="navbar-nav flex-grow-1">
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
-                        <li class="nav-item">
-                            <a class="nav-link text-body" asp-area="" asp-controller="Home" asp-action="Index"> <i class="bi bi-house-door"></i> Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-body" asp-area="" asp-controller="Reservation" asp-action="Index"> <i class="bi bi-calendar"></i> Reservation</a>
-                        </li>
-                        <li class="nav-item">
-                                <a class="nav-link text-body" asp-area="" asp-controller="User" asp-action="UserLab"> <i class="bi bi-diagram-3"></i> My labs</a>
-                        </li>
-                        <li class="nav-item">
-                              <a class="nav-link text-body" asp-area="" asp-controller="Backup" asp-action="Index">   <i class="bi bi-database-gear"></i> Backups</a>
-                        </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-body" asp-area="" asp-controller="Home" asp-action="Index"> <i class="bi bi-house-door"></i>  @Localizer["Home"]</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-body" asp-area="" asp-controller="Reservation" asp-action="Index"> <i class="bi bi-calendar"></i> @Localizer["ReservationLayout"]</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-body" asp-area="" asp-controller="User" asp-action="UserLab"> <i class="bi bi-diagram-3"></i> @Localizer["MyLabLayout"]</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-body" asp-area="" asp-controller="Backup" asp-action="Index">   <i class="bi bi-database-gear"></i> @Localizer["BackupsLayout"]</a>
+                            </li>
                             
                         }
                     </ul>
+                    
+                    
                     
                     <div class="nav-item me-3">
                         @if(User.Identity != null && User.Identity.IsAuthenticated)
@@ -59,12 +61,20 @@
                             </label>
                         </div>
                     </div>
+                    @{ var currentCulture = Context.Features.Get<Microsoft.AspNetCore.Localization.IRequestCultureFeature>()?.RequestCulture.UICulture.Name ?? "en-US"; }
+                    <form asp-controller="Culture" asp-action="SetLanguage" method="post" id="languageForm">
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                        <select name="culture" onchange="document.getElementById('languageForm').submit();" class="form-select">
+                            <option value="en-US" selected="@(currentCulture == "en-US" ? "selected" : null)">English 🇬🇧</option>
+                            <option value="cs-CZ" selected="@(currentCulture == "cs-CZ" ? "selected" : null)">Čeština 🇨🇿</option>
+                        </select>
+                    </form>
                     <ul class="navbar-nav">
                         <li class="nav-item">
                         <form>
                                 @if (User.Identity != null && User.Identity.IsAuthenticated)
                                 {
-                                    <button class="btn btn-danger" type="submit" formaction="@Url.Action("Logout","Login")">Log out <i class="bi bi-box-arrow-in-right"></i></button>
+                                    <button class="btn btn-danger" type="submit" formaction="@Url.Action("Logout","Login")">@Localizer["LogoutLayout"]<i class="bi bi-box-arrow-in-right"></i></button>
                                 }
                             </form>
                         </li>

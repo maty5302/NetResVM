@@ -2,7 +2,7 @@
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @{
-	ViewData["Title"] = "Manage Users";
+	ViewData["Title"] = @Localizer["ManageUsers"];
 }
 <h1>@ViewData["Title"]</h1>
 
@@ -10,10 +10,10 @@
 	<table class="table">
 		<thead>
 			<tr>
-				<th>Username</th>
-				<th>Role</th>
-				<th>Active</th>
-				<th>Authorization</th>
+				<th>@Localizer["Username"]</th>
+				<th>@Localizer["Role"]</th>
+				<th>@Localizer["Active"]</th>
+				<th>@Localizer["AuthType"]</th>
 				<th></th>
 			</tr>
 		</thead>
@@ -32,12 +32,12 @@
 								@if (user.Role != "Admin")
 								{
 									<input type="hidden" name="username" value="@user.Username" />
-									<button type="submit" formaction="@Url.Action("RemoveUser","User", new {UserId=user.Id})" class="btn btn-danger"> <i class="bi bi-person-dash-fill"></i> Delete</button>
+									<button type="submit" formaction="@Url.Action("RemoveUser","User", new {UserId=user.Id})" class="btn btn-danger"> <i class="bi bi-person-dash-fill"></i> @Localizer["DeleteButton"]</button>
 									@if (user.Active){
-										<button type="submit" formaction="@Url.Action("DeactivateUser","User", new {UserId=user.Id})" class="btn btn-primary"> <i class="bi bi-person-x-fill"></i> Deactivate</button>
+										<button type="submit" formaction="@Url.Action("DeactivateUser","User", new {UserId=user.Id})" class="btn btn-primary"> <i class="bi bi-person-x-fill"></i> @Localizer["DeactivateButton"]</button>
 									}
 									else{
-										<button type="submit" formaction="@Url.Action("ActivateUser","User",  new {UserId=user.Id})" class="btn btn-primary"> <i class="bi bi-person-check-fill"></i> Activate</button>
+										<button type="submit" formaction="@Url.Action("ActivateUser","User",  new {UserId=user.Id})" class="btn btn-primary"> <i class="bi bi-person-check-fill"></i> @Localizer["Activate"]</button>
 									}
 								}
 							</form>

@@ -5,8 +5,10 @@ using BusinessLayer.Services;
 using DataLayer;
 using DataLayer.Interface;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Localization;
 using SimpleLogger;
 using SuperReservationSystem;
+using System.Globalization;
 
 namespace NetResVM
 {
@@ -24,7 +26,9 @@ namespace NetResVM
             var builder = WebApplication.CreateBuilder(args);
 
 			// Add services to the container.
-			builder.Services.AddControllersWithViews();
+			builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+			builder.Services.AddControllersWithViews().AddViewLocalization(Microsoft.AspNetCore.Mvc.Razor.LanguageViewLocationExpanderFormat.Suffix)
+				.AddDataAnnotationsLocalization();;
 			builder.Services.AddSession(options =>
 			{
                 options.Cookie.Name = "SessionCookie";
@@ -60,7 +64,28 @@ namespace NetResVM
             });
 
             var app = builder.Build();
+            
+            var supportedCultures = new[]
+            {
+                new CultureInfo("en-US"),
+                new CultureInfo("cs-CZ")
+            };
 
+            var localizationOptions = new RequestLocalizationOptions
+            {
+                DefaultRequestCulture = new RequestCulture("en-US"),
+                SupportedCultures = supportedCultures,
+                SupportedUICultures = supportedCultures,
+                RequestCultureProviders = new List<IRequestCultureProvider>
+                {
+                    new CookieRequestCultureProvider(),
+                    new QueryStringRequestCultureProvider(),
+                    new AcceptLanguageHeaderRequestCultureProvider()
+                }
+            };
+            
+            app.UseRequestLocalization(localizationOptions);
+            
 			// Configure the HTTP request pipeline.
 			if (!app.Environment.IsDevelopment())
 			{

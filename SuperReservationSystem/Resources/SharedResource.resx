@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="Username" xml:space="preserve">
+        <value>Usernamo</value>
+    </data>
+    <data name="Password" xml:space="preserve">
+        <value>Passwordo</value>
+    </data>
+    <data name="Login" xml:space="preserve">
+        <value>Loginos</value>
+    </data>
+    <data name="LoginButton" xml:space="preserve">
+        <value>Log ins</value>
+    </data>
+    <data name="HomeTitle" xml:space="preserve">
+        <value>Homik</value>
+    </data>
+    <data name="ConnectButton" xml:space="preserve">
+        <value>Connectos</value>
+    </data>
+    <data name="Home" xml:space="preserve">
+        <value>Homes</value>
+    </data>
+    <data name="ReservationLayout" xml:space="preserve">
+        <value>Reservioos</value>
+    </data>
+    <data name="MyLabLayout" xml:space="preserve">
+        <value>Laboratos</value>
+    </data>
+    <data name="BackupsLayout" xml:space="preserve">
+        <value>Backupo</value>
+    </data>
+    <data name="LogoutLayout" xml:space="preserve">
+        <value>Logoutos</value>
+    </data>
+    <data name="ServerType" xml:space="preserve">
+        <value>ServerTypos</value>
+    </data>
+    <data name="State" xml:space="preserve">
+        <value>Statos</value>
+    </data>
+    <data name="SettingsTitle" xml:space="preserve">
+        <value>Settingo</value>
+    </data>
+    <data name="ChangePassLDAP" xml:space="preserve">
+        <value>Not Supported</value>
+    </data>
+    <data name="ManageUsers" xml:space="preserve">
+        <value>Manages User</value>
+    </data>
+    <data name="AddUser" xml:space="preserve">
+        <value>Add HIM</value>
+    </data>
+    <data name="AuthType" xml:space="preserve">
+        <value>AuthorizationType</value>
+    </data>
+    <data name="localhost" xml:space="preserve">
+        <value>locales</value>
+    </data>
+    <data name="Active" xml:space="preserve">
+        <value>Activa</value>
+    </data>
+    <data name="ChangePass" xml:space="preserve">
+        <value>ChangePass</value>
+    </data>
+    <data name="OldPass" xml:space="preserve">
+        <value>Oldpass</value>
+    </data>
+    <data name="NewPass" xml:space="preserve">
+        <value>NewPass</value>
+    </data>
+    <data name="ConfirmNewPass" xml:space="preserve">
+        <value>ConfirmNewPass</value>
+    </data>
+    <data name="Role" xml:space="preserve">
+        <value>Roles</value>
+    </data>
+    <data name="DeleteButton" xml:space="preserve">
+        <value>DeleteB</value>
+    </data>
+    <data name="DeactivateButton" xml:space="preserve">
+        <value>DeactivateB</value>
+    </data>
+    <data name="Activate" xml:space="preserve">
+        <value>ActivateB</value>
+    </data>
+    <data name="NewReservation" xml:space="preserve">
+        <value>NewReserv</value>
+    </data>
+    <data name="MyReservations" xml:space="preserve">
+        <value>MyReserv</value>
+    </data>
+    <data name="SelectView" xml:space="preserve">
+        <value>SelectView</value>
+    </data>
+    <data name="ListView" xml:space="preserve">
+        <value>ListView</value>
+    </data>
+    <data name="MonthView" xml:space="preserve">
+        <value>MonthView</value>
+    </data>
+    <data name="PlannedReservations" xml:space="preserve">
+        <value>PlannedReserv</value>
+    </data>
+    <data name="Lab" xml:space="preserve">
+        <value>Labs</value>
+    </data>
+    <data name="FromTime" xml:space="preserve">
+        <value>FromTime</value>
+    </data>
+    <data name="ToTime" xml:space="preserve">
+        <value>ToTime</value>
+    </data>
+    <data name="User" xml:space="preserve">
+        <value>Users</value>
+    </data>
+    <data name="Export" xml:space="preserve">
+        <value>Exports</value>
+    </data>
+    <data name="Server" xml:space="preserve">
+        <value>Servers</value>
+    </data>
+    <data name="Monday" xml:space="preserve">
+        <value>Mon</value>
+    </data>
+    <data name="Tuesday" xml:space="preserve">
+        <value>Tue</value>
+    </data>
+    <data name="Wednesday" xml:space="preserve">
+        <value>Wed</value>
+    </data>
+    <data name="Thursday" xml:space="preserve">
+        <value>Thu</value>
+    </data>
+    <data name="Friday" xml:space="preserve">
+        <value>Fri</value>
+    </data>
+    <data name="Saturday" xml:space="preserve">
+        <value>Sat</value>
+    </data>
+    <data name="Sunday" xml:space="preserve">
+        <value>Sun</value>
+    </data>
+    <data name="SelectLab" xml:space="preserve">
+        <value>SelectLab</value>
+    </data>
+    <data name="SelectServer" xml:space="preserve">
+        <value>SelectServer</value>
+    </data>
+    <data name="NoReservation" xml:space="preserve">
+        <value>NoReservations</value>
+    </data>
+    <data name="ExpiredReservations" xml:space="preserve">
+        <value>ExpiredReservations</value>
+    </data>
+    <data name="ExpiredResWarning" xml:space="preserve">
+        <value>WarningExpiredReserv</value>
+    </data>
+    <data name="NoExpired" xml:space="preserve">
+        <value>NoExpired</value>
+    </data>
+    <data name="RemoveOwnership" xml:space="preserve">
+        <value>RemoveOwnership</value>
+    </data>
+    <data name="NoOwnedLab" xml:space="preserve">
+        <value>NoOwnedLab</value>
+    </data>
+    <data name="Name" xml:space="preserve">
+        <value>Names</value>
+    </data>
+    <data name="IPadd" xml:space="preserve">
+        <value>ServerURLIP</value>
+    </data>
+    <data name="EditServer" xml:space="preserve">
+        <value>EditServer</value>
+    </data>
+    <data name="TestConn" xml:space="preserve">
+        <value>TestConnection</value>
+    </data>
+    <data name="SaveChanges" xml:space="preserve">
+        <value>SaveChanges</value>
+    </data>
+    <data name="placeholderPass" xml:space="preserve">
+        <value>PasswordPlaceholder</value>
+    </data>
+    <data name="AddNewServ" xml:space="preserve">
+        <value>AddNewServer</value>
+    </data>
+    <data name="SelectPlatform" xml:space="preserve">
+        <value>SelectPlatform</value>
+    </data>
+    <data name="ManageBackup" xml:space="preserve">
+        <value>ManageBackup</value>
+    </data>
+    <data name="NoBackups" xml:space="preserve">
+        <value>NoBackups</value>
+    </data>
+    <data name="CreatedAt" xml:space="preserve">
+        <value>CreatedAt</value>
+    </data>
+    <data name="Actions" xml:space="preserve">
+        <value>Actionss</value>
+    </data>
+    <data name="ServerName" xml:space="preserve">
+        <value>ServerName</value>
+    </data>
+    <data name="MessageWarningRestoreBackup" xml:space="preserve">
+        <value>MessageWarningRestoreBackup</value>
+    </data>
+    <data name="MessageWarningDeleteBackup" xml:space="preserve">
+        <value>MessageWarningDeleteBackup</value>
+    </data>
+    <data name="ImportLab" xml:space="preserve">
+        <value>ImportLab</value>
+    </data>
+    <data name="StoppedState" xml:space="preserve">
+        <value>StoppedState</value>
+    </data>
+    <data name="StartedState" xml:space="preserve">
+        <value>StartedState</value>
+    </data>
+    <data name="UnknownState" xml:space="preserve">
+        <value>UnknownState</value>
+    </data>
+    <data name="ModifiedLab" xml:space="preserve">
+        <value>ModifiedLab</value>
+    </data>
+    <data name="NodesCount" xml:space="preserve">
+        <value>NodesCount</value>
+    </data>
+    <data name="AuthorLab" xml:space="preserve">
+        <value>AuthorLab</value>
+    </data>
+    <data name="LabInfo" xml:space="preserve">
+        <value>LabInfo</value>
+    </data>
+    <data name="GeneralDetails" xml:space="preserve">
+        <value>GeneralDetails </value>
+    </data>
+    <data name="LabId" xml:space="preserve">
+        <value>Labid</value>
+    </data>
+    <data name="LabName" xml:space="preserve">
+        <value>LabName</value>
+    </data>
+    <data name="LabOwners" xml:space="preserve">
+        <value>LabOwners</value>
+    </data>
+    <data name="NoneOwns" xml:space="preserve">
+        <value>NooneOwns</value>
+    </data>
+    <data name="DescriptionLab" xml:space="preserve">
+        <value>LabDescription</value>
+    </data>
+    <data name="PlatformSpecifics" xml:space="preserve">
+        <value>PlatformSpecifics</value>
+    </data>
+    <data name="BackToLabList" xml:space="preserve">
+        <value>BackToLabList</value>
+    </data>
+    <data name="ShowNodes" xml:space="preserve">
+        <value>ShowNodes</value>
+    </data>
+    <data name="BackupLab" xml:space="preserve">
+        <value>BackupLab</value>
+    </data>
+    <data name="DownloadLab" xml:space="preserve">
+        <value>DownloadLab</value>
+    </data>
+    <data name="ReserveLab" xml:space="preserve">
+        <value>ReserveLab</value>
+    </data>
+    <data name="AddCollaborator" xml:space="preserve">
+        <value>AddCollaborator</value>
+    </data>
+    <data name="OwnLab" xml:space="preserve">
+        <value>OwnLab</value>
+    </data>
+    <data name="StartLab" xml:space="preserve">
+        <value>StartLab</value>
+    </data>
+    <data name="StopLab" xml:space="preserve">
+        <value>StopLab</value>
+    </data>
+    <data name="DeleteLab" xml:space="preserve">
+        <value>DeleteLab</value>
+    </data>
+    <data name="addcollabenterusername" xml:space="preserve">
+        <value>AddCollaboratorUsername</value>
+    </data>
+    <data name="CancelB" xml:space="preserve">
+        <value>CancelB</value>
+    </data>
+    <data name="DeleteConfirmLab" xml:space="preserve">
+        <value>DeleteConfirmLab</value>
+    </data>
+</root>

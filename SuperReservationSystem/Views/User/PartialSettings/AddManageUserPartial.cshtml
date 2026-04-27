@@ -5,25 +5,25 @@
 }
 
 @model BusinessLayer.Models.UserModel
-<h3>Manage users</h3>
+<h3>@Localizer["ManageUsers"]</h3>
 <form method="post" class="p-3 border rounded mb-4">
-	<button class="btn btn-primary" formaction="@Url.Action("ManageUser", "User")">Manage users</button>
+	<button class="btn btn-primary" formaction="@Url.Action("ManageUser", "User")">@Localizer["ManageUsers"]</button>
 </form>
-<h3>Add user</h3>
+<h3>@Localizer["AddUser"]</h3>
 <form method="post" class="p-3 border rounded">
 	<div class="form-group">
-		<label for="Username">Username</label>
+		<label for="Username">@Localizer["Username"]</label>
 		<input type="text" class="form-control" id="Username" asp-for="Username" required>
 	</div>
 	<div class="form-group">
-		<label id="PasswordLabel" for="Password">Password</label>
+		<label id="PasswordLabel" for="Password">@Localizer["Password"]</label>
 		<input type="password" class="form-control" id="Password" asp-for="Password">
 	</div>
 	<div class="row">
 		<div class="form-group col-md-10">
-			<label for="AuthorizationType">Authorization type</label>
+			<label for="AuthorizationType">@Localizer["AuthType"]</label>
 			<select class="form-control" id="AuthorizationType" asp-for="AuthorizationType" required>
-				<option value="localhost">localhost</option>
+				<option value="localhost">@Localizer["localhost"]</option>
 				<option value="vsb">VŠB server</option>
 			</select>
 		</div>
@@ -31,12 +31,12 @@
 			<div class="text-center justify-content-center">
 				<input type="checkbox" class="form-check-input" id="Active" asp-for="Active">
 				<label for="Active" class="form-check-label">
-					Active
+					@Localizer["Active"]
 				</label>
 			</div>
 		</div>
 	</div>
-	<button type="submit" formaction="@Url.Action("AddUser","User")" class="btn btn-primary mt-3">Add user</button>
+	<button type="submit" formaction="@Url.Action("AddUser","User")" class="btn btn-primary mt-3">@Localizer["AddUser"]</button>
 </form>
 
 <script>

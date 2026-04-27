@@ -3,16 +3,16 @@
 	var plannedReservations = (List<ReservationInformationModel>)ViewBag.PlannedReservations;
 }
 <div id="list-view">
-	<h3>Planned reservations</h3>
+	<h3>@Localizer["PlannedReservations"]</h3>
 	<table class="table">
 		<thead>
 			<tr>
-				<th>Server</th>
-				<th>Lab</th>
-				<th>From</th>
-				<th>To</th>
-				<th>User</th>
-				<th>Export</th>
+				<th>@Localizer["Server"]</th>
+				<th>@Localizer["Lab"]</th>
+				<th>@Localizer["FromTime"]</th>
+				<th>@Localizer["ToTime"]</th>
+				<th>@Localizer["User"]</th>
+				<th>@Localizer["Export"]</th>
 			</tr>
 		</thead>
 		<tbody>

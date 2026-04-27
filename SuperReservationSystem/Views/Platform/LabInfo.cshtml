@@ -1,7 +1,7 @@
 ﻿@model BusinessLayer.DTOs.LabDTO
 @{
     // Název stránky dynamicky podle modelu
-    ViewData["Title"] = "Lab Info - " + (Model?.Name ?? "Unknown");
+    ViewData["Title"] = @Localizer["LabInfo"] + " - " + (Model?.Name ?? "Unknown");
 }
 
 @if (Model == null)
@@ -15,21 +15,21 @@ else
     
     <div class="row mb-4">
         <div class="col-md-6">
-            <h4>General Details</h4>
-            <p><strong>Lab ID:</strong> @Model.Id</p>
-            <p><strong>Lab Name:</strong> @Model.Name</p>
+            <h4>@Localizer["GeneralDetails"]</h4>
+            <p><strong>@Localizer["LabId"]:</strong> @Model.Id</p>
+            <p><strong>@Localizer["LabName"]:</strong> @Model.Name</p>
             <p>
                 @{
 					var owners = ViewBag.Owners as IEnumerable<string>;
                 }
-                <strong>Lab Owners:</strong>
+                <strong>@Localizer["LabOwners"]:</strong>
                 @if (owners != null && owners.Any())
                 {
                     @string.Join(", ", owners)
                 }
                 else
                 {
-                    <span class="text-muted"><em>None</em></span>
+                    <span class="text-muted"><em>@Localizer["NoneOwns"]</em></span>
                 }
             </p>
             @{
@@ -42,16 +42,32 @@ else
                 };                     
             }
 
-            <p><strong>Status:</strong> <span class="badge @badgeClass">@Model.Status</span></p>
+            <p><strong>@Localizer["State"]:</strong> 
+                @if (Model.Status.ToLower() == "started" || Model.Status.ToLower() == "running")
+                {
+                    <span class="badge @badgeClass mb-2">@Localizer["StartedState"]</span>
+                    <br/>
+                }
+                else if(Model.Status.ToLower() == "stopped")
+                {
+                    <span class="badge @badgeClass mb-2">@Localizer["StoppedState"]</span>
+                    <br/>
+                }
+                else
+                {
+                    <span class="badge @badgeClass mb-2">@Localizer["UnknownState"]</span>
+                    <br/>
+                }
+                </p>
             
             @if (!string.IsNullOrEmpty(Model.Description))
             {
-                <p><strong>Description:</strong> @Model.Description</p>
+                <p><strong>@Localizer["DescriptionLab"]:</strong> @Model.Description</p>
             }
         </div>
         
         <div class="col-md-6">
-            <h4>Platform Specifics</h4>
+            <h4>@Localizer["PlatformSpecifics"]</h4>
             @* Zde se automaticky vypíše Path (pro EVE) nebo LinkCount (pro CML) atd. *@
             @if (Model.Metadata != null && Model.Metadata.Any())
             {
@@ -71,11 +87,11 @@ else
             <div class="btn-group mb-2" role="group">
                 <button type="submit" class="btn btn-secondary"
                         formaction="@Url.Action("LabList", "Platform", new { serverId = ViewBag.ServerId })">
-                    <i class="bi bi-arrow-left-circle"></i> Back to Lab List
+                    <i class="bi bi-arrow-left-circle"></i> @Localizer["BackToLabList"]
                 </button>
                 <button type="submit" class="btn btn-info"
                         formaction="@Url.Action("LabNodeList", "Platform", new { serverId = ViewBag.ServerId, labId = Model.Id })">
-                    <i class="bi bi-diagram-3"></i> Show Nodes
+                    <i class="bi bi-diagram-3"></i> @Localizer["ShowNodes"]
                 </button>
             </div>
         </div>
@@ -87,33 +103,33 @@ else
                 {
                 <button type="submit" class="btn btn-primary"
                         formaction="@Url.Action("MakeBackup", "Backup", new { serverId = ViewBag.ServerId, labId = Model.Id, serverType = ViewBag.PlatformName, fromServer = true })">
-                    <i class="bi bi-cloud-arrow-up"></i> Backup Lab
+                    <i class="bi bi-cloud-arrow-up"></i> @Localizer["BackupLab"]
                 </button>
                 <button type="submit" class="btn btn-primary"
                         formaction="@Url.Action("DownloadLab", "Platform", new { serverId = ViewBag.ServerId, labId = Model.Id })">
-                    <i class="bi bi-download"></i> Download Lab
+                    <i class="bi bi-download"></i> @Localizer["DownloadLab"]
                 </button>
                 <button type="submit" class="btn btn-primary"
                         formaction="@Url.Action("Create", "Reservation", new { selectedServer = ViewBag.ServerId, labId = Model.Id })">
-                    <i class="bi bi-calendar-check"></i> Reserve This Lab
+                    <i class="bi bi-calendar-check"></i> @Localizer["ReserveLab"]
                 </button>
                 
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCollaboratorModal">
-                        <i class="bi bi-person-plus"></i> Add Collaborator
+                        <i class="bi bi-person-plus"></i> @Localizer["AddCollaborator"]
                     </button>
                 }
                 @* Vlastnictví laboratoře *@
                 @if (ViewBag.Owned == true)
                 {
                     <button class="btn btn-outline-secondary" disabled>
-                        <i class="bi bi-person-check"></i> Own a Lab
+                        <i class="bi bi-person-check"></i> @Localizer["OwnLab"]
                     </button>
                 }
                 else
                 {
                     <button type="submit" class="btn btn-primary"
                             formaction="@Url.Action("OwnLab", "User", new { serverId = ViewBag.ServerId, labId = Model.Id })">
-                        <i class="bi bi-person-plus"></i> Own a Lab
+                        <i class="bi bi-person-plus"></i> @Localizer["OwnLab"]
                     </button>
                 }
             </div>
@@ -126,11 +142,11 @@ else
                 <div class="btn-group mb-2" role="group">
                     <button type="submit" class="btn btn-success"
                             formaction="@Url.Action("StartLab", "Platform", new { serverId = ViewBag.ServerId, labId = Model.Id })">
-                        <i class="bi bi-play-circle"></i> Start This Lab
+                        <i class="bi bi-play-circle"></i> @Localizer["StartLab"]
                     </button>
                     <button type="submit" class="btn btn-warning"
                             formaction="@Url.Action("StopLab", "Platform", new { serverId = ViewBag.ServerId, labId = Model.Id })">
-                        <i class="bi bi-stop-circle"></i> Stop the Lab
+                        <i class="bi bi-stop-circle"></i> @Localizer["StopLab"]
                     </button>
                 </div>
             </div>
@@ -142,8 +158,9 @@ else
             <div class="mb-3">
                 <button type="submit" class="btn btn-danger"
                         formaction="@Url.Action("DeleteLab", "Platform", new { serverId = ViewBag.ServerId, labId = Model.Id })"
-                        onclick="return confirm('Are you sure you want to permanently delete this lab?')">
-                    <i class="bi bi-trash"></i> Delete This Lab
+                        data-confirm="@Localizer["DeleteConfirmLab"]"
+                        onclick="return confirm(this.getAttribute('data-confirm'));">
+                    <i class="bi bi-trash"></i> @Localizer["DeleteLab"]
                 </button>
             </div>
         }
@@ -171,25 +188,25 @@ else
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addCollaboratorModalLabel">Add Collaborator</h5>
+                <h5 class="modal-title" id="addCollaboratorModalLabel">@Localizer["AddCollaborator"]</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
             <form method="post" action="@Url.Action("AddCollaborator", "Platform")">
                 <div class="modal-body">
-                    <p>Enter the username of the person you want to grant access to this lab.</p>
+                    <p>@Localizer["addcollabenterusername"]</p>
                     
                     <input type="hidden" name="serverId" value="@ViewBag.ServerId" />
                     <input type="hidden" name="labId" value="@Model.Id" />
                     
                     <div class="mb-3">
-                        <label for="collaboratorUsername" class="form-label fw-bold">Username:</label>
+                        <label for="collaboratorUsername" class="form-label fw-bold">@Localizer["Username"]</label>
                         <input type="text" class="form-control" id="collaboratorUsername" name="collaboratorUsername" required placeholder="e.g. novakj" />
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add User</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["CancelB"]</button>
+                    <button type="submit" class="btn btn-primary">@Localizer["AddUser"]</button>
                 </div>
             </form>
         </div>
