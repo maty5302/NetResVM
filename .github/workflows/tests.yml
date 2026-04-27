@@ -9,26 +9,43 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup .NET 8
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
-    
-    - name: Restore dependencies
-      run: dotnet restore
-    
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
-    
-    - name: Run tests with coverage
-      run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"
-    
-    - name: Upload coverage reports
-      if: always()
-      uses: codecov/codecov-action@v3
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
       with:
-        files: "**/coverage.cobertura.xml"
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore
+      run: dotnet restore SuperReservationSystem.sln
+
+    - name: Build
+      run: dotnet build SuperReservationSystem.sln --no-restore --configuration Release
+
+    - name: Test with coverage
+      run: dotnet test SuperReservationSystem.sln --no-build --configuration Release --collect:"XPlat Code Coverage"
+
+    - name: Install ReportGenerator
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+    - name: Generate coverage report
+      run: |
+        reportgenerator \
+          -reports:**/coverage.cobertura.xml \
+          -targetdir:coverage \
+          -reporttypes:Cobertura
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        files: coverage/Cobertura.xml
