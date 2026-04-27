@@ -36,13 +36,16 @@ BEGIN
 END
 GO
 
--- Vložení výchozího uživatele admin, POKUD TAM JEŠTĚ NENÍ
-IF NOT EXISTS (SELECT * FROM [dbo].[User] WHERE Username = 'admin')
+IF NOT EXISTS (SELECT 1 FROM [User] WHERE Username = 'admin')
 BEGIN
-    INSERT INTO [dbo].[User] (Username, Password, Role, AuthorizationType, Active)
-    VALUES ('admin', 'Password123', 'Admin', 'localhost', 1);
+    INSERT INTO [User] (Username, [Password], [Role], AuthorizationType, Active)
+    VALUES ('admin', 'VaseHeslo', 'Admin', 'localhost', 1);
+    PRINT 'Admin created successfully.';
 END
-GO
+ELSE
+BEGIN
+    PRINT 'Admin already exists, skipping...';
+END
 
 -- Vytvoření tabulky Reservation, pokud neexistuje
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Reservation]') AND type in (N'U'))
