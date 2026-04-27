@@ -6,7 +6,7 @@ using BusinessLayer.Enum;
 using BusinessLayer.Models;
 using Moq;
 
-namespace BusinessLayer.Tests;
+namespace NetResVM.UnitTests;
 
 public class ServerServiceTests
 {

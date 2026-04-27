@@ -6,7 +6,7 @@ using DataLayer;
 using DataLayer.Interface;
 using Moq;
 
-namespace BusinessLayer.Tests;
+namespace NetResVM.UnitTests;
 
 public class BackupServiceTests
 {

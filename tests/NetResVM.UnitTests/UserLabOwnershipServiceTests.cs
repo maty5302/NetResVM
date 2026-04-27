@@ -9,7 +9,7 @@ using Moq;
 using NuGet.Frameworks;
 using Xunit;
 
-namespace BusinessLayer.Tests;
+namespace NetResVM.UnitTests;
 
 public class UserLabOwnershipServiceTests
 {

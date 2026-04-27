@@ -4,7 +4,7 @@ using Xunit;
 using System.Data;
 using DataLayer.Interface;
 
-namespace BusinessLayer.Tests
+namespace NetResVM.UnitTests
 {
     /// <summary>
     /// Unit tests for the UserService class.

@@ -4,7 +4,7 @@ using BusinessLayer.Services;
 using Moq;
 using Xunit;
 
-namespace BusinessLayer.Tests
+namespace NetResVM.UnitTests
 {
     /// <summary>
     /// Unit tests for the PlatformManager class.
