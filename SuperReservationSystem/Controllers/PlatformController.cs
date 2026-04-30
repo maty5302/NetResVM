@@ -5,6 +5,7 @@ using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.NetworkInformation;
 using System.Linq;
+using Microsoft.Extensions.Localization;
 
 namespace NetResVM.Controllers
 {
@@ -14,13 +15,15 @@ namespace NetResVM.Controllers
         private readonly ServerService _serverService;
         private readonly UserService _userService;
         private readonly UserLabOwnershipService _userLabOwnership;
+        private readonly IStringLocalizer<SharedResource> _localizer;
 
-        public PlatformController(PlatformManager platformManager, ServerService serverService, UserService userService, UserLabOwnershipService userLabOwnership)
+        public PlatformController(PlatformManager platformManager, ServerService serverService, UserService userService, UserLabOwnershipService userLabOwnership, IStringLocalizer<SharedResource> localizer)
         {
             _platformManager = platformManager;
             _serverService = serverService;
             _userService = userService;
             _userLabOwnership = userLabOwnership;
+            _localizer = localizer;
         }
 
         /// <summary>
@@ -36,7 +39,7 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
-                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
                 return RedirectToAction("Login", "Home");
             }
             return RedirectToAction("LabList", "Platform", new { serverId = serverId });
@@ -64,23 +67,28 @@ namespace NetResVM.Controllers
             var server = _serverService.GetServerById(serverId);
             if (server == null)
             {
-                TempData["ErrorMessage"] = "Server not found.";
+                TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
                 return RedirectToAction("Index", "Home");
             }
-
+            var online = await IsServerOnlineAsync(server.IpAddress);
+            if(!online)
+            {
+                TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
+                return RedirectToAction("Index", "Home");
+            }
             try
             {
                 if (server.Platform == PlatformType.Unknown)
                 {
-                    TempData["ErrorMessage"] = "Unsupported platform type.";
+                    TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                     return RedirectToAction("Index", "Home");
                 }
                 IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
-
+                
                 var response = await adapter.AuthenticateAsync(server.Id);
                 if (!response.Valid)
                 {
-                    TempData["ErrorMessage"] = $"Authentication failed: {response.Message}";
+                    TempData["ErrorMessage"] = $"{_localizer["AuthFailed"].Value} {response.Message}";
                     return RedirectToAction("Index", "Home");
                 }
 
@@ -122,7 +130,13 @@ namespace NetResVM.Controllers
             var server = _serverService.GetServerById(serverId);
             if (server == null)
             {
-                TempData["ErrorMessage"] = "Server not found.";
+                TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
+                return RedirectToAction("Index", "Home");
+            }
+            var online = await IsServerOnlineAsync(server.IpAddress);
+            if(!online)
+            {
+                TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
                 return RedirectToAction("Index", "Home");
             }
 
@@ -130,22 +144,22 @@ namespace NetResVM.Controllers
             {
                 if (server.Platform == PlatformType.Unknown)
                 {
-                    TempData["ErrorMessage"] = "Unsupported platform type.";
+                    TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                     return RedirectToAction("Index", "Home");
                 }
                 IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
-
+                
                 var response = await adapter.AuthenticateAsync(server.Id);
                 if (!response.Valid)
                 {
-                    TempData["ErrorMessage"] = $"Authentication failed: {response.Message}";
+                    TempData["ErrorMessage"] = $"{_localizer["AuthFailed"].Value} {response.Message}";
                     return RedirectToAction("Index", "Home");
                 }
 
                 var labInfoResult = await adapter.GetLabInfoAsync(serverId,labId);
                 if (labInfoResult.Lab == null)
                 {
-                    TempData["ErrorMessage"] = $"Lab with ID {labId} not found.";
+                    TempData["ErrorMessage"] = $"{_localizer["LabWithIDNotFound"].Value} (ID: {labId})";
                     return RedirectToAction("LabList", "Platform", new { serverId = serverId });
                 }
                 var owned = _userLabOwnership.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
@@ -179,20 +193,20 @@ namespace NetResVM.Controllers
                 var server = _serverService.GetServerById(serverId);
                 if (server == null)
                 {
-                    TempData["ErrorMessage"] = "Server not found.";
+                    TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
                     return RedirectToAction("Index", "Home");
                 }
 
                 if (server.Platform == PlatformType.Unknown)
                 {
-                    TempData["ErrorMessage"] = "Unsupported platform type.";
+                    TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                     return RedirectToAction("Index", "Home");
                 }
 
                 int collaboratorId = _userService.GetUserId(collaboratorUsername);
                 if (collaboratorId == -1)
                 {
-                    TempData["ErrorMessage"] = "User not found.";
+                    TempData["ErrorMessage"] = _localizer["UserNotFound"].Value;
                     return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
                 }
 
@@ -206,10 +220,9 @@ namespace NetResVM.Controllers
 
                 var result = _userLabOwnership.InsertUserLabOwnership(ownershipRecord);
 
-                // Zpracování výsledku (result.Item1 je true/false, result.Item2 je zpráva z tvé Service)
                 if (result.Item1)
                 {
-                    TempData["SuccessMessage"] = $"User {collaboratorUsername} has been successfully added as a collaborator.";
+                    TempData["SuccessMessage"] = $"{_localizer["UserCollaboratorAdded"].Value} : {collaboratorUsername}";
                 }
                 else
                 {
@@ -218,7 +231,7 @@ namespace NetResVM.Controllers
             }
             catch (Exception ex) {
                     TempData["ErrorMessage"] = $"An error occurred: {ex.Message}";
-                }
+            }
             return RedirectToAction("LabInfo","Platform", new { serverId = serverId ,labId = labId});
         }
 
@@ -235,28 +248,34 @@ namespace NetResVM.Controllers
                 return RedirectToAction("Index", "Login");
             if (file == null)
             {
-                TempData["ErrorMessage"] = "File not found.";
+                TempData["ErrorMessage"] =_localizer["FileNotFound"].Value;
                 return RedirectToAction("LabList", "Platform", new { serverId = serverId });
             }
             var server = _serverService.GetServerById(serverId);
             if (server == null)
             {
-                TempData["ErrorMessage"] = "Server not found.";
+                TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
+                return RedirectToAction("Index", "Home");
+            }
+            var online = await IsServerOnlineAsync(server.IpAddress);
+            if(!online)
+            {
+                TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
                 return RedirectToAction("Index", "Home");
             }
             if (server.Platform == PlatformType.Unknown)
             {
-                TempData["ErrorMessage"] = "Unsupported platform type.";
+                TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                 return RedirectToAction("Index", "Home");
             }
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
             var res = await adapter.ImportLab(serverId, file);
             if (res)
             {
-                TempData["SuccessMessage"] = "Lab imported successfully.";
+                TempData["SuccessMessage"] = _localizer["LabImportSuccess"].Value;
                 return RedirectToAction("LabList", "Platform", new { serverId = serverId });
             }
-            TempData["ErrorMessage"] = "An error occurred.";
+            TempData["ErrorMessage"] = _localizer["AnErrorOccured"].Value;
             return RedirectToAction("LabList", "Platform", new { serverId = serverId });
 
         }
@@ -279,12 +298,18 @@ namespace NetResVM.Controllers
             var server = _serverService.GetServerById(serverId);
             if (server == null)
             {
-                TempData["ErrorMessage"] = "Server not found.";
+                TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
+                return RedirectToAction("Index", "Home");
+            }
+            var online = await IsServerOnlineAsync(server.IpAddress);
+            if(!online)
+            {
+                TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
                 return RedirectToAction("Index", "Home");
             }
             if (server.Platform == PlatformType.Unknown)
             {
-                TempData["ErrorMessage"] = "Unsupported platform type.";
+                TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                 return RedirectToAction("Index", "Home");
             }
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
@@ -321,23 +346,29 @@ namespace NetResVM.Controllers
             var server = _serverService.GetServerById(serverId);
             if (server == null)
             {
-                TempData["ErrorMessage"] = "Server not found.";
+                TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
+                return RedirectToAction("Index", "Home");
+            }
+            var online = await IsServerOnlineAsync(server.IpAddress);
+            if(!online)
+            {
+                TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
                 return RedirectToAction("Index", "Home");
             }
             if (server.Platform == PlatformType.Unknown)
             {
-                TempData["ErrorMessage"] = "Unsupported platform type.";
+                TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                 return RedirectToAction("Index", "Home");
             }
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
             var result = await adapter.DeleteLab(serverId, labId);
             if (result.value)
             {
-                TempData["SuccessMessage"] = "Lab deleted successfully.";
+                TempData["SuccessMessage"] = _localizer["LabDeleteSuccess"].Value;
             }
             else
             {
-                TempData["ErrorMessage"] = result.message ?? "An error occurred while deleting the lab.";
+                TempData["ErrorMessage"] = result.message ?? _localizer["LabDeleteError"].Value;
             }
             return RedirectToAction("LabList", "Platform", new { serverId = serverId });
         }
@@ -360,23 +391,29 @@ namespace NetResVM.Controllers
             var server = _serverService.GetServerById(serverId);
             if (server == null)
             {
-                TempData["ErrorMessage"] = "Server not found.";
+                TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
+                return RedirectToAction("Index", "Home");
+            }
+            var online = await IsServerOnlineAsync(server.IpAddress);
+            if(!online)
+            {
+                TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
                 return RedirectToAction("Index", "Home");
             }
             if (server.Platform == PlatformType.Unknown)
             {
-                TempData["ErrorMessage"] = "Unsupported platform type.";
+                TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                 return RedirectToAction("Index", "Home");
             }
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
             var result = await adapter.StartLabAsync(serverId, labId);
             if (result.value)
             {
-                TempData["SuccessMessage"] = "Lab started successfully.";
+                TempData["SuccessMessage"] = _localizer["LabStartedSuccess"].Value;
             }
             else
             {
-                TempData["ErrorMessage"] = result.message ?? "An error occurred while starting the lab.";
+                TempData["ErrorMessage"] = result.message ?? _localizer["LabStartError"].Value;
             }
             return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
         }
@@ -398,23 +435,29 @@ namespace NetResVM.Controllers
             var server = _serverService.GetServerById(serverId);
             if (server == null)
             {
-                TempData["ErrorMessage"] = "Server not found.";
+                TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
+                return RedirectToAction("Index", "Home");
+            }
+            var online = await IsServerOnlineAsync(server.IpAddress);
+            if(!online)
+            {
+                TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
                 return RedirectToAction("Index", "Home");
             }
             if (server.Platform == PlatformType.Unknown)
             {
-                TempData["ErrorMessage"] = "Unsupported platform type.";
+                TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                 return RedirectToAction("Index", "Home");
             }
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
             var result = await adapter.StopLabAsync(serverId, labId);
             if (result.value)
             {
-                TempData["SuccessMessage"] = "Lab stopped successfully.";
+                TempData["SuccessMessage"] = _localizer["LabStoppedSuccess"].Value;
             }
             else
             {
-                TempData["ErrorMessage"] = result.message ?? "An error occurred while stopping the lab.";
+                TempData["ErrorMessage"] = result.message ?? _localizer["LabStopError"].Value;
             }
             return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
         }
@@ -437,19 +480,25 @@ namespace NetResVM.Controllers
             var server = _serverService.GetServerById(serverId);
             if (server == null)
             {
-                TempData["ErrorMessage"] = "Server not found.";
+                TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
+                return RedirectToAction("Index", "Home");
+            }
+            var online = await IsServerOnlineAsync(server.IpAddress);
+            if(!online)
+            {
+                TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
                 return RedirectToAction("Index", "Home");
             }
             if (server.Platform == PlatformType.Unknown)
             {
-                TempData["ErrorMessage"] = "Unsupported platform type.";
+                TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                 return RedirectToAction("Index", "Home");
             }
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
             var result = await adapter.GetAllNodes(serverId, labId);
             if (result.Nodes == null)
             {
-                TempData["ErrorMessage"] = result.Message ?? "An error occurred while retrieving nodes.";
+                TempData["ErrorMessage"] = result.Message ?? _localizer["LabNodesError"].Value;
                 return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
             }
             return View(result.Nodes);

@@ -2,6 +2,7 @@
 using System.Net.NetworkInformation;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using SuperReservationSystem.Models;
 
 namespace NetResVM.Controllers
@@ -13,16 +14,18 @@ namespace NetResVM.Controllers
 	{
 		private readonly ILogger<HomeController> _logger;
         private readonly ServerService _serverService;
+        private readonly IStringLocalizer<SharedResource> _localizer;
 
         /// <summary>
         /// Constructor for the HomeController class.
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="serverService"></param>
-        public HomeController(ILogger<HomeController> logger, ServerService serverService)
+        public HomeController(ILogger<HomeController> logger, ServerService serverService, IStringLocalizer<SharedResource> localizer)
 		{
 			_logger = logger;
             _serverService = serverService;
+            _localizer = localizer;
         }
 
         /// <summary>
@@ -43,7 +46,7 @@ namespace NetResVM.Controllers
 
             if (Request.Query["error"] == "connection_lost")
             {
-                TempData["ErrorMessage"] = "Connection lost! The server went offline while you were working.";
+                TempData["ErrorMessage"] = _localizer["ConnectionLost"].Value;
                 return RedirectToAction("Index");
             }
 

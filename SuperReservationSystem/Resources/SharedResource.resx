@@ -312,4 +312,202 @@
     <data name="DeleteConfirmLab" xml:space="preserve">
         <value>DeleteConfirmLab</value>
     </data>
+    <data name="AccessDenied" xml:space="preserve">
+        <value>Access Denied</value>
+    </data>
+    <data name="BackupSuccess" xml:space="preserve">
+        <value>Backup Success</value>
+    </data>
+    <data name="BackupFailed" xml:space="preserve">
+        <value>BackupFailed</value>
+    </data>
+    <data name="BackupRestoreSuccess" xml:space="preserve">
+        <value>Restore Success</value>
+    </data>
+    <data name="BackupRestoreFailed" xml:space="preserve">
+        <value>Restore Failed</value>
+    </data>
+    <data name="BackupRestoreFailNotOwned" xml:space="preserve">
+        <value>Backup Restore Fail Not Owned</value>
+    </data>
+    <data name="BackupDeleteFailNotOwned" xml:space="preserve">
+        <value>Backup Delete Fail Not Owned</value>
+    </data>
+    <data name="BackupDeleteSuccess" xml:space="preserve">
+        <value>Backup Delete Success</value>
+    </data>
+    <data name="BackupDeleteFailed" xml:space="preserve">
+        <value>Backup Delete Failed</value>
+    </data>
+    <data name="BackupDownloadFailed" xml:space="preserve">
+        <value>Backup Download Failed</value>
+    </data>
+    <data name="ConnectionLost" xml:space="preserve">
+        <value>ConnectionLost</value>
+    </data>
+    <data name="InvalidCredentials" xml:space="preserve">
+        <value>InvalidCredentials</value>
+    </data>
+    <data name="ServerNotFound" xml:space="preserve">
+        <value>ServerNotFound</value>
+    </data>
+    <data name="UnsupportedPlatform" xml:space="preserve">
+        <value>UnsupportedPlatform</value>
+    </data>
+    <data name="AuthFailed" xml:space="preserve">
+        <value>AuthFailed</value>
+    </data>
+    <data name="LabWithIDNotFound" xml:space="preserve">
+        <value>LabWithIDNotFound</value>
+    </data>
+    <data name="UserNotFound" xml:space="preserve">
+        <value>UserNotFound</value>
+    </data>
+    <data name="UserCollaboratorAdded" xml:space="preserve">
+        <value>UserCollaboratorAdded</value>
+    </data>
+    <data name="FileNotFound" xml:space="preserve">
+        <value>FileNotFound</value>
+    </data>
+    <data name="LabImportSuccess" xml:space="preserve">
+        <value>LabImportSuccess</value>
+    </data>
+    <data name="AnErrorOccured" xml:space="preserve">
+        <value>An error occurred.</value>
+    </data>
+    <data name="LabDeleteSuccess" xml:space="preserve">
+        <value>LabDeleteSuccess</value>
+    </data>
+    <data name="LabDeleteError" xml:space="preserve">
+        <value>Lab Delete Error</value>
+    </data>
+    <data name="LabStartedSuccess" xml:space="preserve">
+        <value>LabStartedSuccess</value>
+    </data>
+    <data name="LabStartError" xml:space="preserve">
+        <value>LabStartError</value>
+    </data>
+    <data name="LabStoppedSuccess" xml:space="preserve">
+        <value>LabStopped</value>
+    </data>
+    <data name="LabStopError" xml:space="preserve">
+        <value>LabStopError</value>
+    </data>
+    <data name="LabNodesError" xml:space="preserve">
+        <value>LabNodesError</value>
+    </data>
+    <data name="ServerOffline" xml:space="preserve">
+        <value>ServerOffline</value>
+    </data>
+    <data name="NoLabsFound" xml:space="preserve">
+        <value>NoLabsFound</value>
+    </data>
+    <data name="ReservationDeleted" xml:space="preserve">
+        <value>ReservationDeleted</value>
+    </data>
+    <data name="SomethingWrong" xml:space="preserve">
+        <value>SomethingWriong</value>
+    </data>
+    <data name="ServerNotSelected" xml:space="preserve">
+        <value>ServerNotSelected</value>
+    </data>
+    <data name="LabNotSelected" xml:space="preserve">
+        <value>LabNotSelected</value>
+    </data>
+    <data name="InvalidTime" xml:space="preserve">
+        <value>InvalidTime</value>
+    </data>
+    <data name="ResOneHour" xml:space="preserve">
+        <value>Reservation must be at least 1 hour.aaaaa</value>
+    </data>
+    <data name="ResSameDay" xml:space="preserve">
+        <value>Reservation start and end must be on the same dayyyy</value>
+    </data>
+    <data name="UserNotSelected" xml:space="preserve">
+        <value>UserNotSelected</value>
+    </data>
+    <data name="ReservationCreated" xml:space="preserve">
+        <value>ReservationCreated</value>
+    </data>
+    <data name="ReservationExistsError" xml:space="preserve">
+        <value>ReservationExistsError</value>
+    </data>
+    <data name="ServerRemoved" xml:space="preserve">
+        <value>ServerRemoved</value>
+    </data>
+    <data name="ServerNotExist" xml:space="preserve">
+        <value>ServenNotExist</value>
+    </data>
+    <data name="ServerUpdated" xml:space="preserve">
+        <value>ServerUpdated</value>
+    </data>
+    <data name="ServerNotUpdated" xml:space="preserve">
+        <value>ServerNotUpdated</value>
+    </data>
+    <data name="YouNeedPassword" xml:space="preserve">
+        <value>YouNeedPassword</value>
+    </data>
+    <data name="ConnectionSuccess" xml:space="preserve">
+        <value>ConnectionSuccess</value>
+    </data>
+    <data name="ConnectionFailed" xml:space="preserve">
+        <value>ConnectionFailed</value>
+    </data>
+    <data name="ServerAdded" xml:space="preserve">
+        <value>ServerAddSuccess</value>
+    </data>
+    <data name="ServerNotAdded" xml:space="preserve">
+        <value>ServerNotAdded</value>
+    </data>
+    <data name="LabOwnedSuccess" xml:space="preserve">
+        <value>LabOwnedSuccess</value>
+    </data>
+    <data name="LabOwnedRemoved" xml:space="preserve">
+        <value>LabOwnedRemove</value>
+    </data>
+    <data name="LabOwnedRemoveError" xml:space="preserve">
+        <value>LabOwnedRemoveError</value>
+    </data>
+    <data name="OldPassIcorrect" xml:space="preserve">
+        <value>OldPassIcorrect</value>
+    </data>
+    <data name="PasswordNotMatch" xml:space="preserve">
+        <value>PasswordNotMatch</value>
+    </data>
+    <data name="PasswordChanged" xml:space="preserve">
+        <value>PasswordChanged</value>
+    </data>
+    <data name="PasswordError" xml:space="preserve">
+        <value>PasswordError</value>
+    </data>
+    <data name="PasswordRequired" xml:space="preserve">
+        <value>PasswordRequired</value>
+    </data>
+    <data name="UserAddedSuccess" xml:space="preserve">
+        <value>UserAddedSuccess</value>
+    </data>
+    <data name="UserAddedFail" xml:space="preserve">
+        <value>UserAddedFail</value>
+    </data>
+    <data name="AccessDeniedAdmin" xml:space="preserve">
+        <value>AccessDeniedAdmmin</value>
+    </data>
+    <data name="UserDeactivated" xml:space="preserve">
+        <value>UserDeactivated</value>
+    </data>
+    <data name="UserDeactivatedFail" xml:space="preserve">
+        <value>UserDeactivatedFail</value>
+    </data>
+    <data name="UserActivated" xml:space="preserve">
+        <value>UserActivated</value>
+    </data>
+    <data name="UserActivatedFail" xml:space="preserve">
+        <value>UserActivatedFail</value>
+    </data>
+    <data name="UserRemoved" xml:space="preserve">
+        <value>UserRemoved</value>
+    </data>
+    <data name="UserRemovedFail" xml:space="preserve">
+        <value>UserRemovedFail</value>
+    </data>
 </root>

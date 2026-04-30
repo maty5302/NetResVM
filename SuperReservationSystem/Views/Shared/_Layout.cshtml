@@ -63,7 +63,7 @@
                     </div>
                     @{ var currentCulture = Context.Features.Get<Microsoft.AspNetCore.Localization.IRequestCultureFeature>()?.RequestCulture.UICulture.Name ?? "en-US"; }
                     <form asp-controller="Culture" asp-action="SetLanguage" method="post" id="languageForm">
-                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
                         <select name="culture" onchange="document.getElementById('languageForm').submit();" class="form-select">
                             <option value="en-US" selected="@(currentCulture == "en-US" ? "selected" : null)">English 🇬🇧</option>
                             <option value="cs-CZ" selected="@(currentCulture == "cs-CZ" ? "selected" : null)">Čeština 🇨🇿</option>

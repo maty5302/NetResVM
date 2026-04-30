@@ -4,6 +4,7 @@ using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 
 namespace NetResVM.Controllers
 {
@@ -14,11 +15,13 @@ namespace NetResVM.Controllers
     {
         private readonly ServerService _serverService;
         private readonly PlatformManager _platformManager;
+        private readonly IStringLocalizer<SharedResource> _localizer;
 
-        public ServerController(PlatformManager platformManager, ServerService serverService)
+        public ServerController(PlatformManager platformManager, ServerService serverService, IStringLocalizer<SharedResource> localizer)
         {
             _platformManager = platformManager;
             _serverService = serverService;
+            _localizer = localizer;
         }
         /// <summary>
         /// Displays the list of servers.
@@ -49,7 +52,7 @@ namespace NetResVM.Controllers
             var server = _serverService.GetServerById(id);
             if (server == null)
             {
-                TempData["ErrorMessage"] = "Server not found.";
+                TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
                 return RedirectToAction("Index", "Home");
             }
 
@@ -69,10 +72,10 @@ namespace NetResVM.Controllers
                 return RedirectToAction("Index","Home");
 
             var result = _serverService.RemoveServer(id);
-            if(result)
-                TempData["SuccessMessage"] = "Server removed";
+            if (result)
+                TempData["SuccessMessage"] = _localizer["ServerRemoved"].Value;
             else
-                TempData["ErrorMessage"] = "Server doesn't exist or something went wrong. See log.";
+                TempData["ErrorMessage"] = _localizer["ServerNotExist"].Value;
             return RedirectToAction("Index", "Home");
         }
 
@@ -91,9 +94,9 @@ namespace NetResVM.Controllers
 
             var result = _serverService.UpdateServer(server);
             if (result)
-                TempData["SuccessMessage"] = "Server updated";
+                TempData["SuccessMessage"] = _localizer["ServerUpdated"].Value;
             else
-                TempData["ErrorMessage"] = "Server cannot be updated. See log.";
+                TempData["ErrorMessage"] = _localizer["ServerNotUpdated"].Value;
 
             return RedirectToAction("Index", "Home");
         }
@@ -102,12 +105,13 @@ namespace NetResVM.Controllers
         /// Tests the connection to a server.
         /// </summary>
         /// <param name="server"> Model where information about server is stored for testing connection </param>
+        /// <param name="edit"> </param>
         /// <returns>  An <see cref="Task{IActionResult}"/> that renders Add page and message about success or failure of operation </returns>
         public async Task<IActionResult> TestConnection(ServerModel server, bool edit = false)
         {
             if (server.Password == null)
             {
-                TempData["ErrorMessage"] = "You need a password for testing connection.";
+                TempData["ErrorMessage"] = _localizer["YouNeedPassword"].Value;
                 if (edit)
                     return RedirectToAction("Edit", "Server", new { id = server.Id });
                 return View("Add", server);
@@ -118,21 +122,23 @@ namespace NetResVM.Controllers
             }
             if (server.Platform == PlatformType.Unknown)
             {
-                TempData["ErrorMessage"] = "Platform type is not selected or not supported";
+                TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
+                if(edit)
+                    return RedirectToAction("Edit", "Server", new { id = server.Id });
                 return View("Add", server);
             }
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
             var authResult = await adapter.TestConnection(server.IpAddress, server.Username, server.Password);
             if (authResult.Valid)
             {
-                TempData["SuccessMessage"] = "Connection successful";
+                TempData["SuccessMessage"] = _localizer["ConnectionSuccess"].Value;
                 ViewBag.Tested = true;
 
                 if (edit)
                     return RedirectToAction("Edit", "Server", new { id = server.Id });
                 return View("Add", server);
             }
-            TempData["ErrorMessage"] = "Connection failed. " + authResult.Message;
+            TempData["ErrorMessage"] = _localizer["ConnectionFailed"].Value + authResult.Message;
 
             if (edit)
                return RedirectToAction("Edit", "Server", new { id = server.Id }); 
@@ -162,15 +168,15 @@ namespace NetResVM.Controllers
             {
                 var ok = _serverService.InsertServer(server);
                 if (ok)
-                    TempData["SuccessMessage"] = "Server added successfully";
+                    TempData["SuccessMessage"] = _localizer["ServerAdded"].Value;
                 else
-                    TempData["ErrorMessage"] = "Server cannot be added. See log.";
+                    TempData["ErrorMessage"] = _localizer["ServerNotAdded"].Value;
                 
                 ViewBag.Servers = _serverService.GetAllServers();
                 return RedirectToAction("Index", "Home");
             }
             
-            TempData["ErrorMessage"] = "Connection failed. " + authResult.Message;
+            TempData["ErrorMessage"] = _localizer["ConnectionFailed"].Value + authResult.Message;
             return View("Add", server);
         }
     }

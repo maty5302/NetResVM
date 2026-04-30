@@ -3,6 +3,7 @@ using BusinessLayer.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using NetResVM.Models;
 using SuperReservationSystem.Models;
 
@@ -14,10 +15,14 @@ namespace NetResVM.Controllers
     public class LoginController : Controller
     {
         private UserService _userService;
+        private readonly ILogger<LoginController> _logger;
+        private readonly IStringLocalizer<SharedResource> _localizer;
 
-        public LoginController(UserService userService)
+        public LoginController(UserService userService, ILogger<LoginController> logger, IStringLocalizer<SharedResource> localizer)
         {
             _userService = userService;
+            _logger = logger;
+            _localizer = localizer;
         }
 
         /// <summary>
@@ -59,7 +64,7 @@ namespace NetResVM.Controllers
                     return RedirectToAction("Index", "Home");
                 }
             }
-            TempData["ErrorMessage"] = "Invalid credentials";
+            TempData["ErrorMessage"] = _localizer["InvalidCredentials"].Value;
             return View("Index");
         }
 

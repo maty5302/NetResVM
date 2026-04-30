@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using SimpleLogger;
 using NetResVM.Models;
 using System.Text;
+using Microsoft.Extensions.Localization;
 
 namespace NetResVM.Controllers
 {
@@ -20,12 +21,14 @@ namespace NetResVM.Controllers
         private readonly ReservationService _reservationService;
         private readonly PlatformManager _platformManager;
         private readonly SimpleLogger.ILogger _logger = FileLogger.Instance;
-        public ReservationController(PlatformManager platformManager, ServerService serverService, UserService userService, ReservationService reservationService)
+        private readonly IStringLocalizer<SharedResource> _localizer;
+        public ReservationController(PlatformManager platformManager, ServerService serverService, UserService userService, ReservationService reservationService, IStringLocalizer<SharedResource> localizer)
         {
             _platformManager = platformManager;
             _serverService = serverService;
             _userService = userService;
             _reservationService = reservationService;
+            _localizer = localizer;
         }
 
         /// <summary>
@@ -110,28 +113,12 @@ namespace NetResVM.Controllers
                 var platform = _serverService.GetServerType(selectedServer.Value);
                 if(platform == PlatformType.Unknown)
                 {
-                    TempData["ErrorMessage"] = "Unknown platform type.";
+                    TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                     _logger.LogError($"Unknown platform type: {platform} for server ID: {selectedServer.Value}");
                     return View("Create", model);
                 }
                 IVirtualizationAdapter adapter = _platformManager.GetAdapter(platform);
                 var res = await adapter.GetLabsAsync(selectedServer.Value);
-                //LabDTO? selected = null;
-                // if(labId != null)
-                // {
-                //     var labInfo = await adapter.GetLabInfoAsync(selectedServer.Value,labId);
-                //     if (labInfo.Lab != null)
-                //     {
-                //         //selected = labInfo.Lab;
-                //         model.LabId = labId;
-                //     }
-                //     else
-                //     {
-                //         TempData["ErrorMessage"] = "Cannot get lab info. Try again..";
-                //         _logger.LogError($"Cannot get lab info for lab ID: {labId} on server ID: {selectedServer.Value}. Message: {labInfo.Message}");
-                //         return View("Create", model);
-                //     }
-                // }
                 if (res.Labs != null && res.Labs.Count > 0)
                 {
                     ViewBag.Labs3 = new List<LabDTO>(res.Labs);
@@ -139,7 +126,7 @@ namespace NetResVM.Controllers
                 else
                 {
                     ViewBag.Labs3 = new List<LabDTO>();
-                    TempData["ErrorMessage"] = "No labs found for the selected server.";
+                    TempData["ErrorMessage"] = _localizer["NoLabsFound"].Value;
                     _logger.LogWarning($"No labs found for server ID: {selectedServer.Value}. Message: {res.Message}");
                 }
             }
@@ -215,9 +202,9 @@ namespace NetResVM.Controllers
                 return RedirectToAction("Index", "Login");
             var reservation = _reservationService.DeleteReservation(reservationId);
             if (reservation)
-                TempData["SuccessMessage"] = "Reservation deleted.";
+                TempData["SuccessMessage"] = _localizer["ReservationDeleted"].Value;
             else
-                TempData["ErrorMessage"] = "Something went wrong. See log.";
+                TempData["ErrorMessage"] = _localizer["SomethingWrong"].Value;
             return RedirectToAction("UserReservation", "Reservation");
         }
 
@@ -235,7 +222,7 @@ namespace NetResVM.Controllers
             var UserId = _userService.GetUserId(User.Identity.Name);
             if (!selectedServer.HasValue && selectedServer == 0 || selectedServer==null)
             {
-                TempData["ErrorMessage"] = "Server not selected.";
+                TempData["ErrorMessage"] = _localizer["ServerNotSelected"].Value;
                 _logger.LogWarning("Server not selected, while creating reservation");
                 return RedirectToAction("Create");
             }
@@ -243,32 +230,32 @@ namespace NetResVM.Controllers
                 reserve.ServerId = selectedServer.Value;
             if (reserve.LabId == null)
             {
-                TempData["ErrorMessage"] = "Lab not selected.";
+                TempData["ErrorMessage"] = _localizer["LabNotSelected"].Value;
                 _logger.LogWarning("Lab not selected, while creating reservation");
                 return RedirectToAction("Create", new { reserve, selectedServer });
             }
             if (reserve.ReservationStart >= reserve.ReservationEnd || reserve.ReservationStart < DateTime.Now)
             {
-                TempData["ErrorMessage"] = "Invalid reservation time.";
+                TempData["ErrorMessage"] = _localizer["InvalidTime"].Value;
                 _logger.LogWarning("Invalid reservation time, while creating reservation");
                 return RedirectToAction("Create", new { reserve, selectedServer });
             }
             if(reserve.ReservationStart.AddHours(1) > reserve.ReservationEnd)
             {
-                TempData["ErrorMessage"] = "Reservation must be at least 1 hour.";
+                TempData["ErrorMessage"] = _localizer["ResOneHour"].Value;
                 _logger.LogWarning("Reservation must be at least 1 hour, while creating reservation");
                 return RedirectToAction("Create", new { reserve, selectedServer });
             }
             //reservation only that day
             if(reserve.ReservationStart.Date != reserve.ReservationEnd.Date)
             {
-                TempData["ErrorMessage"] = "Reservation start and end must be on the same day.";
+                TempData["ErrorMessage"] = _localizer["ResSameDay"].Value;
                 _logger.LogWarning("Reservation must be on the same day, while creating reservation");
                 return RedirectToAction("Create", new {reserve,selectedServer});
             }
             if (reserve.UserId == -1)
             {
-                TempData["ErrorMessage"] = "User not selected.";
+                TempData["ErrorMessage"] = _localizer["UserNotSelected"].Value;
                 _logger.LogWarning("User not selected, while creating reservation");
                 return RedirectToAction("Create");
             }
@@ -282,9 +269,9 @@ namespace NetResVM.Controllers
             };
             var result = _reservationService.MakeReservation(reservation);
             if (result)
-                TempData["SuccessMessage"] = "Reservation created.";
+                TempData["SuccessMessage"] = _localizer["ReservationCreated"].Value;
             else
-                TempData["ErrorMessage"] = "Reservation exists at this time or error occurred.";
+                TempData["ErrorMessage"] = _localizer["ReservationExistsError"].Value;
             return RedirectToAction("Index","Reservation");
         }
 

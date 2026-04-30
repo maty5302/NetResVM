@@ -1,6 +1,7 @@
 using BusinessLayer.Enum;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 
 namespace NetResVM.Controllers;
 
@@ -12,12 +13,15 @@ public class BackupController : Controller
     private readonly BackupService _backupService;
     private readonly UserLabOwnershipService _labOwnershipService;
     private readonly UserService _userService;
+    private readonly IStringLocalizer<SharedResource> _localizer;
 
-    public BackupController(BackupService backupService, UserService userService, UserLabOwnershipService labOwnershipService)
+    public BackupController(BackupService backupService, UserService userService, UserLabOwnershipService labOwnershipService,IStringLocalizer<SharedResource> localizer)
     {
         _backupService = backupService;
         _userService = userService;
         _labOwnershipService = labOwnershipService;
+        _localizer = localizer;
+
     }
     /// <summary>
     /// Displays the list of backups.
@@ -27,7 +31,7 @@ public class BackupController : Controller
     {
         if (User.Identity != null && !User.Identity.IsAuthenticated)
         {
-            TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+            TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
             return RedirectToAction("Login", "Home");
         }
         var allBackups = await _backupService.GetBackups();
@@ -53,11 +57,11 @@ public class BackupController : Controller
         var result = await _backupService.BackupLab(serverId, labId);
         if (result.backup)
         {
-            TempData["SuccessMessage"] = "Backup was successful.";
+            TempData["SuccessMessage"] = _localizer["BackupSuccess"].Value;
         }
         else
         {
-            TempData["ErrorMessage"] = "Backup failed.";
+            TempData["ErrorMessage"] = _localizer["BackupFailed"].Value;
         }
 
         if (fromServer)
@@ -80,17 +84,17 @@ public class BackupController : Controller
         var owned = _labOwnershipService.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
         if(!owned.userOwns)
         {
-            TempData["ErrorMessage"] = "Cannot restore lab backup... You don't own this lab.";
+            TempData["ErrorMessage"] = _localizer["BackupRestoreFailNotOwned"].Value;
             return RedirectToAction("Index", "Backup");
         }
         var result = await _backupService.RestoreBackup(serverId, platform, labId, filename);
         if (result)
         {
-            TempData["SuccessMessage"] = "Restore was successful.";
+            TempData["SuccessMessage"] = _localizer["BackupRestoreSuccess"].Value;
         }
         else
         {
-            TempData["ErrorMessage"] = "Restore failed.";
+            TempData["ErrorMessage"] = _localizer["BackupRestoreFailed"].Value;
         }
         return RedirectToAction("Index", "Backup");
     }
@@ -109,17 +113,17 @@ public class BackupController : Controller
         var owned = _labOwnershipService.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
         if(owned.owned && !owned.userOwns)
         {
-            TempData["ErrorMessage"] = "Cannot delete lab backup... You don't own this lab.";
+            TempData["ErrorMessage"] = _localizer["BackupDeleteFailNotOwned"].Value;
             return RedirectToAction("Index", "Backup");
         }
         var result = _backupService.DeleteBackup(filename, labId, platform);
         if (result)
         {
-            TempData["SuccessMessage"] = "Backup was deleted.";
+            TempData["SuccessMessage"] = _localizer["BackupDeleteSuccess"].Value; 
         }
         else
         {
-            TempData["ErrorMessage"] = "Delete failed.";
+            TempData["ErrorMessage"] = _localizer["BackupDeleteFailed"].Value;
         }
         return RedirectToAction("Index", "Backup");
     }
@@ -140,7 +144,7 @@ public class BackupController : Controller
         {
             return File(file, "application/octet-stream", filename);
         }
-        TempData["ErrorMessage"] = "Download failed.";
+        TempData["ErrorMessage"] = _localizer["BackupDownloadFailed"].Value;
         return RedirectToAction("Index", "Backup");
     }
 }

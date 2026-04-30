@@ -4,6 +4,7 @@ using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using NetResVM.Models;
 using SuperReservationSystem.Models;
 
@@ -18,13 +19,15 @@ namespace NetResVM.Controllers
         private readonly PlatformManager _platformManager;
         private readonly UserService _userService;
         private readonly ServerService _serverService;
+        private readonly IStringLocalizer<SharedResource> _localizer;
 
-        public UserController(PlatformManager platformManager, UserLabOwnershipService userLabOwnershipService, UserService userService, ServerService serverService)
+        public UserController(PlatformManager platformManager, UserLabOwnershipService userLabOwnershipService, UserService userService, ServerService serverService, IStringLocalizer<SharedResource> localizer)
         {
             _platformManager = platformManager;
             _userLabOwnershipService = userLabOwnershipService;
             _userService = userService;
             _serverService = serverService;
+            _localizer = localizer;
         }
         /// <summary>
         /// Displays the settings page for the user.
@@ -54,7 +57,7 @@ namespace NetResVM.Controllers
 
             if (userId == 0)
             {
-                TempData["ErrorMessage"] = "User not found.";
+                TempData["ErrorMessage"] = _localizer["UserNotFound"].Value;
                 return RedirectToAction("Index", "Home");
             }
             // Get all labs owned by the user
@@ -95,13 +98,13 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
-                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
                 return RedirectToAction("Login", "Home");
             }
             var server = _serverService.ServerExists(serverID);
             if (!server)
             {
-                TempData["ErrorMessage"] = "Server not found.";
+                TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
                 return RedirectToAction("Index", "Home");
             }
             UserLabOwnershipModel model = new UserLabOwnershipModel
@@ -113,7 +116,7 @@ namespace NetResVM.Controllers
             var lab = _userLabOwnershipService.InsertUserLabOwnership(model);
             if (lab.Item1)
             {
-                TempData["SuccessMessage"] = "Lab owned successfully.";
+                TempData["SuccessMessage"] = _localizer["LabOwnedSuccess"].Value;
                 return RedirectToAction("LabInfo", "Platform", new { serverId = serverID, labId = labID });
             }
             TempData["ErrorMessage"] = lab.Item2;
@@ -130,7 +133,7 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
-                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
                 return RedirectToAction("Login", "Home");
             }
             var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
@@ -143,10 +146,10 @@ namespace NetResVM.Controllers
             var lab = _userLabOwnershipService.DeleteUserLabOwnership(model);
             if (lab)
             {
-                TempData["SuccessMessage"] = "Lab ownership removed successfully.";
+                TempData["SuccessMessage"] = _localizer["LabOwnedRemoved"];
                 return RedirectToAction("UserLab", "User");
             }
-            TempData["ErrorMessage"] = "Lab ownership could not be removed.";
+            TempData["ErrorMessage"] = _localizer["LabOwnedRemoveError"].Value;
             return RedirectToAction("UserLab", "User");
         }
 
@@ -159,25 +162,25 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
-                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
                 return RedirectToAction("Login", "Home");
             }
             if (!_userService.ValidateCredentials(User.Identity.Name, PassModel.oldPassword))
             {
-                TempData["ErrorMessage"] = "Old password is incorrect.";
+                TempData["ErrorMessage"] = _localizer["OldPassIcorrect"].Value;
                 return RedirectToAction("Settings", "User");
             }
             if (PassModel.newPassword != PassModel.confirmPassword)
             {
-                TempData["ErrorMessage"] = "Passwords do not match.";
+                TempData["ErrorMessage"] = _localizer["PasswordNotMatch"].Value;
                 return RedirectToAction("Settings", "User");
             }
             if (_userService.UpdateUser(_userService.GetUserId(User.Identity.Name), PassModel.newPassword))
             {
-                TempData["SuccessMessage"] = "Password changed successfully.";
+                TempData["SuccessMessage"] = _localizer["PasswordChanged"].Value;
                 return RedirectToAction("Settings", "User");
             }
-            TempData["ErrorMessage"] = "Password could not be changed.";
+            TempData["ErrorMessage"] = _localizer["PasswordError"].Value;
             return RedirectToAction("Settings", "User");
         }
 
@@ -190,20 +193,20 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
-                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
                 return RedirectToAction("Login", "Home");
             }
             if(model.AuthorizationType=="localhost" && model.Password==null)
             {
-                TempData["ErrorMessage"] = "Password is required for local account.";
+                TempData["ErrorMessage"] = _localizer["PasswordRequired"].Value;
                 return RedirectToAction("Settings", "User");
             }
             if (_userService.AddUser(model.Username, model.Password, "student", model.AuthorizationType, model.Active))
             {
-                TempData["SuccessMessage"] = "User added successfully.";
+                TempData["SuccessMessage"] = _localizer["UserAddedSuccess"].Value;
                 return RedirectToAction("Settings", "User");
             }
-            TempData["ErrorMessage"] = "User could not be added.";
+            TempData["ErrorMessage"] = _localizer["UserAddedFail"].Value;
             return RedirectToAction("Settings", "User");
         }
 
@@ -215,12 +218,12 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
-                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
                 return RedirectToAction("Login", "Home");
             }
             if(!User.IsInRole("Admin"))
             {
-                TempData["ErrorMessage"] = "Access denied. Admin role required.";
+                TempData["ErrorMessage"] = _localizer["AccessDeniedAdmin"].Value;
                 return RedirectToAction("Index", "Home");
             }
             var users = _userService.GetAllUsersInfo();
@@ -240,20 +243,20 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
-                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
                 return RedirectToAction("Login", "Home");
             }
             if (!User.IsInRole("Admin"))
             {
-                TempData["ErrorMessage"] = "Access denied. Admin role required.";
+                TempData["ErrorMessage"] = _localizer["AccessDeniedAdmin"].Value;
                 return RedirectToAction("Index", "Home");
             }
             if (_userService.UpdateUser(UserId,false))
             {
-                TempData["SuccessMessage"] = "User deactivated successfully.";
+                TempData["SuccessMessage"] = _localizer["UserDeactivated"].Value;
                 return RedirectToAction("ManageUser", "User");
             }
-            TempData["ErrorMessage"] = "User could not be deactivated.";
+            TempData["ErrorMessage"] = _localizer["UserDeactivatedFail"].Value;
             return RedirectToAction("ManageUser", "User");
         }
 
@@ -266,20 +269,20 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
-                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
                 return RedirectToAction("Login", "Home");
             }
             if (!User.IsInRole("Admin"))
             {
-                TempData["ErrorMessage"] = "Access denied. Admin role required.";
+                TempData["ErrorMessage"] = _localizer["AccessDeniedAdmin"].Value;
                 return RedirectToAction("Index", "Home");
             }
             if (_userService.UpdateUser(UserId, true))
             {
-                TempData["SuccessMessage"] = "User activated successfully.";
+                TempData["SuccessMessage"] = _localizer["UserActivated"].Value;
                 return RedirectToAction("ManageUser", "User");
             }
-            TempData["ErrorMessage"] = "User could not be deactivated.";
+            TempData["ErrorMessage"] = _localizer["UserActivatedFail"].Value;
             return RedirectToAction("ManageUser", "User");
         }
 
@@ -292,20 +295,20 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
-                TempData["ErrorMessage"] = "Access denied. Log in to use this feature.";
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
                 return RedirectToAction("Login", "Home");
             }
             if (!User.IsInRole("Admin"))
             {
-                TempData["ErrorMessage"] = "Access denied. Admin role required.";
+                TempData["ErrorMessage"] = _localizer["AccessDeniedAdmin"].Value;
                 return RedirectToAction("Index", "Home");
             }
             if (_userService.RemoveUser(UserId))
             {
-                TempData["SuccessMessage"] = "User removed successfully.";
+                TempData["SuccessMessage"] = _localizer["UserRemoved"].Value;
                 return RedirectToAction("ManageUser", "User");
             }
-            TempData["ErrorMessage"] = "User could not be removed. See log..";
+            TempData["ErrorMessage"] =  _localizer["UserRemovedFail"].Value;
             return RedirectToAction("ManageUser", "User");
         }
     }
