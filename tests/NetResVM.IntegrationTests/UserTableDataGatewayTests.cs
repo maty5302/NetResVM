@@ -5,6 +5,7 @@ using Xunit;
 
 namespace NetResVM.IntegrationTests
 {
+    [Trait("Category", "Integration")]
     public class UserTableDataGatewayTests : IClassFixture<DatabaseFixture>
     {
         private readonly DatabaseFixture _fixture;

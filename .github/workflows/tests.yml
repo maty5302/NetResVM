@@ -1,4 +1,4 @@
-name: Unit Tests
+name: Tests
 
 on:
   push:
@@ -7,16 +7,17 @@ on:
     branches: [ dev, main, release-* ]
 
 jobs:
-  test:
+  unit-tests:
+    name: Unit tests
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup .NET 8
+    - name: Setup .NET 10
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '10.0.x'
 
     - name: Cache NuGet packages
       uses: actions/cache@v4
@@ -33,7 +34,7 @@ jobs:
       run: dotnet build SuperReservationSystem.sln --no-restore --configuration Release
 
     - name: Test with coverage
-      run: dotnet test SuperReservationSystem.sln --no-build --configuration Release --collect:"XPlat Code Coverage"
+      run: dotnet test SuperReservationSystem.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --filter "Category!=Integration"
 
     - name: Install ReportGenerator
       run: dotnet tool install -g dotnet-reportgenerator-globaltool
@@ -49,3 +50,27 @@ jobs:
       uses: codecov/codecov-action@v4
       with:
         files: coverage/Cobertura.xml
+
+integration-tests:
+  name: Integration Tests
+  runs-on: ubuntu-latest
+
+  steps:
+  - uses: actions/checkout@v4
+
+  - name: Setup .NET 10
+    uses: actions/setup-dotnet@v4
+    with:
+      dotnet-version: '10.0.x'
+
+  - name: Restore
+    run: dotnet restore SuperReservationSystem.sln
+
+  - name: Build
+    run: dotnet build SuperReservationSystem.sln --no-restore --configuration Release
+
+  - name: Run integration tests
+    run: |
+      dotnet test SuperReservationSystem.sln \
+      --no-build --configuration Release \
+      --filter "Category=Integration"

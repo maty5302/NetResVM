@@ -156,6 +156,7 @@ public class BackupServiceTests
         _mockLocalBackupStorage.Setup(s => s.GetBackupRecords()).Returns(new List<BackupRecord> { backupRecord });
         _mockServerService.Setup(s => s.GetAllServers()).Returns(new List<ServerDTO> { server });
         _mockPlatformManager.Setup(p => p.GetAdapter(PlatformType.CML)).Returns(adapter.Object);
+        _mockServerService.Setup(s => s.IsServerOnlineAsync(server.IpAddress)).ReturnsAsync(true);
         adapter.Setup(a => a.AuthenticateAsync(server.Id)).ReturnsAsync((true, string.Empty));
         adapter.Setup(a => a.GetLabInfoAsync(server.Id, backupRecord.LabId)).ReturnsAsync((new LabDTO { Id = backupRecord.LabId }, string.Empty));
 
@@ -233,6 +234,17 @@ public class BackupServiceTests
     {
         var adapter = new Mock<IVirtualizationAdapter>();
         var content = new byte[] { 1, 2, 3 };
+        
+        var server = new ServerDTO
+        {
+            Id = 1,
+            IpAddress = "10.0.0.1",
+            Platform = PlatformType.CML,
+            Name = "ServerTest",
+            Username = "admin"
+        };
+        _mockServerService.Setup(s => s.GetServerById(1)).Returns(server); 
+        _mockServerService.Setup(s => s.IsServerOnlineAsync(server.IpAddress)).ReturnsAsync(true);
 
         _mockLocalBackupStorage.Setup(s => s.GetBackup("CML", "lab-1", "backup.zip")).ReturnsAsync(content);
         _mockLocalBackupStorage.Setup(s => s.DeleteBackup("CML", "lab-1", "backup.zip")).Returns(true);

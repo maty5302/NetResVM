@@ -3,7 +3,7 @@ using Microsoft.Data.SqlClient;
 using Testcontainers.MsSql;
 
 namespace NetResVM.IntegrationTests;
-
+[Trait("Category", "Integration")]
 public class DatabaseFixture : IAsyncLifetime
 {
     private readonly MsSqlContainer _dbContainer = new MsSqlBuilder()
