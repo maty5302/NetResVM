@@ -15,4 +15,5 @@ public interface IServerService
     bool InsertServer(ServerModel server);
     bool UpdateServer(ServerModel server);
     bool RemoveServer(int id);
+    Task<bool> IsServerOnlineAsync(string ipAddress);
 }

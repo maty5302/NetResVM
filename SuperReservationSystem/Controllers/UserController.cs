@@ -71,10 +71,17 @@ namespace NetResVM.Controllers
                 {
                     var server = _serverService.ServerExists(owned.ServerId);
                     var platform = _serverService.GetServerType(owned.ServerId);
-                    if(platform == PlatformType.Unknown)
+                    var online = _serverService.IsServerOnlineAsync(_serverService.GetServerById(owned.ServerId).IpAddress ?? string.Empty).Result;
+                    
+                    if(!online)
+                    {
+                        continue; // Skip if server is offline
+                    } 
+                    if (platform == PlatformType.Unknown)
                     {
                         continue; // Skip if platform type is unknown
                     }
+
                     IVirtualizationAdapter adapter = _platformManager.GetAdapter(platform);
                     if(server)
                     {

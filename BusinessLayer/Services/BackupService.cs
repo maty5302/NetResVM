@@ -102,22 +102,28 @@ public class BackupService
 
                 try
                 {
+                    var online = await _serverService.IsServerOnlineAsync(server.IpAddress);
+                    if (!online)
+                    {
+                        _logger.LogWarning($"BackupService - Server {server.Name} is offline, skipping lab check.");
+                        continue;
+                    }
                     var adapter = _platformManager.GetAdapter(server.Platform);
                     var authResult = await adapter.AuthenticateAsync(server.Id);
                     if (!authResult.Valid)
                     {
                         _logger.LogWarning($"BackupService - Authentication failed for server {server.Name}: {authResult.Message}");
-                        continue; // Zkus�me dal�� server v seznamu
+                        continue;
                     }
 
-                    // 3. Dotaz na laborato� pomoc� sjednocen�ho rozhran�
+                    //Get Lab Info
                     var labResult = await adapter.GetLabInfoAsync(server.Id, backup.LabId);
 
-                    // 4. Pokud n�m adapt�r vr�til laborato� (nen� null), na�li jsme spr�vn� server!
+                    // If lab exists on the server, we consider this backup as valid and assign it to this server
                     if (labResult.Lab != null)
                     {
                         matchingServer = server;
-                        break; // Ukon��me prohled�v�n� server� pro tuto konkr�tn� z�lohu
+                        break; 
                     }
                 }
                 catch (Exception ex)
@@ -128,7 +134,6 @@ public class BackupService
 
             if (matchingServer != null)
             {
-                // Laborato� na serveru existuje = p�id�me validn� z�znam
                 backupDTOs.Add(new BackupDTO
                 {
                     ServerId = matchingServer.Id,
@@ -142,7 +147,7 @@ public class BackupService
             }
             else
             {
-                // Laborato� u� na ��dn�m zn�m�m serveru neexistuje (Unknown server)
+                // Backup exists but we don't know on which server it is, we can still show it but with unknown server info
                 backupDTOs.Add(new BackupDTO
                 {
                     ServerId = -1,
@@ -181,6 +186,13 @@ public class BackupService
             }
 
             var adapter = _platformManager.GetAdapter(platform);
+            var online = await _serverService.IsServerOnlineAsync(_serverService.GetServerById(serverId)?.IpAddress ?? string.Empty);
+            if (!online)
+            {
+                _logger.LogError($"BackupService - RestoreBackup: Server with ID {serverId} is offline.");
+                return false;
+            }
+            
             var authResult = await adapter.AuthenticateAsync(serverId);
 
             if (!authResult.Valid)

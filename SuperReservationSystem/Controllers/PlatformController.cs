@@ -70,7 +70,7 @@ namespace NetResVM.Controllers
                 TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
                 return RedirectToAction("Index", "Home");
             }
-            var online = await IsServerOnlineAsync(server.IpAddress);
+            var online = await _serverService.IsServerOnlineAsync(server.IpAddress);
             if(!online)
             {
                 TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
@@ -133,7 +133,7 @@ namespace NetResVM.Controllers
                 TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
                 return RedirectToAction("Index", "Home");
             }
-            var online = await IsServerOnlineAsync(server.IpAddress);
+            var online = await _serverService.IsServerOnlineAsync(server.IpAddress);
             if(!online)
             {
                 TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
@@ -257,7 +257,7 @@ namespace NetResVM.Controllers
                 TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
                 return RedirectToAction("Index", "Home");
             }
-            var online = await IsServerOnlineAsync(server.IpAddress);
+            var online = await _serverService.IsServerOnlineAsync(server.IpAddress);
             if(!online)
             {
                 TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
@@ -301,7 +301,7 @@ namespace NetResVM.Controllers
                 TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
                 return RedirectToAction("Index", "Home");
             }
-            var online = await IsServerOnlineAsync(server.IpAddress);
+            var online = await _serverService.IsServerOnlineAsync(server.IpAddress);
             if(!online)
             {
                 TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
@@ -349,7 +349,7 @@ namespace NetResVM.Controllers
                 TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
                 return RedirectToAction("Index", "Home");
             }
-            var online = await IsServerOnlineAsync(server.IpAddress);
+            var online = await _serverService.IsServerOnlineAsync(server.IpAddress);
             if(!online)
             {
                 TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
@@ -394,7 +394,7 @@ namespace NetResVM.Controllers
                 TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
                 return RedirectToAction("Index", "Home");
             }
-            var online = await IsServerOnlineAsync(server.IpAddress);
+            var online = await _serverService.IsServerOnlineAsync(server.IpAddress);
             if(!online)
             {
                 TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
@@ -438,7 +438,7 @@ namespace NetResVM.Controllers
                 TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
                 return RedirectToAction("Index", "Home");
             }
-            var online = await IsServerOnlineAsync(server.IpAddress);
+            var online = await _serverService.IsServerOnlineAsync(server.IpAddress);
             if(!online)
             {
                 TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
@@ -483,7 +483,7 @@ namespace NetResVM.Controllers
                 TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
                 return RedirectToAction("Index", "Home");
             }
-            var online = await IsServerOnlineAsync(server.IpAddress);
+            var online = await _serverService.IsServerOnlineAsync(server.IpAddress);
             if(!online)
             {
                 TempData["ErrorMessage"] = _localizer["ServerOffline"].Value;
@@ -504,35 +504,6 @@ namespace NetResVM.Controllers
             return View(result.Nodes);
         }
 
-
-        /// <summary>
-        /// Asynchronously determines whether the specified server is reachable by sending a network ping request.
-        /// </summary>
-        /// <remarks>If the input is not a valid IP address or URI, or if the server does not respond
-        /// within the timeout, the method returns <see langword="false"/>. This method suppresses exceptions and
-        /// returns <see langword="false"/> on error.</remarks>
-        /// <param name="ipAddress">The IP address or URI of the server to check. If a URI is provided, the host portion is used. Cannot be
-        /// null, empty, or whitespace.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains <see langword="true"/> if the
-        /// server responds to a ping request within the timeout period; otherwise, <see langword="false"/>.</returns>
-        private async Task<bool> IsServerOnlineAsync(string ipAddress)
-        {
-            if (string.IsNullOrWhiteSpace(ipAddress)) return false;
-
-            try
-            {
-                string host = ipAddress.Contains("://") ? new Uri(ipAddress).Host : ipAddress;
-
-                using var pinger = new Ping();
-                var reply = await pinger.SendPingAsync(host, 1000);
-                return reply.Status == IPStatus.Success;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         
         /// <summary>
         /// Checks the online status of the specified server and returns the result as a JSON response.
@@ -546,7 +517,7 @@ namespace NetResVM.Controllers
             var server = _serverService.GetServerById(serverId);
             if (server == null) return Json(new { isOnline = false });
 
-            bool online = await IsServerOnlineAsync(server.IpAddress);
+            bool online = await _serverService.IsServerOnlineAsync(server.IpAddress);
 
             return Json(new { isOnline = online });
         }
