@@ -206,6 +206,188 @@ public class ReservationServiceTests
         _mockDataGateway.Verify(m => m.InsertReservation(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>()), Times.Never);
     }
 
+    [Fact]
+    public void MakeReservation_ShouldReturnTrue_WhenReservationDoesNotOverlap_AdjacentReservation()
+    {
+        var baseTime = new DateTime(2030, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var newReservation = new ReservationModel
+        {
+            ServerId = 1,
+            UserId = 2,
+            LabId = "new-lab",
+            ReservationStart = baseTime.AddHours(2),
+            ReservationEnd = baseTime.AddHours(4)
+        };
+        
+        var datatable = new DataTable();
+        datatable.Columns.Add("ReservationID", typeof(int));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Columns.Add("UserID", typeof(int));   
+        datatable.Columns.Add("StartDate", typeof(DateTime));
+        datatable.Columns.Add("EndDate", typeof(DateTime));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Rows.Add(1, 1, 1, baseTime, baseTime.AddHours(2), "old-lab");
+        
+        _mockDataGateway.Setup(m => m.GetAllReservations()).Returns(datatable);
+        _mockDataGateway.Setup(m => m.InsertReservation(newReservation.ServerId, newReservation.UserId, newReservation.ReservationStart, newReservation.ReservationEnd, newReservation.LabId));
+        
+        var result = _reservationService.MakeReservation(newReservation);
+        
+        Assert.True(result);
+        _mockDataGateway.Verify(m => m.InsertReservation(newReservation.ServerId, newReservation.UserId, newReservation.ReservationStart, newReservation.ReservationEnd, newReservation.LabId), Times.Once);
+    }
+
+    [Fact]
+    public void MakeReservation_ShouldReturnTrue_WhenReservationDifferentServer()
+    {
+        var baseTime = new DateTime(2030, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var newReservation = new ReservationModel
+        {
+            ServerId = 2,
+            UserId = 1,
+            LabId = "lab",
+            ReservationStart = baseTime,
+            ReservationEnd = baseTime.AddHours(1)
+        };
+        
+        var datatable = new DataTable();
+        datatable.Columns.Add("ReservationID", typeof(int));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Columns.Add("UserID", typeof(int));   
+        datatable.Columns.Add("StartDate", typeof(DateTime));
+        datatable.Columns.Add("EndDate", typeof(DateTime));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Rows.Add(1, 1, 1, baseTime, baseTime.AddHours(1), "lab");
+        
+        _mockDataGateway.Setup(m => m.GetAllReservations()).Returns(datatable);
+        _mockDataGateway.Setup(m => m.InsertReservation(newReservation.ServerId, newReservation.UserId, newReservation.ReservationStart, newReservation.ReservationEnd, newReservation.LabId));
+        
+        var result = _reservationService.MakeReservation(newReservation);
+        
+        Assert.True(result);
+        _mockDataGateway.Verify(m => m.InsertReservation(newReservation.ServerId, newReservation.UserId, newReservation.ReservationStart, newReservation.ReservationEnd, newReservation.LabId), Times.Once);
+    }
+
+    [Fact]
+    public void MakeReservation_ShouldReturnFalse_WhenReservationOverlapAtStart()
+    {
+        var baseTime = new DateTime(2030, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var newReservation = new ReservationModel
+        {
+            ServerId = 1,
+            UserId = 2,
+            LabId = "new-lab",
+            ReservationStart = baseTime.AddMinutes(30),
+            ReservationEnd = baseTime.AddHours(2)
+        };
+        
+        var datatable = new DataTable();
+        datatable.Columns.Add("ReservationID", typeof(int));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Columns.Add("UserID", typeof(int));   
+        datatable.Columns.Add("StartDate", typeof(DateTime));
+        datatable.Columns.Add("EndDate", typeof(DateTime));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Rows.Add(1, 1, 1, baseTime, baseTime.AddHours(1), "old-lab");
+        
+        _mockDataGateway.Setup(m => m.GetAllReservations()).Returns(datatable);
+        
+        var result = _reservationService.MakeReservation(newReservation);
+        
+        Assert.False(result);
+        _mockDataGateway.Verify(m => m.InsertReservation(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void MakeReservation_ShouldReturnFalse_WhenReservationOverlapAtEnd()
+    {
+        var baseTime = new DateTime(2030, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var newReservation = new ReservationModel
+        {
+            ServerId = 1,
+            UserId = 2,
+            LabId = "new-lab",
+            ReservationStart = baseTime.AddMinutes(-30),
+            ReservationEnd = baseTime.AddMinutes(30)
+        };
+        
+        var datatable = new DataTable();
+        datatable.Columns.Add("ReservationID", typeof(int));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Columns.Add("UserID", typeof(int));   
+        datatable.Columns.Add("StartDate", typeof(DateTime));
+        datatable.Columns.Add("EndDate", typeof(DateTime));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Rows.Add(1, 1, 1, baseTime, baseTime.AddHours(1), "old-lab");
+        
+        _mockDataGateway.Setup(m => m.GetAllReservations()).Returns(datatable);
+        
+        var result = _reservationService.MakeReservation(newReservation);
+        
+        Assert.False(result);
+        _mockDataGateway.Verify(m => m.InsertReservation(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void MakeReservation_ShouldReturnFalse_WhenReservationCompletelyInside()
+    {
+        var baseTime = new DateTime(2030, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var newReservation = new ReservationModel
+        {
+            ServerId = 1,
+            UserId = 2,
+            LabId = "new-lab",
+            ReservationStart = baseTime.AddMinutes(15),
+            ReservationEnd = baseTime.AddMinutes(45)
+        };
+        
+        var datatable = new DataTable();
+        datatable.Columns.Add("ReservationID", typeof(int));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Columns.Add("UserID", typeof(int));   
+        datatable.Columns.Add("StartDate", typeof(DateTime));
+        datatable.Columns.Add("EndDate", typeof(DateTime));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Rows.Add(1, 1, 1, baseTime, baseTime.AddHours(1), "old-lab");
+        
+        _mockDataGateway.Setup(m => m.GetAllReservations()).Returns(datatable);
+        
+        var result = _reservationService.MakeReservation(newReservation);
+        
+        Assert.False(result);
+        _mockDataGateway.Verify(m => m.InsertReservation(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void MakeReservation_ShouldReturnFalse_WhenReservationCompletelyContainsExisting()
+    {
+        var baseTime = new DateTime(2030, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+        var newReservation = new ReservationModel
+        {
+            ServerId = 1,
+            UserId = 2,
+            LabId = "new-lab",
+            ReservationStart = baseTime.AddMinutes(-30),
+            ReservationEnd = baseTime.AddHours(2)
+        };
+        
+        var datatable = new DataTable();
+        datatable.Columns.Add("ReservationID", typeof(int));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Columns.Add("UserID", typeof(int));   
+        datatable.Columns.Add("StartDate", typeof(DateTime));
+        datatable.Columns.Add("EndDate", typeof(DateTime));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Rows.Add(1, 1, 1, baseTime, baseTime.AddHours(1), "old-lab");
+        
+        _mockDataGateway.Setup(m => m.GetAllReservations()).Returns(datatable);
+        
+        var result = _reservationService.MakeReservation(newReservation);
+        
+        Assert.False(result);
+        _mockDataGateway.Verify(m => m.InsertReservation(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>()), Times.Never);
+    }
+
 
     #endregion
 
@@ -266,3 +448,4 @@ public class ReservationServiceTests
 
     #endregion
 }
+

@@ -1,20 +1,17 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using DataLayer;
-using Xunit;
 
 namespace NetResVM.IntegrationTests
 {
     [Trait("Category", "Integration")]
-    public class UserTableDataGatewayTests : IClassFixture<DatabaseFixture>
+    [Collection("Integration DB")]
+    public class UserTableDataGatewayTests
     {
-        private readonly DatabaseFixture _fixture;
         private readonly UserTableDataGateway _userTableDataGateway;
 
         public UserTableDataGatewayTests(DatabaseFixture fixture)
         {
-            _fixture = fixture;
-            DBConnector.TestConnectionString = _fixture.ConnectionString;
+            DBConnector.TestConnectionString = fixture.ConnectionString;
             _userTableDataGateway = new UserTableDataGateway();
         }
 

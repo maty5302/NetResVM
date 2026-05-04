@@ -13,14 +13,14 @@ public class DatabaseFixture : IAsyncLifetime
 
     public string ConnectionString => _dbContainer.GetConnectionString();
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _dbContainer.StartAsync();
 
         await CreateDatabaseSchemaAsync();
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await _dbContainer.DisposeAsync();
     }
