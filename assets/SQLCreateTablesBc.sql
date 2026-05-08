@@ -39,7 +39,7 @@ GO
 IF NOT EXISTS (SELECT 1 FROM [User] WHERE Username = 'admin')
 BEGIN
     INSERT INTO [User] (Username, [Password], [Role], AuthorizationType, Active)
-    VALUES ('admin', 'VaseHeslo', 'Admin', 'localhost', 1);
+    VALUES ('admin', 'Password123', 'Admin', 'localhost', 1);
     PRINT 'Admin created successfully.';
 END
 ELSE
