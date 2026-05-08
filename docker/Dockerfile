@@ -26,16 +26,13 @@ COPY . .
 WORKDIR "/src/SuperReservationSystem"
 RUN dotnet publish "NetResVM.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-RUN dotnet dev-certs https -ep /app/publish/aspnetapp.pfx -p DevPasswordUselessForYou123
-
 # 2. Fáze: RUN (Běhové prostředí)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
 EXPOSE 8080
-EXPOSE 8081
-ENV ASPNETCORE_URLS="https://+:8081;http://+:8080"
+ENV ASPNETCORE_URLS=http://+:8080
 
 # ENTRYPOINT spouští výslednou zkompilovanou DLL knihovnu webu
 ENTRYPOINT ["dotnet", "NetResVM.dll"]
