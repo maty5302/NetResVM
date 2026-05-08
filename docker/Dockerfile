@@ -26,7 +26,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 RUN apt-get update && \
-    apt-get install -y libldap-2.5-0 libldap-common && \
+    apt-get install -y libldap-common libldap2-dev && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/publish .
