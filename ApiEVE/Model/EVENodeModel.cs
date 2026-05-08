@@ -29,7 +29,7 @@ namespace ApiEVE.Models
         /// Gets or sets the number of CPUs allocated to the node.
         /// </summary>
         [JsonPropertyName("cpu")]
-        public int NumberOfCPU { get; set; }
+        public int NumberOfCpu { get; set; }
 
         /// <summary>
         /// Gets or sets the amount of memory (RAM) allocated to the node.

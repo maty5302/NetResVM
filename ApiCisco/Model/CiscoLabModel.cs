@@ -26,13 +26,13 @@ namespace ApiCisco.Model
         /// Gets or sets the count of nodes in the lab.
         /// </summary>
         [JsonPropertyName("node_count")]
-        public int Node_count { get; set; }
+        public int NodeCount { get; set; }
 
         /// <summary>
         /// Gets or sets the count of links in the lab.
         /// </summary>
         [JsonPropertyName("link_count")]
-        public int Link_count { get; set; }
+        public int LinkCount { get; set; }
 
         /// <summary>
         /// Gets or sets the current state of the lab (e.g., started, stopped).
@@ -44,6 +44,6 @@ namespace ApiCisco.Model
         /// Gets or sets the last modified date and time of the lab.
         /// </summary>
         [JsonPropertyName("modified")]
-        public DateTime Last_modified { get; set; }
+        public DateTime LastModified { get; set; }
     }
 }

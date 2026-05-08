@@ -104,7 +104,7 @@ public class EveNGAdapter : IVirtualizationAdapter
         if (_httpClient == null)
         {
             var authResult = await AuthenticateAsync(serverId);
-            if (!authResult.Valid)
+            if (!authResult.Valid || _httpClient==null)
             {
                 _logger.LogError($"EveAdapter - DeleteLab - Authentication failed: {authResult.Message}");
                 return (false, authResult.Message);
@@ -141,7 +141,7 @@ public class EveNGAdapter : IVirtualizationAdapter
         if (_httpClient == null)
         {
             var authResult = await AuthenticateAsync(serverId);
-            if (!authResult.Valid)
+            if (!authResult.Valid || _httpClient==null)
             {
                 _logger.LogError($"EveAdapter - DownloadLab - Authentication failed: {authResult.Message}");
                 return (null, "", "", authResult.Message);
@@ -203,7 +203,7 @@ public class EveNGAdapter : IVirtualizationAdapter
         if (_httpClient == null)
         {
             var authResult = await AuthenticateAsync(serverId);
-            if (!authResult.Valid)
+            if (!authResult.Valid || _httpClient==null)
             {
                 _logger.LogError($"EveAdapter - GetAllNodes - Authentication failed: {authResult.Message}");
                 return (null, authResult.Message);
@@ -230,7 +230,7 @@ public class EveNGAdapter : IVirtualizationAdapter
                 Id = res.Id.ToString(),
                 Name = res.Name,
                 Status = nodeStatus,
-                NumberOfCPU = res.NumberOfCPU,
+                NumberOfCPU = res.NumberOfCpu,
                 Memory = res.Memory,
                 Metadata = new Dictionary<string, string>
                 {
@@ -259,19 +259,16 @@ public class EveNGAdapter : IVirtualizationAdapter
     {
         try
         {
-            // 1. Kontrola autentizace
             if (_httpClient == null)
             {
                 var authResult = await AuthenticateAsync(serverId);
-                if (!authResult.Valid)
+                if (!authResult.Valid || _httpClient==null)
                 {
                     _logger.LogError($"EveAdapter - GetLabInfoAsync - Authentication failed: {authResult.Message}");
                     return (null, authResult.Message);
                 }
             }
 
-            // 2. Stažení dat z EVE-NG API 
-            // (Předpokládám, že máš v _apiLab metodu, která umí stáhnout info o 1 laboratoři podle ID/cesty)
             var labResponse = await _apiLab.GetLabInfo(_httpClient, labId);
 
             if (string.IsNullOrEmpty(labResponse))
@@ -280,30 +277,22 @@ public class EveNGAdapter : IVirtualizationAdapter
                 return (null, "Lab not found.");
             }
 
-            // 3. Parsování JSONu
             using var jsonDoc = JsonDocument.Parse(labResponse);
 
-            // EVE-NG obvykle vrací data uvnitř objektu "data"
             if (!jsonDoc.RootElement.TryGetProperty("data", out var dataElement))
             {
                 _logger.LogError("EveAdapter - GetLabInfoAsync - Invalid JSON structure (missing 'data' node).");
                 return (null, "Invalid data format received from server.");
             }
-
-            // 4. Sestavení univerzálního DTO
             var labDto = new LabDTO
             {
-                // Pokud EVE nevrátí ID, použijeme jako identifikátor vstupní labId (cestu k souboru)
                 Id = labId,
                 Name = dataElement.TryGetProperty("name", out var nameProp) ? (nameProp.GetString() ?? "Unknown") : "Unknown",
-                Description = dataElement.TryGetProperty("description", out var descProp) ? descProp.GetString() : "",
-
-                //TO-DO předělat
-                // EVE-NG ne vždy u laboratoře vrací stav přímo, pokud ho nemáš, dej zástupnou hodnotu
+                Description = dataElement.TryGetProperty("description", out var descProp) ? (descProp.GetString() ?? "") : "",
+ 
                 Status = dataElement.TryGetProperty("status", out var statProp) ? (statProp.GetString() ?? "UNKNOWN") : "UNKNOWN"
             };
 
-            // 5. Zabalení EVE-NG specifik do slovníku Metadata (aby se vypsaly v LabInfo.cshtml)
             if (dataElement.TryGetProperty("id", out var idProp) && !string.IsNullOrEmpty(idProp.GetString()))
                 labDto.Metadata.Add("UUID", idProp.GetString()!);
 
@@ -346,7 +335,7 @@ public class EveNGAdapter : IVirtualizationAdapter
             if (_httpClient == null)
             {
                 var authResult = await AuthenticateAsync(serverId);
-                if (!authResult.Valid)
+                if (!authResult.Valid || _httpClient==null) 
                 {
                     _logger.LogError($"EveAdapter - GetLabsAsync - Authentication failed: {authResult.Message}");
                     return (null, authResult.Message);
@@ -446,7 +435,7 @@ public class EveNGAdapter : IVirtualizationAdapter
         if (_httpClient == null)
         {
             var authResult = await AuthenticateAsync(serverId);
-            if (!authResult.Valid)
+            if (!authResult.Valid || _httpClient==null)
             {
                 _logger.LogError($"EveNGAdapter - ImportLab - Authentication failed: {authResult.Message}");
                 return false;
@@ -454,6 +443,11 @@ public class EveNGAdapter : IVirtualizationAdapter
         }
         try
         {
+            if (string.IsNullOrEmpty(filename))
+            {
+                _logger.LogWarning("EveNGAdapter - ImportLab - Filename is null or empty. Using default name 'imported_lab.unl'.");
+                filename = "imported_lab.unl";
+            }
             return await _apiLab.ImportLab(_httpClient, fileContent, filename);
         }
         catch (Exception e)
@@ -477,7 +471,7 @@ public class EveNGAdapter : IVirtualizationAdapter
         if (_httpClient == null)
         {
             var authResult = await AuthenticateAsync(serverId);
-            if (!authResult.Valid)
+            if (!authResult.Valid || _httpClient==null)
             {
                 _logger.LogError($"EveNGAdapter - ImportLab - Authentication failed: {authResult.Message}");
                 return false;
@@ -505,7 +499,7 @@ public class EveNGAdapter : IVirtualizationAdapter
         if (_httpClient == null)
         {
             var authResult = await AuthenticateAsync(serverId);
-            if (!authResult.Valid)
+            if (!authResult.Valid || _httpClient==null)
             {
                 _logger.LogError($"EveNGAdapter - StartLabAsync - Authentication failed: {authResult.Message}");
                 return (false, authResult.Message);
@@ -551,7 +545,7 @@ public class EveNGAdapter : IVirtualizationAdapter
         if (_httpClient == null)
         {
             var authResult = await AuthenticateAsync(serverId);
-            if (!authResult.Valid)
+            if (!authResult.Valid || _httpClient==null)
             {
                 _logger.LogError($"EveNGAdapter - StopLabAsync - Authentication failed: {authResult.Message}");
                 return (false, authResult.Message);

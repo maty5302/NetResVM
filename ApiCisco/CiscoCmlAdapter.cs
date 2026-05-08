@@ -1,9 +1,9 @@
+using System.Globalization;
 using ApiCisco.Client;
 using ApiCisco.Model;
 using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
 using BusinessLayer.Interface;
-using BusinessLayer.Models;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Http;
 using SimpleLogger;
@@ -141,6 +141,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     /// <summary>
     /// Retrieves detailed information about a specific lab from the Cisco CML server.
     /// </summary>
+    /// <param name="serverId">The unique identifier of the server.</param>
     /// <param name="labId">The unique identifier of the lab.</param>
     /// <returns>
     /// A tuple containing a <see cref="CiscoLabModel"/> and a message string.
@@ -150,7 +151,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
         if (_httpClient == null)
         {
             var authResult = await AuthenticateAsync(serverId);
-            if (!authResult.Valid)
+            if (!authResult.Valid || _httpClient==null)
             {
                 _logger.LogError($"CiscoCmlAdapter - ImportLab - Authentication failed: {authResult.Message}");
                 return (null, authResult.Message);
@@ -180,10 +181,10 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             if (ciscoLab == null)
                 return (null, "Failed to parse lab data.");
 
-            var labState = ciscoLab.State ?? "Unknown";
+            var labState = ciscoLab.State;
             if (labState == "")
                 return (null, "Lab state is unknown.");
-            else if (labState=="DEFINED_ON_CORE")
+            if (labState=="DEFINED_ON_CORE")
             {
                 labState = "STOPPED";
             }
@@ -192,14 +193,14 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             {
                 Id = ciscoLab.Id,
                 Name = ciscoLab.Name,
-                Description = ciscoLab.Description ?? "",
-                Status = ciscoLab.State ?? "Unknown"
+                Description = ciscoLab.Description,
+                Status = labState
             };
 
             // Uložení specifických CML dat do Metadata slovníku
-            dto.Metadata.Add("NodeCount", ciscoLab.Node_count.ToString());
-            dto.Metadata.Add("LinkCount", ciscoLab.Link_count.ToString());
-            dto.Metadata.Add("LastModified", ciscoLab.Last_modified.ToString() ?? "");
+            dto.Metadata.Add("NodeCount", ciscoLab.NodeCount.ToString());
+            dto.Metadata.Add("LinkCount", ciscoLab.LinkCount.ToString());
+            dto.Metadata.Add("LastModified", ciscoLab.LastModified.ToString(CultureInfo.CurrentCulture));
 
             return (dto, "OK");
         }
@@ -225,7 +226,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
         if (_httpClient == null)
         {
             var authResult = await AuthenticateAsync(serverId);
-            if (!authResult.Valid)
+            if (!authResult.Valid || _httpClient==null)
             {
                 _logger.LogError($"CiscoCmlAdapter - GetLabsAsync - Authentication failed: {authResult.Message}");
                 return (null, authResult.Message);
@@ -278,7 +279,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             if (_httpClient == null)
             {
                 var authResult = await AuthenticateAsync(serverId);
-                if(!authResult.Valid)
+                if(!authResult.Valid || _httpClient==null)
                 {
                     _logger.LogError($"CiscoCmlAdapter - ImportLab - Authentication failed: {authResult.Message}");
                     return false;
@@ -312,13 +313,13 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             if (_httpClient == null)
             {
                 var authResult = await AuthenticateAsync(serverId);
-                if(!authResult.Valid)
+                if(!authResult.Valid || _httpClient==null)
                 {
                     _logger.LogError($"CiscoCmlAdapter - ImportLab - Authentication failed: {authResult.Message}");
                     return false;
                 }
             }
-            string contentString = System.Text.Encoding.UTF8.GetString(fileContent);
+            string contentString = Encoding.UTF8.GetString(fileContent);
             var result = await _ciscoLab.ImportLab(_httpClient, contentString);
             return result;
         }
@@ -348,7 +349,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             if (_httpClient == null)
             {
                 var authResult = await AuthenticateAsync(serverId);
-                if (!authResult.Valid)
+                if (!authResult.Valid || _httpClient== null)
                 {
                     _logger.LogError($"CiscoCmlAdapter - DownloadLab - Authentication failed: {authResult.Message}");
                     return (null, "", "", "Authentication failed");
@@ -390,7 +391,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             if (_httpClient == null)
             {
                 var authResult = await AuthenticateAsync(serverId);
-                if (!authResult.Valid)
+                if (!authResult.Valid || _httpClient==null)
                 {
                     _logger.LogError($"CiscoCmlAdapter - DownloadLab - Authentication failed: {authResult.Message}");
                     return (false, "Authentication failed");
@@ -426,7 +427,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             if (_httpClient == null)
             {
                 var authResult = await AuthenticateAsync(serverId);
-                if (!authResult.Valid)
+                if (!authResult.Valid || _httpClient==null)
                 {
                     _logger.LogError($"CiscoCmlAdapter - StartLabAsync - Authentication failed: {authResult.Message}");
                     return (false, "Authentication failed");
@@ -465,7 +466,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             if (_httpClient == null)
             {
                 var authResult = await AuthenticateAsync(serverId);
-                if (!authResult.Valid)
+                if (!authResult.Valid || _httpClient==null)
                 {
                     _logger.LogError($"CiscoCmlAdapter - StopLabAsync - Authentication failed: {authResult.Message}");
                     return (false, "Authentication failed");
@@ -495,7 +496,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
         if (_httpClient == null)
         {
             var authResult = await AuthenticateAsync(serverId);
-            if (!authResult.Valid)
+            if (!authResult.Valid || _httpClient==null)
             {
                 _logger.LogError($"CiscoCmlAdapter - StopLabAsync - Authentication failed: {authResult.Message}");
                 return (null, "Authentication failed");
@@ -540,7 +541,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
         if (_httpClient == null)
         {
             var authResult = await AuthenticateAsync(serverId);
-            if (!authResult.Valid)
+            if (!authResult.Valid || _httpClient==null)
             {
                 _logger.LogError($"CiscoCmlAdapter - StopLabAsync - Authentication failed: {authResult.Message}");
                 return null;
@@ -558,7 +559,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
         if (node == null)
             return null;
 
-        var nodeDTO = new NodeDTO
+        var nodeDto = new NodeDTO
         {
             Id = node.Id,
             Name = node.Name,
@@ -566,10 +567,10 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             NumberOfCPU = node.Cpu ?? 0,
             Memory = node.Memory ?? 0,
         };
-        nodeDTO.Metadata.Add("CPU_Limit", node.CpuLimit?.ToString() ?? "0");
-        nodeDTO.Metadata.Add("DataVolume", node.DataVolume?.ToString() ?? "0");
+        nodeDto.Metadata.Add("CPU_Limit", node.CpuLimit?.ToString() ?? "0");
+        nodeDto.Metadata.Add("DataVolume", node.DataVolume?.ToString() ?? "0");
 
-        return nodeDTO;
+        return nodeDto;
     }
 
     /// <summary>
@@ -587,7 +588,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             if (_httpClient == null)
             {
                 var authResult = await AuthenticateAsync(serverId);
-                if (!authResult.Valid)
+                if (!authResult.Valid || _httpClient==null)
                 {
                     _logger.LogError($"CiscoCmlAdapter - StopLabAsync - Authentication failed: {authResult.Message}");
                     return null;

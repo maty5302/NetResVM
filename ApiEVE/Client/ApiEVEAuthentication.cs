@@ -5,8 +5,8 @@ using System.Text.Json;
 namespace ApiEVE.Client
 {
     /// <summary>
-    // /// Provides authentication services for the EVE API, including login and logout operations.
-    // /// </summary>
+    /// Provides authentication services for the EVE API, including login and logout operations.
+    /// </summary>
     public class ApiEVEAuthentication
     {
         /// <summary>
