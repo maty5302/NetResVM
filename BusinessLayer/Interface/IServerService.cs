@@ -8,7 +8,6 @@ public interface IServerService
 {
     List<ServerDTO>? GetAllServers();
     ServerDTO? GetServerById(int id);
-    //ServerModel? GetServerByIdInternal(int id);
     (string Url, string Username, string Password)? GetServerCredentials(int id);
     PlatformType GetServerType(int id);
     bool ServerExists(int id);
