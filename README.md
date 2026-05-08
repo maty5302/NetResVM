@@ -1,5 +1,7 @@
 # NetResVM
-[![Unit Tests](https://github.com/maty5302/NetResVM/actions/workflows/tests.yml/badge.svg)](https://github.com/maty5302/NetResVM/actions/workflows/tests.yml)
+[![Unit and Integration Tests](https://github.com/maty5302/NetResVM/actions/workflows/tests.yml/badge.svg)](https://github.com/maty5302/NetResVM/actions/workflows/tests.yml)
+[![Build and Push Docker Image](https://github.com/maty5302/NetResVM/actions/workflows/docker.yml/badge.svg)](https://github.com/maty5302/NetResVM/actions/workflows/docker.yml)
+
 This system is used by students to manage reservations of lab environments (Cisco CML and EVE-NG), allows backups to be created and restored, and facilitates coordination between users. The application is designed with simplicity, security, and efficiency in mind.
 
 ## License
@@ -7,14 +9,31 @@ This system is used by students to manage reservations of lab environments (Cisc
 This project is available under the [GNU GPL v3](LICENSE) license.
 
 ## System requirements
+- Access to CML and EVE-NG servers
 - Operating system Linux or Windows
-- .NET 8.0 Runtime
-- ASP.NET 8.0 Runtime
+- Docker 
+- .NET 10.0 Runtime
+- ASP.NET 10.0 Runtime
 - Microsoft SQL Server 2022
 - libldap-2.5-0 for LDAP auth (Linux only)
-- Access to CML and EVE-NG servers
 
-## Installation
+## Installation Docker (Recommended)
+> Note: for installation in docker you don't need requirements from above except from Docker.
+#### 1. Download and install Docker
+#### 2. Download docker-compose.yml from assets folder
+#### 3. Create .env file with following
+> Choose your own strong password for database
+```
+DB_USER=sa
+DB_PASSWORD=vase_silne_heslo
+```
+#### 4. Run docker-compose.yml and wait for about 1-2 minutes.
+
+#### 5. You can use the app usually hosted on http://localhost:8080/ and sign in with default login=admin and password=Password123.
+>Note after first login you should change the password for a stronger one!!!
+
+
+## Installation with custom made script
 #### 1. Download and unzip archive for your operating system
 #### 2. Run install.sh or install.ps1
 

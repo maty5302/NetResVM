@@ -399,3 +399,4 @@ FodyWeavers.xsd
 *.sln.iml
 /Testovaci_Konzole
 /SuperReservationSystem/sqlconnection.json
+.env
