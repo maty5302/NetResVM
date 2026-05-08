@@ -1,11 +1,6 @@
 ﻿using DataLayer.Interface;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 
 namespace DataLayer
 {
@@ -17,9 +12,9 @@ namespace DataLayer
         /// <summary>
         /// This method retrieves a user by their username from the database and returns it as a DataTable.
         /// </summary>
-        /// <param name="Username"> Username </param>
+        /// <param name="username"> Username </param>
         /// <returns></returns>
-        public DataTable GetUserByUsername(string Username)
+        public DataTable GetUserByUsername(string username)
         {
             string query = "SELECT * FROM \"User\" WHERE Username=@username";
             var result = new DataTable();
@@ -29,7 +24,7 @@ namespace DataLayer
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@username", Username);
+                    command.Parameters.AddWithValue("@username", username);
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
                         result.Load(reader);
@@ -43,9 +38,9 @@ namespace DataLayer
         /// <summary>
         /// This method retrieves a user by their ID from the database and returns it as a DataTable.
         /// </summary>
-        /// <param name="Id"> ID of user to be retrieved </param>
+        /// <param name="id"> ID of user to be retrieved </param>
         /// <returns></returns>
-        public DataTable GetUserById(int Id)
+        public DataTable GetUserById(int id)
         {
             string query = "SELECT * FROM \"User\" WHERE UserID = @Id";
             var result = new DataTable();
@@ -54,7 +49,7 @@ namespace DataLayer
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@Id", Id);
+                    command.Parameters.AddWithValue("@Id", id);
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
                         result.Load(reader);
@@ -90,12 +85,12 @@ namespace DataLayer
         /// <summary>
         /// This method adds a new user to the database.
         /// </summary>
-        /// <param name="Username"> Username for account </param>
-        /// <param name="Password"> Password for account </param>
-        /// <param name="Role"> Role for account (Admin/student)</param>
-        /// <param name="AuthorizationType"> Authorization type for account (localhost/vsb)</param>
-        /// <param name="Active"> Determines if user is active  </param>
-        public void AddUser(string Username, string Password, string Role, string AuthorizationType, int Active)
+        /// <param name="username"> Username for account </param>
+        /// <param name="password"> Password for account </param>
+        /// <param name="role"> Role for account (Admin/student)</param>
+        /// <param name="authorizationType"> Authorization type for account (localhost/vsb)</param>
+        /// <param name="active"> Determines if user is active  </param>
+        public void AddUser(string username, string password, string role, string authorizationType, int active)
         {
             string query = "INSERT INTO \"User\" (Username, Password, Role, AuthorizationType, Active) VALUES (@username, @password, @role, @authorizationType, @active)";
             using (var connection = DBConnector.GetConnection())
@@ -103,11 +98,11 @@ namespace DataLayer
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@username", Username);
-                    command.Parameters.AddWithValue("@password", Password);
-                    command.Parameters.AddWithValue("@role", Role);
-                    command.Parameters.AddWithValue("@authorizationType", AuthorizationType);
-                    command.Parameters.AddWithValue("@active", Active);
+                    command.Parameters.AddWithValue("@username", username);
+                    command.Parameters.AddWithValue("@password", password);
+                    command.Parameters.AddWithValue("@role", role);
+                    command.Parameters.AddWithValue("@authorizationType", authorizationType);
+                    command.Parameters.AddWithValue("@active", active);
                     command.ExecuteNonQuery();
                 }
             }
@@ -116,11 +111,11 @@ namespace DataLayer
         /// <summary>
         /// This method adds a new user to the database.
         /// </summary>
-        /// <param name="Username"> Username for account </param>        
-        /// <param name="Role"> Role for account (Admin/student)</param>
-        /// <param name="AuthorizationType"> Authorization type for account (localhost/vsb)</param>
-        /// <param name="Active"> Determines if user is active  </param>
-        public void AddUser(string Username, string Role, string AuthorizationType, int Active)
+        /// <param name="username"> Username for account </param>        
+        /// <param name="role"> Role for account (Admin/student)</param>
+        /// <param name="authorizationType"> Authorization type for account (localhost/vsb)</param>
+        /// <param name="active"> Determines if user is active  </param>
+        public void AddUser(string username, string role, string authorizationType, int active)
         {
             string query = "INSERT INTO \"User\" (Username, Role, AuthorizationType, Active) VALUES (@username, @role, @authorizationType, @active)";
             using (var connection = DBConnector.GetConnection())
@@ -128,10 +123,10 @@ namespace DataLayer
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@username", Username);
-                    command.Parameters.AddWithValue("@role", Role);
-                    command.Parameters.AddWithValue("@authorizationType", AuthorizationType);
-                    command.Parameters.AddWithValue("@active", Active);
+                    command.Parameters.AddWithValue("@username", username);
+                    command.Parameters.AddWithValue("@role", role);
+                    command.Parameters.AddWithValue("@authorizationType", authorizationType);
+                    command.Parameters.AddWithValue("@active", active);
                     command.ExecuteNonQuery();
                 }
             }
@@ -141,9 +136,9 @@ namespace DataLayer
         /// <summary>
         /// This method updates the active status of a user in the database.
         /// </summary>
-        /// <param name="Id"> ID of User </param>
-        /// <param name="Active"> Active status (0/1) </param>
-        public void UpdateUserActive(int Id, int Active)
+        /// <param name="id"> ID of User </param>
+        /// <param name="active"> Active status (0/1) </param>
+        public void UpdateUserActive(int id, int active)
         {
             string query = "UPDATE \"User\" SET Active = @active WHERE UserID = @Id";
             using (var connection = DBConnector.GetConnection())
@@ -151,8 +146,8 @@ namespace DataLayer
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@Id", Id);
-                    command.Parameters.AddWithValue("@active", Active);
+                    command.Parameters.AddWithValue("@Id", id);
+                    command.Parameters.AddWithValue("@active", active);
                     command.ExecuteNonQuery();
                 }
             }
@@ -161,9 +156,9 @@ namespace DataLayer
         /// <summary>
         /// This method updates the password of a user in the database.
         /// </summary>
-        /// <param name="Id"> ID of user to update password for </param>
-        /// <param name="Password"> New password </param>
-        public void UpdateUserPassword(int Id, string Password)
+        /// <param name="id"> ID of user to update password for </param>
+        /// <param name="password"> New password </param>
+        public void UpdateUserPassword(int id, string password)
         {
             string query = "UPDATE \"User\" SET Password = @password WHERE UserID = @Id";
             using (var connection = DBConnector.GetConnection())
@@ -171,8 +166,8 @@ namespace DataLayer
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@Id", Id);
-                    command.Parameters.AddWithValue("@password", Password);
+                    command.Parameters.AddWithValue("@Id", id);
+                    command.Parameters.AddWithValue("@password", password);
                     command.ExecuteNonQuery();
                 }
             }
@@ -181,8 +176,8 @@ namespace DataLayer
         /// <summary>
         /// This method updates the role of a user in the database.
         /// </summary>
-        /// <param name="Id"> Id of user to be removed </param>
-        public void RemoveUser(int Id)
+        /// <param name="id"> Id of user to be removed </param>
+        public void RemoveUser(int id)
         {
             string query = "DELETE FROM \"User\" WHERE UserID = @Id";
             using (var connection = DBConnector.GetConnection())
@@ -190,7 +185,7 @@ namespace DataLayer
                 connection.Open();
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.AddWithValue("@Id", Id);
+                    command.Parameters.AddWithValue("@Id", id);
                     command.ExecuteNonQuery();
                 }
             }

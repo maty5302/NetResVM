@@ -26,7 +26,7 @@ public class LocalBackupStorage : ILocalBackupStorage
         string fileName = $"{serverType}-{labId}-{timestamp}{fileExtension}";
         string filePath = Path.Combine(_backupPath, serverType, labId, fileName);
 
-        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? "");
         await File.WriteAllBytesAsync(filePath, fileContent);
     }
 

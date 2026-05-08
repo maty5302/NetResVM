@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
+﻿using Microsoft.Data.SqlClient;
 using System.Text.Json;
-using System.Threading.Tasks;
 using SimpleLogger;
 
 namespace DataLayer
@@ -26,6 +21,12 @@ namespace DataLayer
             if(!string.IsNullOrEmpty(TestConnectionString))
             {
                 return new SqlConnection(TestConnectionString);
+            }
+            
+            string? envConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+            if (!string.IsNullOrEmpty(envConnectionString))
+            {
+                return new SqlConnection(envConnectionString);
             }
             
             var builder = GetBuilder();
@@ -53,6 +54,9 @@ namespace DataLayer
                 builder.UserID = userIdValue;
                 builder.Password = passValue;
                 builder.InitialCatalog = "DB_NetResVM";
+                
+                builder.TrustServerCertificate = true;
+                builder.Encrypt = false;
                 return builder;
             }
             else
