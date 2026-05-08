@@ -14,10 +14,10 @@ namespace NetResVM.Controllers
     public class ServerController : Controller
     {
         private readonly ServerService _serverService;
-        private readonly PlatformManager _platformManager;
+        private readonly IPlatformManager _platformManager;
         private readonly IStringLocalizer<SharedResource> _localizer;
 
-        public ServerController(PlatformManager platformManager, ServerService serverService, IStringLocalizer<SharedResource> localizer)
+        public ServerController(IPlatformManager platformManager, ServerService serverService, IStringLocalizer<SharedResource> localizer)
         {
             _platformManager = platformManager;
             _serverService = serverService;

@@ -3,21 +3,19 @@ using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.NetworkInformation;
-using System.Linq;
 using Microsoft.Extensions.Localization;
 
 namespace NetResVM.Controllers
 {
     public class PlatformController : Controller
     {
-        private readonly PlatformManager _platformManager;
+        private readonly IPlatformManager _platformManager;
         private readonly ServerService _serverService;
         private readonly UserService _userService;
         private readonly UserLabOwnershipService _userLabOwnership;
         private readonly IStringLocalizer<SharedResource> _localizer;
 
-        public PlatformController(PlatformManager platformManager, ServerService serverService, UserService userService, UserLabOwnershipService userLabOwnership, IStringLocalizer<SharedResource> localizer)
+        public PlatformController(IPlatformManager platformManager, ServerService serverService, UserService userService, UserLabOwnershipService userLabOwnership, IStringLocalizer<SharedResource> localizer)
         {
             _platformManager = platformManager;
             _serverService = serverService;
@@ -40,7 +38,7 @@ namespace NetResVM.Controllers
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
-                return RedirectToAction("Login", "Home");
+                return RedirectToAction("Index", "Login");
             }
             return RedirectToAction("LabList", "Platform", new { serverId = serverId });
         }
@@ -61,7 +59,7 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
-                return RedirectToAction("Login", "Home");
+                return RedirectToAction("Index", "Login");
             }
 
             var server = _serverService.GetServerById(serverId);
@@ -124,7 +122,7 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
-                return RedirectToAction("Login", "Home");
+                return RedirectToAction("Index", "Login");
             }
 
             var server = _serverService.GetServerById(serverId);
@@ -310,6 +308,10 @@ namespace NetResVM.Controllers
             if (server.Platform == PlatformType.Unknown)
             {
                 TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
+                return RedirectToAction("Index", "Home");
+            }
+            if (labId == null)
+            {
                 return RedirectToAction("Index", "Home");
             }
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);

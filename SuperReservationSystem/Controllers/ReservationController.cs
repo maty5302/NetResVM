@@ -19,10 +19,10 @@ namespace NetResVM.Controllers
         private readonly ServerService _serverService;
         private readonly UserService _userService;
         private readonly ReservationService _reservationService;
-        private readonly PlatformManager _platformManager;
+        private readonly IPlatformManager _platformManager;
         private readonly SimpleLogger.ILogger _logger = FileLogger.Instance;
         private readonly IStringLocalizer<SharedResource> _localizer;
-        public ReservationController(PlatformManager platformManager, ServerService serverService, UserService userService, ReservationService reservationService, IStringLocalizer<SharedResource> localizer)
+        public ReservationController(IPlatformManager platformManager, ServerService serverService, UserService userService, ReservationService reservationService, IStringLocalizer<SharedResource> localizer)
         {
             _platformManager = platformManager;
             _serverService = serverService;
@@ -71,18 +71,18 @@ namespace NetResVM.Controllers
                     });
                 //this month
                 if(reservation.ReservationStart.Month==DateTime.Now.Month)
-                allReservations.Add(new ReservationInformationModel
-                {
-                    Id = reservation.Id,
-                    ServerName = server.Name,
-                    Platform = server.Platform,
-                    ServerId = server.Id,
-                    LabId = reservation.LabId,
-                    ReservationStart = reservation.ReservationStart,
-                    ReservationEnd = reservation.ReservationEnd,
-                    UserId = reservation.UserId,
-                    UserName = user
-                });
+                    allReservations.Add(new ReservationInformationModel
+                    {
+                        Id = reservation.Id,
+                        ServerName = server.Name,
+                        Platform = server.Platform,
+                        ServerId = server.Id,
+                        LabId = reservation.LabId,
+                        ReservationStart = reservation.ReservationStart,
+                        ReservationEnd = reservation.ReservationEnd,
+                        UserId = reservation.UserId,
+                        UserName = user
+                    });
             }
             ViewBag.AllReservations = allReservations;
             ViewBag.PlannedReservations = plannedReservations;
@@ -142,8 +142,8 @@ namespace NetResVM.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
-            var UserId = _userService.GetUserId(User.Identity.Name);
-            var reservations = _reservationService.GetReservationsByUserId(UserId);
+            var userId = _userService.GetUserId(User.Identity.Name);
+            var reservations = _reservationService.GetReservationsByUserId(userId);
             List<ReservationInformationModel> plannedReservations = new List<ReservationInformationModel>();
             List<ReservationInformationModel> expiredReservations = new List<ReservationInformationModel>();
             if (reservations == null)
@@ -219,7 +219,7 @@ namespace NetResVM.Controllers
         {
             if (User.Identity!=null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
-            var UserId = _userService.GetUserId(User.Identity.Name);
+            var userId = _userService.GetUserId(User.Identity.Name);
             if (!selectedServer.HasValue && selectedServer == 0 || selectedServer==null)
             {
                 TempData["ErrorMessage"] = _localizer["ServerNotSelected"].Value;
@@ -265,7 +265,7 @@ namespace NetResVM.Controllers
                 LabId = reserve.LabId,
                 ReservationStart = reserve.ReservationStart,
                 ReservationEnd = reserve.ReservationEnd,
-                UserId = UserId
+                UserId = userId
             };
             var result = _reservationService.MakeReservation(reservation);
             if (result)

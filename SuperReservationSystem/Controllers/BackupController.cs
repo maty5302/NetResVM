@@ -32,7 +32,7 @@ public class BackupController : Controller
         if (User.Identity != null && !User.Identity.IsAuthenticated)
         {
             TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
-            return RedirectToAction("Login", "Home");
+            return RedirectToAction("Index", "Login");
         }
         var allBackups = await _backupService.GetBackups();
         

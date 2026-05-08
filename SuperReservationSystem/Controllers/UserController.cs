@@ -6,7 +6,6 @@ using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NetResVM.Models;
-using SuperReservationSystem.Models;
 
 namespace NetResVM.Controllers
 {
@@ -16,12 +15,12 @@ namespace NetResVM.Controllers
     public class UserController : Controller
     {
         private readonly UserLabOwnershipService _userLabOwnershipService;
-        private readonly PlatformManager _platformManager;
+        private readonly IPlatformManager _platformManager;
         private readonly UserService _userService;
         private readonly ServerService _serverService;
         private readonly IStringLocalizer<SharedResource> _localizer;
 
-        public UserController(PlatformManager platformManager, UserLabOwnershipService userLabOwnershipService, UserService userService, ServerService serverService, IStringLocalizer<SharedResource> localizer)
+        public UserController(IPlatformManager platformManager, UserLabOwnershipService userLabOwnershipService, UserService userService, ServerService serverService, IStringLocalizer<SharedResource> localizer)
         {
             _platformManager = platformManager;
             _userLabOwnershipService = userLabOwnershipService;

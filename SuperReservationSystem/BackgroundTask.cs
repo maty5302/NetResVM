@@ -14,7 +14,6 @@ namespace NetResVM
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly ILogger _logger = FileLogger.Instance;
         private readonly IServiceProvider _serviceProvider;
-
         public BackgroundTask(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
@@ -29,13 +28,13 @@ namespace NetResVM
         /// <param name="platformManager">The platform manager used to obtain the appropriate virtualization adapter for the operation. Cannot be
         /// null.</param>
         /// <param name="serverType">The type of platform server on which the lab resides.</param>
-        /// <param name="serverID">The unique identifier of the server hosting the lab.</param>
+        /// <param name="serverId">The unique identifier of the server hosting the lab.</param>
         /// <param name="labId">The identifier of the lab to start the reservation for. Cannot be null.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        private async Task StartReservation(PlatformManager platformManager, PlatformType serverType, int serverID, string labId)
+        private async Task StartReservation(IPlatformManager platformManager, PlatformType serverType, int serverId, string labId)
         {
             IVirtualizationAdapter adapter = platformManager.GetAdapter(serverType);
-            var labState = await adapter.StateOfLab(serverID, labId);
+            var labState = await adapter.StateOfLab(serverId, labId);
             if (labState == null)
             {
                 _logger.LogError($"Lab {labId} in unknown state. Cannot perform the operation");
@@ -46,22 +45,22 @@ namespace NetResVM
             }
             else if (labState == "STOPPED")
             {
-                var labs = await adapter.GetLabsAsync(serverID);
+                var labs = await adapter.GetLabsAsync(serverId);
                 if(labs.Labs == null)
                 {
-                    _logger.LogError($"Labs on server {serverID} could not be retrieved. Cannot perform the operation");
+                    _logger.LogError($"Labs on server {serverId} could not be retrieved. Cannot perform the operation");
                     return;
                 }
                 foreach (var lab in labs.Labs)
                 {
-                    _logger.Log($"Stopping lab {lab.Id} on server {serverID} before starting reservation");
-                    await adapter.StopLabAsync(serverID, lab.Id);                    
+                    _logger.Log($"Stopping lab {lab.Id} on server {serverId} before starting reservation");
+                    await adapter.StopLabAsync(serverId, lab.Id);                    
                 }
-                var res = await adapter.StartLabAsync(serverID, labId);
+                var res = await adapter.StartLabAsync(serverId, labId);
                 if (res.value)
-                    _logger.Log($"Lab {labId} on server {serverID} started");
+                    _logger.Log($"Lab {labId} on server {serverId} started");
                 else
-                    _logger.LogWarning($"Lab {labId} on server {serverID} could not be started");
+                    _logger.LogWarning($"Lab {labId} on server {serverId} could not be started");
 
             }
              else
@@ -78,7 +77,7 @@ namespace NetResVM
         /// <param name="serverId">The unique identifier of the server hosting the lab.</param>
         /// <param name="labId">The unique identifier of the lab to stop.</param>
         /// <returns>A task that represents the asynchronous stop operation.</returns>
-        private async Task StopReservation(PlatformManager platformManager,PlatformType serverType,int serverId, string labId)
+        private async Task StopReservation(IPlatformManager platformManager,PlatformType serverType,int serverId, string labId)
         {
             IVirtualizationAdapter adapter = platformManager.GetAdapter(serverType);
             var labState = await adapter.StateOfLab(serverId, labId);
@@ -118,7 +117,7 @@ namespace NetResVM
                 {
                     var reservationService = scope.ServiceProvider.GetRequiredService<ReservationService>();
                     var serverService = scope.ServiceProvider.GetRequiredService<ServerService>();
-                    var platformManager = scope.ServiceProvider.GetRequiredService<PlatformManager>();
+                    var platformManager = scope.ServiceProvider.GetRequiredService<IPlatformManager>();
 
                     var reservations = reservationService.GetAllReservations();
                     var time = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0);

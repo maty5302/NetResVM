@@ -7,7 +7,6 @@ using DataLayer.Interface;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
 using SimpleLogger;
-using SuperReservationSystem;
 using System.Globalization;
 
 namespace NetResVM
@@ -39,15 +38,14 @@ namespace NetResVM
             // Dependency Injection for services
             builder.Services.AddScoped<IServerService, ServerService>();
             builder.Services.AddScoped<ILocalBackupStorage, LocalBackupStorage>();
-            builder.Services.AddScoped<BusinessLayer.Services.BackupService>();
-            builder.Services.AddScoped<BusinessLayer.Services.ServerService>();
-            builder.Services.AddScoped<BusinessLayer.Services.ReservationService>();
-            builder.Services.AddScoped<BusinessLayer.Services.UserService>();
-            builder.Services.AddScoped<BusinessLayer.Services.UserLabOwnershipService>();
+            builder.Services.AddScoped<BackupService>();
+            builder.Services.AddScoped<ServerService>();
+            builder.Services.AddScoped<ReservationService>();
+            builder.Services.AddScoped<UserService>();
+            builder.Services.AddScoped<UserLabOwnershipService>();
 
 
             builder.Services.AddScoped<IPlatformManager, PlatformManager>();
-            builder.Services.AddScoped<BusinessLayer.Services.PlatformManager>();
             builder.Services.AddScoped<IVirtualizationAdapter, CiscoCmlAdapter>();
             builder.Services.AddScoped<IVirtualizationAdapter, EveNGAdapter>();
 
