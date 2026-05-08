@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TelnetConsole
 {
@@ -16,7 +11,7 @@ namespace TelnetConsole
         /// <summary>
         /// Port number for the Telnet server.
         /// </summary>
-        private static int port = 2323;
+        private static readonly int Port = 2323;
 
         /// <summary>
         /// Starts the Telnet listener on the specified port.
@@ -24,9 +19,9 @@ namespace TelnetConsole
         /// <returns></returns>
         public static async Task StartListener()
         {
-            var listener = new TcpListener(IPAddress.Any, port);
+            var listener = new TcpListener(IPAddress.Any, Port);
             listener.Start();
-            Console.WriteLine($"Telnet is running on port {port}...");
+            Console.WriteLine($"Telnet is running on port {Port}...");
 
             while (true)
             {

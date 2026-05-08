@@ -12,8 +12,8 @@ namespace TelnetConsole
     /// </summary>
     internal static class Command
     {
-        private static readonly ServerService server = new ServerService();
-        private static readonly PlatformManager platformManager;
+        private static readonly ServerService Server = new ServerService();
+        private static readonly PlatformManager PlatformManager;
 
         // Statický konstruktor - spustí se jen jednou při prvním použití třídy Command
         static Command()
@@ -25,7 +25,7 @@ namespace TelnetConsole
                 new EveNGAdapter() 
             };
 
-            platformManager = new PlatformManager(adapters);
+            PlatformManager = new PlatformManager(adapters);
         }
         /// <summary>
         /// Lists all servers in the system.
@@ -33,7 +33,7 @@ namespace TelnetConsole
         /// <returns> A response string based on the result of the ListServers </returns>
         public static string ListServers()
         {
-            var list = server.GetAllServers();
+            var list = Server.GetAllServers();
             if (list == null)
                 return "";
 
@@ -50,13 +50,13 @@ namespace TelnetConsole
         /// <summary>
         /// Lists all labs on a specified server.
         /// </summary>
-        /// <param name="server_id"> ID of server we want labs from </param>
+        /// <param name="serverId"> ID of server we want labs from </param>
         /// <returns>  A response string based on the result of the ListLabs</returns>
-        public static async Task<string> ListLabs(string server_id)
+        public static async Task<string> ListLabs(string serverId)
         {
-            if (!int.TryParse(server_id, out int id) || id < 0) return "Invalid ID";
+            if (!int.TryParse(serverId, out int id) || id < 0) return "Invalid ID";
 
-            var s = server.GetServerById(id);
+            var s = Server.GetServerById(id);
             if (s == null) return "Server not found";
             if (s.Platform == PlatformType.Unknown) return "Unsupported platform type.";
 
@@ -66,17 +66,17 @@ namespace TelnetConsole
 
             try
             {
-                IVirtualizationAdapter adapter = platformManager.GetAdapter(s.Platform);
+                IVirtualizationAdapter adapter = PlatformManager.GetAdapter(s.Platform);
                 var authResult = await adapter.AuthenticateAsync(id);
                 if (!authResult.Valid) return $"Auth failed: {authResult.Message}";
 
                 var labsResult = await adapter.GetLabsAsync(id);
-                if (labsResult.Labs == null) return labsResult.Message ?? "Error fetching labs.";
+                if (labsResult.Labs == null) return labsResult.Message;
 
                 foreach (var lab in labsResult.Labs)
                 {
                     string modDate = "N/A";
-                    if (lab.Metadata.TryGetValue("LastModified", out string m)) modDate = m;
+                    if (lab.Metadata.TryGetValue("LastModified", out var m)) modDate = m;
                     sb.AppendLine($"{lab.Id.PadRight(idWidth)} | {lab.Name.PadRight(nameWidth)} | {modDate.PadRight(dateWidth)}");
                 }
                 return sb.ToString();
@@ -99,43 +99,42 @@ namespace TelnetConsole
 
             var users = userService.GetAllUsersInfo();
             sb.AppendLine($"{"ID".PadRight(idWidth)} | {"Username".PadRight(nameWidth)} | {"Active".PadRight(activeWidth)}");
-            if (users == null)
-                return "";
+            
             foreach (var user in users)
             {
-                sb.AppendLine($"{user.Id.ToString().PadRight(idWidth)} | {user.Username.ToString().PadRight(nameWidth)} | {user.Active.ToString().PadRight(activeWidth)}");
+                sb.AppendLine($"{user.Id.ToString().PadRight(idWidth)} | {user.Username.PadRight(nameWidth)} | {user.Active.ToString().PadRight(activeWidth)}");
             }
             return sb.ToString();
         }
 
 
 
-        public static async Task<string> StartLab(string server_id, string lab_id)
+        public static async Task<string> StartLab(string serverId, string labId)
         {
-            return await ExecuteLabActionAsync(server_id, lab_id, true);
+            return await ExecuteLabActionAsync(serverId, labId, true);
         }
 
-        public static async Task<string> StopLab(string server_id, string lab_id)
+        public static async Task<string> StopLab(string serverId, string labId)
         {
-            return await ExecuteLabActionAsync(server_id, lab_id, false);
+            return await ExecuteLabActionAsync(serverId, labId, false);
         }
 
-        private static async Task<string> ExecuteLabActionAsync(string server_id, string lab_id, bool start)
+        private static async Task<string> ExecuteLabActionAsync(string serverId, string labId, bool start)
         {
-            if (!int.TryParse(server_id, out int id) || id < 0) return "Invalid ID";
+            if (!int.TryParse(serverId, out int id) || id < 0) return "Invalid ID";
 
-            var s = server.GetServerById(id);
+            var s = Server.GetServerById(id);
             if (s == null) return "Server not found";
             if (s.Platform == PlatformType.Unknown) return "Unsupported platform type.";
 
             try
             {
-                IVirtualizationAdapter adapter = platformManager.GetAdapter(s.Platform);
+                IVirtualizationAdapter adapter = PlatformManager.GetAdapter(s.Platform);
                 var authResult = await adapter.AuthenticateAsync(id);
                 if (!authResult.Valid) return $"Auth failed: {authResult.Message}";
 
                 // Předpokládám, že do IVirtualizationAdapter jsi přidal StartLabAsync a StopLabAsync!
-                var result = start ? await adapter.StartLabAsync(id, lab_id) : await adapter.StopLabAsync(id, lab_id);
+                var result = start ? await adapter.StartLabAsync(id, labId) : await adapter.StopLabAsync(id, labId);
 
                 return result.value ? $"Lab {(start ? "started" : "stopped")} successfully." : $"{result.message}";
             }
