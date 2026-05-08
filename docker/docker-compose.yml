@@ -1,0 +1,43 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: netresvm-app
+    ports:
+      - "80:8080"
+      - "443:8081"
+    depends_on:
+      - db
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=db;Database=DB_NetResVM;User Id=${DB_USER};Password=${DB_PASSWORD};Encrypt=False;TrustServerCertificate=True;
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=DevPasswordUselessForYou123
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/app/aspnetapp.pfx
+    volumes:
+      - dp-keys:/root/.aspnet/DataProtection-Keys
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql-server-2022
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ../assets/SQLCreateTablesBc.sql:/usr/src/app/SQLCreateTablesBc.sql:ro,z
+
+    command: >
+      /bin/bash -c "
+        /opt/mssql/bin/sqlservr &
+        echo 'Waiting for SQL Server startup...' &&
+        sleep 30s &&
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD}' -i /usr/src/app/SQLCreateTablesBc.sql -C &&
+        echo 'Database initialized.' &&
+        wait
+      "
+
+    restart: always
+
+volumes:
+  dp-keys:

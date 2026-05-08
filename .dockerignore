@@ -1,0 +1,8 @@
+bin/
+obj/
+.git/
+.vscode/
+.idea/
+TestResults/
+docker-compose.yml
+.env
