@@ -1,5 +1,4 @@
 name: Tests
-
 on:
   push:
     branches: [ dev ]
@@ -10,7 +9,6 @@ jobs:
   unit-tests:
     name: Unit tests
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
 
@@ -46,15 +44,16 @@ jobs:
           -targetdir:coverage \
           -reporttypes:Cobertura
 
-    - name: Upload coverage
-      uses: codecov/codecov-action@v4
+    - name: Upload unit test coverage to Codecov
+      uses: codecov/codecov-action@v5
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage/Cobertura.xml
+        flags: unittests
 
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
 
@@ -69,8 +68,17 @@ jobs:
     - name: Build
       run: dotnet build SuperReservationSystem.sln --no-restore --configuration Release
 
-    - name: Run integration tests
+    # Zde bylo přidáno sbírání coverage (--collect)
+    - name: Run integration tests with coverage
       run: |
         dotnet test SuperReservationSystem.sln \
         --no-build --configuration Release \
-        --filter "Category=Integration"
+        --filter "Category=Integration" \
+        --collect:"XPlat Code Coverage"
+
+    # Codecov si sám najde vygenerované XML soubory a pošle je
+    - name: Upload integration test coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: integrationtests
