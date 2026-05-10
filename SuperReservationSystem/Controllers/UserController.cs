@@ -152,11 +152,35 @@ namespace NetResVM.Controllers
             var lab = _userLabOwnershipService.DeleteUserLabOwnership(model);
             if (lab)
             {
-                TempData["SuccessMessage"] = _localizer["LabOwnedRemoved"];
+                TempData["SuccessMessage"] = _localizer["LabOwnedRemoved"].Value;
                 return RedirectToAction("UserLab", "User");
             }
             TempData["ErrorMessage"] = _localizer["LabOwnedRemoveError"].Value;
             return RedirectToAction("UserLab", "User");
+        }
+
+        public IActionResult RemoveOwnershipWithUsername(int serverId, string labId, string username)
+        {
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
+                return RedirectToAction("Index", "Login");
+            }
+            var userId = _userService.GetUserId(username);
+            UserLabOwnershipModel model = new UserLabOwnershipModel
+            {
+                ServerId = serverId,
+                LabId = labId,
+                UserId = userId
+            };
+            var lab = _userLabOwnershipService.DeleteUserLabOwnership(model);
+            if (lab)
+            {
+                TempData["SuccessMessage"] = _localizer["LabOwnedRemoved"].Value;
+                return RedirectToAction("LabInfo", "Platform", new {serverId,labId});
+            }
+            TempData["ErrorMessage"] = _localizer["LabOwnedRemoveError"].Value;
+            return RedirectToAction("LabInfo", "Platform", new {serverId,labId});
         }
 
         /// <summary>

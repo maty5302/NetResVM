@@ -162,15 +162,24 @@ namespace NetResVM.Controllers
                 }
                 var owned = _userLabOwnership.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
 
+                bool mainOwner = false;
+                List<string> owners = new List<string>();
                 var ownersList = _userLabOwnership.GetAllUserLabsByLabId(labId);
-                var owners = (from item in ownersList
-                              select _userService.GetUsername(item.UserId)).ToList();
+
+                if (ownersList != null && ownersList.Count > 0)
+                {
+                    mainOwner = ownersList.First().UserId == _userService.GetUserId(User.Identity.Name);
+                    owners = (from item in ownersList
+                        select _userService.GetUsername(item.UserId)).ToList();
+                }
+
+                ViewBag.MainOwner = mainOwner;
                 ViewBag.Owners = owners;
                 ViewBag.ServerId = serverId;
                 ViewBag.ServerName = server.Name;
                 ViewBag.PlatformName = adapter.PlatformName.ToString();
                 ViewBag.Owned = owned.owned;
-            ViewBag.UserOwn = owned.userOwns;
+                ViewBag.UserOwn = owned.userOwns;
                 return View(labInfoResult.Lab);
             }
             catch (Exception ex)
@@ -179,7 +188,6 @@ namespace NetResVM.Controllers
                 return RedirectToAction("Index", "Home");
             }
         }
-
 
         public async Task<IActionResult> AddCollaborator(int serverId, string labId, string collaboratorUsername)
         {

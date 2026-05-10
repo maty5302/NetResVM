@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
 
   netresvm:
-    image: ghcr.io/maty5302/netresvm:dev
+    image: ghcr.io/maty5302/netresvm:latest # Use the latest image from GitHub Container Registry or dev branch for testing
     container_name: netresvm-app
 
     depends_on:

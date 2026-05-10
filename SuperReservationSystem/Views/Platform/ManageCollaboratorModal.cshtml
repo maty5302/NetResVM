@@ -1,0 +1,72 @@
+@using Microsoft.Extensions.Localization
+@model BusinessLayer.DTOs.LabDTO
+@inject IStringLocalizer<SharedResource> Localizer
+
+@{
+    // Bezpečné vytažení seznamu jmen z ViewBag
+    var collaborators = ViewBag.Owners as List<string> ?? new List<string>();
+}
+
+<div class="modal fade" id="manageCollaboratorsModal" tabindex="-1" aria-labelledby="manageCollaboratorsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="manageCollaboratorsModalLabel">@Localizer["ManageCollaborators"]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body">
+                <h6 class="fw-bold mb-3">@Localizer["CurrentCollaborators"]</h6>
+                
+                @if (collaborators.Any())
+                {
+                    <ul class="list-group mb-4">
+                        @foreach (var username in collaborators)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>@username</span>
+                                
+                                <form method="post" action="@Url.Action("RemoveOwnershipWithUsername", "User")" class="m-0 p-0">
+                                    <input type="hidden" name="serverId" value="@ViewBag.ServerId" />
+                                    <input type="hidden" name="labId" value="@Model.Id" />
+                                    <input type="hidden" name="username" value="@username" />
+                                    
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        @Localizer["RemoveCollab"]
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="alert alert-light border text-center text-muted mb-4" role="alert">
+                        @Localizer["NoCollaboratorsYet"]
+                    </div>
+                }
+
+                <hr class="mb-4" />
+                
+                <h6 class="fw-bold mb-3">@Localizer["AddCollaborator"]</h6>
+                
+                <form method="post" action="@Url.Action("AddCollaborator", "Platform")">
+                    <input type="hidden" name="serverId" value="@ViewBag.ServerId" />
+                    <input type="hidden" name="labId" value="@Model.Id" />
+                
+                    <div class="mb-3">
+                        <label for="collaboratorUsername" class="form-label text-muted small">@Localizer["addcollabenterusername"]</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="collaboratorUsername" name="collaboratorUsername" required placeholder="např. novakj" />
+                            <button type="submit" class="btn btn-primary">@Localizer["AddUser"]</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Close"]</button>
+            </div>
+        </div>
+    </div>
+</div>

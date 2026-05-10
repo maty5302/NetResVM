@@ -114,18 +114,18 @@ else
                     <i class="bi bi-calendar-check"></i> @Localizer["ReserveLab"]
                 </button>
                 
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCollaboratorModal">
-                        <i class="bi bi-person-plus"></i> @Localizer["AddCollaborator"]
+                    
+                }
+                
+                @if (ViewBag.MainOwner == true || User.IsInRole("Admin"))
+                {
+                    <button type="button" class="btn btn-primary"
+                            data-bs-toggle="modal" data-bs-target="#manageCollaboratorsModal">
+                        <i class="bi bi-person-x"></i> @Localizer["ManageCollaborators"]
                     </button>
                 }
                 @* Vlastnictví laboratoře *@
-                @if (ViewBag.Owned == true)
-                {
-                    <button class="btn btn-outline-secondary" disabled>
-                        <i class="bi bi-person-check"></i> @Localizer["OwnLab"]
-                    </button>
-                }
-                else
+                @if (ViewBag.Owned == false)
                 {
                     <button type="submit" class="btn btn-primary"
                             formaction="@Url.Action("OwnLab", "User", new { serverId = ViewBag.ServerId, labId = Model.Id })">
@@ -167,6 +167,8 @@ else
     </form>
 }
 
+<partial name="ManageCollaboratorModal" model="Model" />
+
 @section Scripts {
     <script>
         setInterval(async function () {
@@ -184,31 +186,3 @@ else
     </script>
 }
 
-<div class="modal fade" id="addCollaboratorModal" tabindex="-1" aria-labelledby="addCollaboratorModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addCollaboratorModalLabel">@Localizer["AddCollaborator"]</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            
-            <form method="post" action="@Url.Action("AddCollaborator", "Platform")">
-                <div class="modal-body">
-                    <p>@Localizer["addcollabenterusername"]</p>
-                    
-                    <input type="hidden" name="serverId" value="@ViewBag.ServerId" />
-                    <input type="hidden" name="labId" value="@Model.Id" />
-                    
-                    <div class="mb-3">
-                        <label for="collaboratorUsername" class="form-label fw-bold">@Localizer["Username"]</label>
-                        <input type="text" class="form-control" id="collaboratorUsername" name="collaboratorUsername" required placeholder="e.g. novakj" />
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["CancelB"]</button>
-                    <button type="submit" class="btn btn-primary">@Localizer["AddUser"]</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>

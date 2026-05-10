@@ -510,4 +510,19 @@
     <data name="UserRemovedFail" xml:space="preserve">
         <value>UserRemovedFail</value>
     </data>
+    <data name="ManageCollaborators" xml:space="preserve">
+        <value>ManageCollaborators</value>
+    </data>
+    <data name="CurrentCollaborators" xml:space="preserve">
+        <value>CurrentCollaborators</value>
+    </data>
+    <data name="RemoveCollab" xml:space="preserve">
+        <value>RemoveCollab</value>
+    </data>
+    <data name="NoCollaboratorsYet" xml:space="preserve">
+        <value>NoCollaboratorsYet</value>
+    </data>
+    <data name="Close" xml:space="preserve">
+        <value>Closed</value>
+    </data>
 </root>

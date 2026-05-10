@@ -2,6 +2,9 @@
 [![Unit and Integration Tests](https://github.com/maty5302/NetResVM/actions/workflows/tests.yml/badge.svg)](https://github.com/maty5302/NetResVM/actions/workflows/tests.yml)
 [![Build and Push Docker Image](https://github.com/maty5302/NetResVM/actions/workflows/docker.yml/badge.svg)](https://github.com/maty5302/NetResVM/actions/workflows/docker.yml)
 
+🇬🇧 [English](README.md)
+🇨🇿 [Čeština](README.cs.md)
+
 This system is used by students to manage reservations of lab environments (Cisco CML and EVE-NG), allows backups to be created and restored, and facilitates coordination between users. The application is designed with simplicity, security, and efficiency in mind.
 
 ## License
@@ -20,14 +23,19 @@ This project is available under the [GNU GPL v3](LICENSE) license.
 ## Installation Docker (Recommended)
 > Note: for installation in docker you don't need requirements from above except from Docker.
 #### 1. Download and install Docker
-#### 2. Download docker-compose.yml from assets folder
-#### 3. Create .env file with following
+#### 2. Download [docker-compose.yml](docker/docker-compose.yml) from assets folder
+#### 3. Create [.env](docker/.env.example) file with following
 > Choose your own strong password for database
 ```
 DB_USER=sa
 DB_PASSWORD=vase_silne_heslo
 ```
 #### 4. Run docker-compose.yml and wait for about 1-2 minutes.
+Linux CLI
+```
+docker compose pull && docker compose up
+```
+
 
 #### 5. You can use the app usually hosted on http://localhost:8080/ and sign in with default login=admin and password=Password123.
 >Note after first login you should change the password for a stronger one!!!
@@ -35,26 +43,8 @@ DB_PASSWORD=vase_silne_heslo
 
 ## Installation with custom made script
 #### 1. Download and unzip archive for your operating system
-#### 2. Run install.sh or install.ps1
 
-Run script for installing dependencies and requirements (Select version of MS SQL 2022 Express).
-
-> Install script install.sh is tested for Ubuntu 22.04 and newer. If you don't have this distro go to 2. Alternative.
-
-Linux
-```bash
-chmod +x install-ubuntu.bash
-sudo ./install-ubuntu.bash
-```
-
-Windows (Run as administrator)
-```powershell
-Set-ExecutionPolicy unrestricted
-.\install.ps1
-```
->  Make sure to change default password and make account for MS SQL Server by seeing and running `SQLCommnadAfterInstall.sql`
-
-#### 2. Alternative -  Not supported linux distro
+#### 2. Install packages
 
 Need to install all system requirements with your package manager before getting to next step.
 
@@ -67,13 +57,13 @@ aspnetcore-runtime-8.0
 dotnet-runtime-8.0
 libldap 2.5-0 or openldap 2.5-0
 ```
-
+#### 3. Create tables in database
  After installing all packages make sure your MS SQL Server is running and have installed mssql-tools. You need to run following command to insert tables to database. 
 ```bash
 sqlcmd -S IPaddress -U Username -P "YourPassword" -i SQLCreateTablesBc.sql
 ```
 
-#### 3. Setup connection
+#### 4. Setup connection
 
 In app directory find a file called `sqlconnection.json` and fill all connection information.
 
@@ -85,7 +75,7 @@ In app directory find a file called `sqlconnection.json` and fill all connection
 }
 ```
 
-#### 4. Run application
+#### 5. Run application
 
 Linux
 ```bash
@@ -157,3 +147,5 @@ The Server Selection dashboard acts as the main entry point for users to connect
 * **Easy Expansion:** A dedicated, full-width action area at the bottom allows administrators to quickly add new server connections to the infrastructure.
 
 ![Server Selection Home](assets/readme/server-selection-online-status.png)
+
+### Managing collaborators of lab 
