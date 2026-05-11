@@ -1,7 +1,7 @@
 ﻿@model BusinessLayer.DTOs.LabDTO
 @{
     // Název stránky dynamicky podle modelu
-    ViewData["Title"] = @Localizer["LabInfo"] + " - " + (Model?.Name ?? "Unknown");
+    ViewData["Title"] = (Model?.Name ?? "Unknown");
 }
 
 @if (Model == null)
