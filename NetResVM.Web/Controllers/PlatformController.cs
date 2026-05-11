@@ -7,6 +7,11 @@ using Microsoft.Extensions.Localization;
 
 namespace NetResVM.Web.Controllers
 {
+    /// <summary>
+    /// Provides an ASP.NET MVC controller for managing and interacting with virtualization platforms, servers, and labs.
+    /// Allows users to view, import, export, manage, and control labs on various supported
+    /// servers through a web interface.
+    /// </summary>
     public class PlatformController : Controller
     {
         private readonly IPlatformManager _platformManager;
@@ -189,6 +194,17 @@ namespace NetResVM.Web.Controllers
             }
         }
 
+        /// <summary>
+        /// Adds a collaborator to a specified lab on a given server.
+        /// </summary>
+        /// <remarks>The method requires the user to be authenticated. If the server, lab, or user is not
+        /// found, or if the platform is unsupported, an error message is set and the user is redirected accordingly.
+        /// Success and error messages are provided via TempData for display in the UI.</remarks>
+        /// <param name="serverId">The unique identifier of the server where the lab is hosted.</param>
+        /// <param name="labId">The unique identifier of the lab to which the collaborator will be added.</param>
+        /// <param name="collaboratorUsername">The username of the user to be added as a collaborator.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains an IActionResult that redirects
+        /// to the appropriate view based on the outcome of the operation.</returns>
         public async Task<IActionResult> AddCollaborator(int serverId, string labId, string collaboratorUsername)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)

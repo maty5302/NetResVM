@@ -132,9 +132,9 @@ namespace NetResVM.Web.Controllers
         /// <summary>
         /// Removes ownership of a lab from a user.
         /// </summary>
-        /// <param name="serverId"> Server ID where a lab is</param>
-        /// <param name="labId"> Lab ID which user doesn't want to own anymore</param>
-        /// <returns> An <see cref="IActionResult"/> that redirects to different page </returns>
+        /// <param name="serverId">The unique identifier of the server where the lab is hosted.</param>
+        /// <param name="labId">The unique identifier of the lab which the user doesn't want to own anymore.</param>
+        /// <returns>An <see cref="IActionResult"/> that redirects to a different page.</returns>
         public IActionResult RemoveOwnership(int serverId, string labId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -159,6 +159,13 @@ namespace NetResVM.Web.Controllers
             return RedirectToAction("UserLab", "User");
         }
 
+        /// <summary>
+        ///  Removes ownership of a lab from a user.
+        /// </summary>
+        /// <param name="serverId">The unique identifier of the server where the lab is hosted.</param>
+        /// <param name="labId">The unique identifier of the lab which the user doesn't want to own anymore.</param>
+        /// <param name="username">The username of the user whose ownership of the lab is to be removed.</param>
+        /// <returns>An <see cref="IActionResult"/> that redirects to the appropriate page based on the outcome of the operation.</returns>
         public IActionResult RemoveOwnershipWithUsername(int serverId, string labId, string username)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
