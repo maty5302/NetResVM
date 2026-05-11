@@ -2,9 +2,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["SuperReservationSystem.sln", "./"]
+COPY ["NetResVM.sln", "./"]
 
-COPY ["SuperReservationSystem/NetResVM.csproj", "SuperReservationSystem/"]
+COPY ["NetResVM.Web/NetResVM.Web.csproj", "NetResVM.Web/"]
 COPY ["BusinessLayer/BusinessLayer.csproj", "BusinessLayer/"]
 COPY ["DataLayer/DataLayer.csproj", "DataLayer/"]
 COPY ["ApiCisco/ApiCisco.csproj", "ApiCisco/"]
@@ -14,12 +14,12 @@ COPY ["TelnetConsole/TelnetConsole.csproj", "TelnetConsole/"]
 COPY ["tests/NetResVM.UnitTests/NetResVM.UnitTests.csproj", "tests/NetResVM.UnitTests/"]
 COPY ["tests/NetResVM.IntegrationTests/NetResVM.IntegrationTests.csproj", "tests/NetResVM.IntegrationTests/"]
 
-RUN dotnet restore "SuperReservationSystem.sln"
+RUN dotnet restore "NetResVM.sln"
 
 COPY . .
 
-WORKDIR "/src/SuperReservationSystem"
-RUN dotnet publish "NetResVM.csproj" -c Release -o /app/publish /p:UseAppHost=false
+WORKDIR "/src/NetResVM.Web"
+RUN dotnet publish "NetResVM.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # 2.RUN 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
@@ -34,4 +34,4 @@ COPY --from=build /app/publish .
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
-ENTRYPOINT ["dotnet", "NetResVM.dll"]
+ENTRYPOINT ["dotnet", "NetResVM.Web.dll"]
