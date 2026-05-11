@@ -41,7 +41,7 @@ docker compose pull && docker compose up
 >Note after first login you should change the password for a stronger one!!!
 
 
-## Installation with custom made script
+## Installation without Docker
 #### 1. Download and unzip archive for your operating system
 
 #### 2. Install packages
@@ -52,9 +52,9 @@ Need to install all system requirements with your package manager before getting
 mssql-server
 mssql-tools
 unixodbc-dev
-dotnet-sdk-8.0
-aspnetcore-runtime-8.0
-dotnet-runtime-8.0
+dotnet-sdk-10.0
+aspnetcore-runtime-10.0
+dotnet-runtime-10.0
 libldap 2.5-0 or openldap 2.5-0
 ```
 #### 3. Create tables in database
@@ -148,4 +148,17 @@ The Server Selection dashboard acts as the main entry point for users to connect
 
 ![Server Selection Home](assets/readme/server-selection-online-status.png)
 
-### Managing collaborators of lab 
+### Managing collaborators of lab
+Users who own a laboratory can invite other registered users to collaborate on their network topologies. This feature is ideal for group projects and team assignments, allowing multiple students to share access to the same lab environment, manage its state (start/stop), and work together seamlessly during reserved time slots.
+
+1. Navigate to the details of lab you own.
+
+2. Click on the "Manage Collaborators" (or similar share icon) button on a specific lab you want to share.
+
+3. Search for the desired user by their username, and click to add them as a collaborator.
+
+4. To revoke access once the joint work is finished, simply click the remove button next to an existing collaborator's name in the same menu.
+
+> By default user who owns lab first can add or remove collaborators.
+
+![Manage collaborators menu](assets/readme/manage-collaborators.png)

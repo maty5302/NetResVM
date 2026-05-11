@@ -148,3 +148,18 @@ Dashboard pro výběr serveru slouží jako hlavní vstupní bod pro uživatele 
 * **Snadné rozšíření:** Speciální široké tlačítko ve spodní části umožňuje administrátorům rychle přidávat nové serverové připojení do infrastruktury.
 
 ![Výběr serveru – Online status](assets/readme/server-selection-online-status-cs.png)
+
+### Správa spolupracovníků v laboratoři
+Uživatelé, kteří vlastní laboratoř, mohou pozvat další registrované uživatele ke spolupráci na svých síťových topologiích. Tato funkce je ideální pro skupinové projekty a týmové úkoly, protože umožňuje více studentům sdílet přístup ke stejnému laboratornímu prostředí, spravovat jeho stav (spustit/zastavit) a hladce spolupracovat během vyhrazených časových úseků.
+
+1. Přejděte do podrobností laboratoře, kterou vlastníte.
+
+2. Klikněte na tlačítko „Spravovat spolupracovníky“ (nebo podobnou ikonu sdílení) u konkrétní laboratoře, kterou chcete sdílet.
+
+3. Vyhledejte požadovaného uživatele podle jeho uživatelského jména a kliknutím jej přidejte jako spolupracovníka.
+
+4. Chcete-li po dokončení společné práce odebrat přístup, stačí kliknout na tlačítko „Odstranit“ vedle jména stávajícího spolupracovníka ve stejném menu.
+
+> Ve výchozím nastavení může spolupracovníky přidávat nebo odebírat uživatel, který laboratoř vlastní jako první.
+
+![Menu Správa spolupracovníků](assets/readme/manage-collaborators-cs.png)
