@@ -1,4 +1,6 @@
-﻿namespace BusinessLayer.Models
+﻿using BusinessLayer.Enum;
+
+namespace BusinessLayer.Models
 {
     /// <summary>
     /// Represents a virtualization server configuration used for lab management.
@@ -11,9 +13,9 @@
         public required int Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the type of the server (e.g., "cisco", "eve-ng").
+        /// Gets or sets the platform type for the current context.
         /// </summary>
-        public required string ServerType { get; set; }
+        public PlatformType Platform { get; set;  }
 
         /// <summary>
         /// Gets or sets the display name of the server.

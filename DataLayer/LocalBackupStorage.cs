@@ -1,12 +1,14 @@
+using DataLayer.Interface;
+
 namespace DataLayer;
 /// <summary>
 /// Class that handels local backup storage.
 /// </summary>
-public class LocalBackupStorage
+public class LocalBackupStorage : ILocalBackupStorage
 {
     private readonly string _backupPath;
     
-    public LocalBackupStorage()
+    public LocalBackupStorage() 
     {
         _backupPath = Path.Combine(Directory.GetCurrentDirectory(), "backups");
     }
@@ -17,14 +19,14 @@ public class LocalBackupStorage
     /// <param name="serverType"> Type of the server, which is used for path </param>
     /// <param name="labId"> ID of a lab </param>
     /// <param name="fileContent"> File that needs to be saved </param>
-    public async void SaveBackup(string serverType, string labId, byte[] fileContent)
+    /// <param name="fileExtension"> File extension for the backup file </param>
+    public async void SaveBackup(string serverType, string labId, byte[] fileContent, string fileExtension)
     {
-        string extension= serverType == "CML" ? ".yaml" : ".zip";
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        string fileName = $"{serverType}-{labId}-{timestamp}{extension}";
+        string fileName = $"{serverType}-{labId}-{timestamp}{fileExtension}";
         string filePath = Path.Combine(_backupPath, serverType, labId, fileName);
 
-        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? "");
         await File.WriteAllBytesAsync(filePath, fileContent);
     }
 

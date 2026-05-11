@@ -2,6 +2,7 @@
 using BusinessLayer.Models;
 using DataLayer;
 using SimpleLogger;
+using DataLayer.Interface;
 
 namespace BusinessLayer.Services
 {
@@ -10,12 +11,18 @@ namespace BusinessLayer.Services
     /// </summary>
     public class UserLabOwnershipService
     {
-        private readonly UserLabOwnershipTableDataGateway _gateway;
+        private readonly IUserLabOwnershipTableDataGateway _gateway;
+        private readonly IUserTableDataGateway _userGateway;
         private static ILogger _logger = FileLogger.Instance;
         
-        public UserLabOwnershipService()
+        public UserLabOwnershipService(IUserLabOwnershipTableDataGateway gateway,  IUserTableDataGateway userGateway)
         {
-            _gateway = new UserLabOwnershipTableDataGateway();
+            _gateway = gateway;
+            _userGateway = userGateway;    
+        }
+        
+        public UserLabOwnershipService() : this(new UserLabOwnershipTableDataGateway(), new UserTableDataGateway())
+        {
         }
 
         /// <summary>
@@ -31,7 +38,31 @@ namespace BusinessLayer.Services
             try
             {
                 var all = new List<UserLabOwnershipModel>();
-                var table = _gateway.GetAllUserLabsByUserID(userId);
+                var table = _gateway.GetAllUserLabsByUserId(userId);
+                foreach (System.Data.DataRow row in table.Rows)
+                {
+                    all.Add(UserLabOwnershipMapper.Map(row));
+                }
+                return all;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Retrieves all user lab ownership records associated with the specified lab identifier.
+        /// </summary>
+        /// <param name="labId">The unique identifier of the lab for which to retrieve user ownership records. Cannot be null or empty.</param>
+        /// <returns>A list of user lab ownership models for the specified lab. Returns null if an error occurs during retrieval.</returns>
+        public List<UserLabOwnershipModel>? GetAllUserLabsByLabId(string labId)
+        {
+            try
+            {
+                var all = new List<UserLabOwnershipModel>();
+                var table = _gateway.GetAllUserLabsByLabId(labId);
                 foreach (System.Data.DataRow row in table.Rows)
                 {
                     all.Add(UserLabOwnershipMapper.Map(row));
@@ -59,7 +90,7 @@ namespace BusinessLayer.Services
         {
             try
             {
-                var all = _gateway.GetAllUserLabsByLabID(labId);
+                var all = _gateway.GetAllUserLabsByLabId(labId);
                 if (all.Rows.Count > 0)
                 {
                     foreach (System.Data.DataRow row in all.Rows)
@@ -93,6 +124,12 @@ namespace BusinessLayer.Services
         {
             try
             {
+                var userTable = _userGateway.GetUserById(userLabOwnership.UserId);
+                if (userTable == null || userTable.Rows.Count == 0)
+                {
+                    _logger.LogWarning($"Attempted to assign lab to non-existent user ID {userLabOwnership.UserId}.");
+                    return (false, "User does not exist.");
+                }
                 var allUserLabs = GetAllUserLabsByUserID(userLabOwnership.UserId);
                 if(allUserLabs == null)
                 {
@@ -130,6 +167,12 @@ namespace BusinessLayer.Services
         {
             try
             {
+                var userTable = _userGateway.GetUserById(model.UserId);
+                if (userTable.Rows.Count == 0)
+                {
+                    _logger.LogWarning($"Attempted to delete ownership of lab to non-existent user ID {model.UserId}.");
+                    return false;
+                }
                 _gateway.DeleteUserLabOwnership(model.UserId, model.LabId, model.ServerId);
                 _logger.Log($"User with ID {model.UserId} has been removed from ownership of lab with ID {model.LabId}.");
                 return true;

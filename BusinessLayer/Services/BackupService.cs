@@ -1,8 +1,10 @@
+using System.Runtime.CompilerServices;
 using BusinessLayer.DTOs;
+using BusinessLayer.Enum;
+using BusinessLayer.Extensions;
 using BusinessLayer.Interface;
-using BusinessLayer.Services.ApiCiscoServices;
-using BusinessLayer.Services.ApiEVEServices;
 using DataLayer;
+using DataLayer.Interface;
 using SimpleLogger;
 
 namespace BusinessLayer.Services;
@@ -12,18 +14,16 @@ namespace BusinessLayer.Services;
 /// </summary>
 public class BackupService
 {
-    private readonly ApiCiscoLabService _apiCisco;
-    private readonly ApiEVELabService _apiEve;
-    private readonly LocalBackupStorage _localBackupStorage;
-    private readonly ServerService _serverService;
+    private readonly ILocalBackupStorage _localBackupStorage;
+    private readonly IServerService _serverService;
+    private readonly IPlatformManager _platformManager;
     private readonly ILogger _logger;
 
-    public BackupService()
+    public BackupService(IPlatformManager platformManager, IServerService serverService, ILocalBackupStorage localBackupStorage)
     {
-        _apiCisco = new ApiCiscoLabService();
-        _apiEve = new ApiEVELabService();
-        _localBackupStorage = new LocalBackupStorage();
-        _serverService = new ServerService();
+        _platformManager = platformManager;
+        _localBackupStorage = localBackupStorage;
+        _serverService = serverService;
         _logger = FileLogger.Instance;
     }
 
@@ -32,85 +32,44 @@ public class BackupService
     /// </summary>
     /// <param name="serverId">The unique identifier (ID) of the server where the lab is hosted.</param>
     /// <param name="labId">The unique identifier (ID) of the lab to back up.</param>
-    /// <param name="serverType">The type of the server (e.g., CML, EVE-NG, etc.).</param>
     /// <returns>
     /// A tuple containing:
-    /// <c>backup</c> – <c>true</c> if the backup was successfully created; otherwise, <c>false</c>,
-    /// <c>Message</c> – a string message providing additional details (e.g., success or error description).
+    /// <c>backup</c> ï¿½ <c>true</c> if the backup was successfully created; otherwise, <c>false</c>,
+    /// <c>Message</c> ï¿½ a string message providing additional details (e.g., success or error description).
     /// </returns>
-    public async Task<(bool backup, string Message)> BackupLab(int serverId, string labId, string serverType)
+    public async Task<(bool backup, string Message)> BackupLab(int serverId, string labId)
     {
-        if (serverType == "CML")
+        var server = _serverService.GetServerById(serverId);
+        if (server == null)
         {
-            var file = await GetCMLLabFile(serverId, labId);
-            if (file != null)
-            {
-                _localBackupStorage.SaveBackup(serverType, labId, file);
-                return (true, "Backup successful");
-            }
+            _logger.LogError($"Backup failed. Server with ID {serverId} not found.");
+            return (false, "Server not found");
+        }
+        if(server.Platform==Enum.PlatformType.Unknown)
+        {
+            _logger.LogError($"Backup failed. Server with ID {serverId} has an unknown platform."); 
+            return (false, "Unknown platform");
+        }
+        IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
+        var settings = PlatformTypeExtensions.GetSettings(server.Platform);
 
+        var labInfo = await adapter.GetLabInfoAsync(serverId,labId);
+        if(labInfo.Lab == null)
+        {
+            _logger.LogError($"Backup failed. Lab with ID {labId} not found on server {serverId}.");
+            return (false, "Lab not found");
+        }
+        var response = await adapter.DownloadLab(serverId, labId, labInfo.Lab);
+        if(response.FileContent != null)
+        {
+            _localBackupStorage.SaveBackup(server.Platform.ToString(), labId, response.FileContent, settings.FileExtension);
+            return (true, "Backup successful");
+        }
+        else
+        {
             _logger.LogError("Backup failed. File could not be fetched.");
             return (false, "Backup failed");
         }
-        else if (serverType == "EVE")
-        {
-            var file = await GetEVELabFile(serverId, labId);
-            if (file != null)
-            {
-                _localBackupStorage.SaveBackup(serverType, labId, file);
-                return (true, "Backup successful");
-            }
-
-            _logger.LogError("Backup failed. File could not be fetched.");
-            return (false, "Backup failed");
-        }
-
-        _logger.LogError("Backup failed. Server type not recognized.");
-        return (false, "Not implemented");
-    }
-
-    /// <summary>
-    /// Asynchronously retrieves the lab file for a specific lab on a CML server.
-    /// </summary>
-    /// <param name="serverId">The unique identifier (ID) of the server hosting the lab.</param>
-    /// <param name="labId">The unique identifier (ID) of the lab to retrieve the file for.</param>
-    /// <returns>
-    /// A byte array representing the lab file if successfully retrieved; otherwise, <c>null</c> if the operation fails.
-    /// </returns>
-    private async Task<byte[]?> GetCMLLabFile(int serverId, string labId)
-    {
-        var response = await _apiCisco.DownloadLab(serverId, labId);
-        if (response.fileContent != null)
-        {
-            return response.fileContent;
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Asynchronously retrieves the lab file for a specific lab on a EVE server.
-    /// </summary>
-    /// <param name="serverId">The unique identifier (ID) of the server hosting the lab.</param>
-    /// <param name="labId">The unique identifier (ID) of the lab to retrieve the file for.</param>
-    /// <returns>
-    /// A byte array representing the lab file if successfully retrieved; otherwise, <c>null</c> if the operation fails.
-    /// </returns>
-    private async Task<byte[]?> GetEVELabFile(int serverId, string labId)
-    {
-        var lab = await _apiEve.GetLabInfoById(serverId, labId);
-        if (lab == null)
-        {
-            return null;
-        }
-
-        var response = await _apiEve.DownloadLab(lab, serverId);
-        if (response != null)
-        {
-            return response;
-        }
-
-        return null;
     }
 
     /// <summary>
@@ -125,38 +84,62 @@ public class BackupService
         var backups = _localBackupStorage.GetBackupRecords();
         var servers = _serverService.GetAllServers();
         var backupDTOs = new List<BackupDTO>();
-        if (servers == null || backups == null)
+        if (servers == null || backups == null || !backups.Any())
         {
             return backupDTOs; // Return empty list if no servers or backups found
         }
 
+
         foreach (var backup in backups)
         {
-            ServerDTO? s = null;
+            ServerDTO? matchingServer = null;
             // Find the server that matches the backup
+            System.Enum.TryParse<PlatformType>(backup.ServerType, true, out var platformType);
             foreach (var server in servers)
-            {
-                ILabModel res;
-                if (backup.ServerType == "CML")
-                    res = (await _apiCisco.GetLabInfo(server.Id, backup.LabId)).lab;
-                else
-                    res = await _apiEve.GetLabInfoById(server.Id, backup.LabId);
-                if (res != null)
+            {                
+                if (server.Platform != platformType)
+                    continue;
+
+                try
                 {
-                    s = server;
-                    break;
+                    var online = await _serverService.IsServerOnlineAsync(server.IpAddress);
+                    if (!online)
+                    {
+                        _logger.LogWarning($"BackupService - Server {server.Name} is offline, skipping lab check.");
+                        continue;
+                    }
+                    var adapter = _platformManager.GetAdapter(server.Platform);
+                    var authResult = await adapter.AuthenticateAsync(server.Id);
+                    if (!authResult.Valid)
+                    {
+                        _logger.LogWarning($"BackupService - Authentication failed for server {server.Name}: {authResult.Message}");
+                        continue;
+                    }
+
+                    //Get Lab Info
+                    var labResult = await adapter.GetLabInfoAsync(server.Id, backup.LabId);
+
+                    // If lab exists on the server, we consider this backup as valid and assign it to this server
+                    if (labResult.Lab != null)
+                    {
+                        matchingServer = server;
+                        break; 
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"BackupService - Error checking lab {backup.LabId} on server {server.Name}: {ex.Message}");
                 }
             }
 
-            if (s != null)
+            if (matchingServer != null)
             {
-                // Lab exists and has valid server = add it to the list
                 backupDTOs.Add(new BackupDTO
                 {
-                    ServerId = s.Id,
-                    ServerName = s.Name,
+                    ServerId = matchingServer.Id,
+                    ServerName = matchingServer.Name,
                     LabId = backup.LabId,
-                    ServerType = backup.ServerType,
+                    Platform = matchingServer.Platform,
                     FileName = backup.FileName,
                     FullPath = backup.FullPath,
                     CreatedAt = backup.CreatedAt
@@ -164,13 +147,13 @@ public class BackupService
             }
             else
             {
-                //move to no more existing lab
+                // Backup exists but we don't know on which server it is, we can still show it but with unknown server info
                 backupDTOs.Add(new BackupDTO
                 {
                     ServerId = -1,
                     ServerName = "Unknown",
                     LabId = backup.LabId,
-                    ServerType = backup.ServerType,
+                    Platform = platformType,
                     FileName = backup.FileName,
                     FullPath = backup.FullPath,
                     CreatedAt = backup.CreatedAt
@@ -185,35 +168,59 @@ public class BackupService
     /// Asynchronously restores a backup for a specified server and lab.
     /// </summary>
     /// <param name="serverId">The unique identifier (ID) of the server where the lab is hosted.</param>
-    /// <param name="serverType">The type of the server (e.g., CML, EVE-NG).</param>
+    /// <param name="platform">The type of the server (e.g., CML, EVE-NG).</param>
     /// <param name="labId">The unique identifier (ID) of the lab to restore the backup for.</param>
     /// <param name="fileName">The name of the backup file to restore.</param>
     /// <returns>
     /// <c>true</c> if the backup was successfully restored; otherwise, <c>false</c>.
     /// </returns>
-    public async Task<bool> RestoreBackup(int serverId, string serverType, string labId, string fileName)
+    public async Task<bool> RestoreBackup(int serverId, PlatformType platform, string labId, string fileName)
     {
-        var file = await _localBackupStorage.GetBackup(serverType, labId, fileName);
-        if (file != null)
+        try
         {
-            if (serverType == "CML")
+            var file = await _localBackupStorage.GetBackup(platform.ToString(), labId, fileName);
+            if (file == null)
             {
-                var res = await _apiCisco.ImportLab(serverId, file);
-                if (res)
-                {
-                    _localBackupStorage.DeleteBackup(serverType, labId, fileName);
-                    return true;
-                }
-
+                _logger.LogWarning($"BackupService - RestoreBackup: Backup file {fileName} not found.");
                 return false;
             }
-            else if (serverType == "EVE")
+
+            var adapter = _platformManager.GetAdapter(platform);
+            var online = await _serverService.IsServerOnlineAsync(_serverService.GetServerById(serverId)?.IpAddress ?? string.Empty);
+            if (!online)
             {
-                return await _apiEve.ImportLab(serverId, file, fileName);
+                _logger.LogError($"BackupService - RestoreBackup: Server with ID {serverId} is offline.");
+                return false;
+            }
+            
+            var authResult = await adapter.AuthenticateAsync(serverId);
+
+            if (!authResult.Valid)
+            {
+                _logger.LogError($"BackupService - RestoreBackup: Auth failed for server {serverId}. {authResult.Message}");
+                return false;
+            }
+
+            var importResult = await adapter.ImportLab(serverId, file, fileName); 
+
+            if (importResult)
+            {
+                _localBackupStorage.DeleteBackup(platform.ToString(), labId, fileName);
+
+                _logger.Log($"BackupService - RestoreBackup: Successfully restored {fileName} to server {serverId}.");
+                return true;
+            }
+            else
+            {
+                _logger.LogError($"BackupService - RestoreBackup: Adapter failed to import.");
+                return false;
             }
         }
-
-        return false;
+        catch (Exception ex)
+        {
+            _logger.LogError($"BackupService - RestoreBackup: Exception occurred - {ex.Message}");
+            return false;
+        }
     }
 
     /// <summary>
@@ -221,27 +228,27 @@ public class BackupService
     /// </summary>
     /// <param name="fileName">The name of the backup file to delete.</param>
     /// <param name="labId">The unique identifier (ID) of the lab associated with the backup.</param>
-    /// <param name="serverType">The type of the server (e.g., CML, EVE-NG) where the backup is stored.</param>
+    /// <param name="platform">The type of the server (e.g., CML, EVE-NG) where the backup is stored.</param>
     /// <returns>
     /// <c>true</c> if the backup was successfully deleted; otherwise, <c>false</c>.
     /// </returns>
-    public bool DeleteBackup(string fileName, string labId, string serverType)
+    public bool DeleteBackup(string fileName, string labId, PlatformType platform)
     {
-        return _localBackupStorage.DeleteBackup(serverType, labId, fileName);
+        return _localBackupStorage.DeleteBackup(platform.ToString(), labId, fileName);
     }
 
     /// <summary>
     /// Asynchronously downloads a backup file for a specific lab and server.
     /// </summary>
-    /// <param name="serverType">The type of the server (e.g., CML, EVE-NG, etc.) hosting the backup.</param>
+    /// <param name="platform">The type of the server (e.g., CML, EVE-NG, etc.) hosting the backup.</param>
     /// <param name="labId">The unique identifier (ID) of the lab associated with the backup.</param>
     /// <param name="fileName">The name of the backup file to download.</param>
     /// <returns>
     /// A byte array containing the backup file if successfully downloaded; otherwise, an empty byte array or <c>null</c> if an error occurs.
     /// </returns>
-    public async Task<byte[]> DownloadBackup(string serverType, string labId, string fileName)
+    public async Task<byte[]> DownloadBackup(PlatformType platform, string labId, string fileName)
     {
-        var file = await _localBackupStorage.GetBackup(serverType, labId, fileName);
+        var file = await _localBackupStorage.GetBackup(platform.ToString(), labId, fileName);
         if (file != null)
         {
             return file;

@@ -1,11 +1,7 @@
 ﻿using BusinessLayer.DTOs;
+using BusinessLayer.Enum;
 using BusinessLayer.Models;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BusinessLayer.MapperDT
 {
@@ -21,10 +17,14 @@ namespace BusinessLayer.MapperDT
         /// <returns>  A ServerModel object with values populated from the DataRow. </returns>
         public static ServerModel Map(DataRow row)
         {
+            //to remain compatible with old database, we need to parse the server type from string to enum
+            string serverType = (string)row["ServerType"];
+            System.Enum.TryParse<PlatformType>(serverType, true, out var platformType);
+
             return new ServerModel
             {
                 Id = (int)row["ServerID"],
-                ServerType = (string)row["ServerType"],
+                Platform = platformType,
                 Name = (string)row["Name"],
                 IpAddress = (string)row["IpAddress"],
                 Username = (string)row["Username"],
@@ -39,10 +39,13 @@ namespace BusinessLayer.MapperDT
         /// <returns>  A ServerModel object with values populated from the DataRow. </returns>
         public static ServerDTO MapToDTO(DataRow row)
         {
+            string serverType = (string)row["ServerType"];
+            System.Enum.TryParse<PlatformType>(serverType, true, out var platformType);
+
             return new ServerDTO
             {
                 Id = (int)row["ServerID"],
-                ServerType = (string)row["ServerType"],
+                Platform = platformType,
                 Name = (string)row["Name"],
                 IpAddress = (string)row["IpAddress"],
                 Username = (string)row["Username"],
@@ -59,7 +62,7 @@ namespace BusinessLayer.MapperDT
             return new ServerModel
             {
                 Id = dto.Id,
-                ServerType = dto.ServerType,
+                Platform = dto.Platform,
                 Name = dto.Name,
                 IpAddress = dto.IpAddress,
                 Username = dto.Username,

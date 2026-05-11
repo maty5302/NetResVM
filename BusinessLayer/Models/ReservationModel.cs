@@ -1,4 +1,6 @@
-﻿namespace BusinessLayer.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace BusinessLayer.Models
 {
     /// <summary>
     /// Represents a reservation for using a specific lab on a server by a user.
@@ -28,11 +30,13 @@
         /// <summary>
         /// Gets or sets the start time of the reservation.
         /// </summary>
+        [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
         public required DateTime ReservationStart { get; set; }
 
         /// <summary>
         /// Gets or sets the end time of the reservation.
         /// </summary>
+        [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
         public required DateTime ReservationEnd { get; set; }
     }
 

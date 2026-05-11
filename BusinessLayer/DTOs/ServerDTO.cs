@@ -1,4 +1,6 @@
-﻿namespace BusinessLayer.DTOs
+﻿using BusinessLayer.Enum;
+
+namespace BusinessLayer.DTOs
 {
     /// <summary>
     /// Represents a virtualization server configuration used for lab management DTO pattern.
@@ -11,9 +13,9 @@
         public required int Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the type of the server (e.g., "cisco", "eve-ng").
+        /// Gets or sets the type of the server (e.g., "cml", "eve").
         /// </summary>
-        public required string ServerType { get; set; }
+        public PlatformType Platform {  get; set; }
 
         /// <summary>
         /// Gets or sets the display name of the server.
@@ -29,5 +31,10 @@
         /// Gets or sets the username used to authenticate with the server.
         /// </summary>
         public required string Username { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the entity is currently online.
+        /// </summary>
+        public bool IsOnline { get; set; } 
     }
 }

@@ -1,0 +1,188 @@
+﻿@model BusinessLayer.DTOs.LabDTO
+@{
+    // Název stránky dynamicky podle modelu
+    ViewData["Title"] = (Model?.Name ?? "Unknown");
+}
+
+@if (Model == null)
+{
+    <div class="alert alert-danger">Lab information could not be loaded.</div>
+}
+else
+{
+    <h1>@Model.Name</h1>
+    <hr />
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h4>@Localizer["GeneralDetails"]</h4>
+            <p><strong>@Localizer["LabId"]:</strong> @Model.Id</p>
+            <p><strong>@Localizer["LabName"]:</strong> @Model.Name</p>
+            <p>
+                @{
+					var owners = ViewBag.Owners as IEnumerable<string>;
+                }
+                <strong>@Localizer["LabOwners"]:</strong>
+                @if (owners != null && owners.Any())
+                {
+                    @string.Join(", ", owners)
+                }
+                else
+                {
+                    <span class="text-muted"><em>@Localizer["NoneOwns"]</em></span>
+                }
+            </p>
+            @{
+                string badgeClass = (Model.Status ?? "").ToUpper() switch
+                {
+                    "STARTED" or "RUNNING" => "bg-success", // Green
+                    "STOPPED" => "bg-danger",               // Red
+                    "UNKNOWN" => "bg-warning text-dark",    // Yellow
+                    _ => "bg-secondary"                     // Gray (Fallback for anything else)
+                };                     
+            }
+
+            <p><strong>@Localizer["State"]:</strong> 
+                @if (Model.Status.ToLower() == "started" || Model.Status.ToLower() == "running")
+                {
+                    <span class="badge @badgeClass mb-2">@Localizer["StartedState"]</span>
+                    <br/>
+                }
+                else if(Model.Status.ToLower() == "stopped")
+                {
+                    <span class="badge @badgeClass mb-2">@Localizer["StoppedState"]</span>
+                    <br/>
+                }
+                else
+                {
+                    <span class="badge @badgeClass mb-2">@Localizer["UnknownState"]</span>
+                    <br/>
+                }
+                </p>
+            
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <p><strong>@Localizer["DescriptionLab"]:</strong> @Model.Description</p>
+            }
+        </div>
+        
+        <div class="col-md-6">
+            <h4>@Localizer["PlatformSpecifics"]</h4>
+            @* Zde se automaticky vypíše Path (pro EVE) nebo LinkCount (pro CML) atd. *@
+            @if (Model.Metadata != null && Model.Metadata.Any())
+            {
+                <ul class="list-unstyled">
+                    @foreach (var meta in Model.Metadata)
+                    {
+                        <li><strong>@meta.Key:</strong> @meta.Value</li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+
+    @* Akční tlačítka - Všechny přesměrovány na PlatformController *@
+    <form method="post">    
+        <div class="mb-3">
+            <div class="btn-group mb-2" role="group">
+                <button type="submit" class="btn btn-secondary"
+                        formaction="@Url.Action("LabList", "Platform", new { serverId = ViewBag.ServerId })">
+                    <i class="bi bi-arrow-left-circle"></i> @Localizer["BackToLabList"]
+                </button>
+                <button type="submit" class="btn btn-info"
+                        formaction="@Url.Action("LabNodeList", "Platform", new { serverId = ViewBag.ServerId, labId = Model.Id })">
+                    <i class="bi bi-diagram-3"></i> @Localizer["ShowNodes"]
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-3">
+           
+            <div class="btn-group mb-2" role="group">  
+                @if (ViewBag.UserOwn == true || User.IsInRole("Admin"))
+                {
+                <button type="submit" class="btn btn-primary"
+                        formaction="@Url.Action("MakeBackup", "Backup", new { serverId = ViewBag.ServerId, labId = Model.Id, serverType = ViewBag.PlatformName, fromServer = true })">
+                    <i class="bi bi-cloud-arrow-up"></i> @Localizer["BackupLab"]
+                </button>
+                <button type="submit" class="btn btn-primary"
+                        formaction="@Url.Action("DownloadLab", "Platform", new { serverId = ViewBag.ServerId, labId = Model.Id })">
+                    <i class="bi bi-download"></i> @Localizer["DownloadLab"]
+                </button>
+                <button type="submit" class="btn btn-primary"
+                        formaction="@Url.Action("Create", "Reservation", new { selectedServer = ViewBag.ServerId, labId = Model.Id })">
+                    <i class="bi bi-calendar-check"></i> @Localizer["ReserveLab"]
+                </button>
+                
+                    
+                }
+                
+                @if (ViewBag.MainOwner == true || User.IsInRole("Admin"))
+                {
+                    <button type="button" class="btn btn-primary"
+                            data-bs-toggle="modal" data-bs-target="#manageCollaboratorsModal">
+                        <i class="bi bi-person-x"></i> @Localizer["ManageCollaborators"]
+                    </button>
+                }
+                @* Vlastnictví laboratoře *@
+                @if (ViewBag.Owned == false)
+                {
+                    <button type="submit" class="btn btn-primary"
+                            formaction="@Url.Action("OwnLab", "User", new { serverId = ViewBag.ServerId, labId = Model.Id })">
+                        <i class="bi bi-person-plus"></i> @Localizer["OwnLab"]
+                    </button>
+                }
+            </div>
+        </div>
+
+        @* Pokud uživatel laboratoř vlastní, nebo je admin, může s ní manipulovat *@
+        @if (ViewBag.UserOwn == true || User.IsInRole("Admin"))
+        {
+            <div class="mb-3">
+                <div class="btn-group mb-2" role="group">
+                    <button type="submit" class="btn btn-success"
+                            formaction="@Url.Action("StartLab", "Platform", new { serverId = ViewBag.ServerId, labId = Model.Id })">
+                        <i class="bi bi-play-circle"></i> @Localizer["StartLab"]
+                    </button>
+                    <button type="submit" class="btn btn-warning"
+                            formaction="@Url.Action("StopLab", "Platform", new { serverId = ViewBag.ServerId, labId = Model.Id })">
+                        <i class="bi bi-stop-circle"></i> @Localizer["StopLab"]
+                    </button>
+                </div>
+            </div>
+        }
+
+        @* Práva pouze pro Admina *@
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="mb-3">
+                <button type="submit" class="btn btn-danger"
+                        formaction="@Url.Action("DeleteLab", "Platform", new { serverId = ViewBag.ServerId, labId = Model.Id })"
+                        data-confirm="@Localizer["DeleteConfirmLab"]"
+                        onclick="return confirm(this.getAttribute('data-confirm'));">
+                    <i class="bi bi-trash"></i> @Localizer["DeleteLab"]
+                </button>
+            </div>
+        }
+    </form>
+}
+
+<partial name="ManageCollaboratorModal" model="Model" />
+
+@section Scripts {
+    <script>
+        setInterval(async function () {
+            try {
+                const response = await fetch('@Url.Action("CheckServerStatus", "Platform", new { serverId = ViewBag.ServerId })');
+                const data = await response.json();
+
+                if (data.isOnline === false) {
+                    window.location.href = '@Url.Action("Index", "Home")?error=connection_lost';
+                }
+            } catch (error) {
+                console.error("Status check failed", error);
+            }
+        }, 15000);
+    </script>
+}
+

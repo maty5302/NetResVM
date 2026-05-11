@@ -1,0 +1,118 @@
+@model List<BusinessLayer.DTOs.LabDTO>
+@{
+    ViewData["Title"] = ViewBag.ServerName ?? "Labs";
+}
+
+<h1>@(ViewBag.ServerName ?? "Labs")</h1>
+<hr />
+
+@if (User.Identity != null && User.IsInRole("Admin"))
+{
+    <form method="post" enctype="multipart/form-data" action="@Url.Action("ImportLab", "Platform", new { serverID = ViewBag.ServerId })">
+        <div class="row mb-3">
+            <div class="col-md-12 d-flex align-items-center">
+                <div class="flex-grow-1 me-3">
+                    <input type="file" class="form-control" id="fileUpload" name="file" accept=".yaml, .yml, .zip" />
+                </div>
+                <button type="submit" class="btn btn-primary">@Localizer["ImportLab"]</button>
+            </div>
+        </div>
+    </form>
+}
+<br />
+
+<div class="row">
+    @if (Model != null && Model.Count > 0)
+    {
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            var lab = Model[i];
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
+                <div class="card flex-fill d-flex flex-column">
+                    @* Odkaz nyní směřuje na sjednocený PlatformController *@
+                    <a href="@Url.Action("LabInfo", "Platform", new { serverId = ViewBag.ServerId, labId = lab.Id })" class="card-link text-decoration-none text-body">
+                        <div class="card-body" style="height: 175px;">
+                            <h5 class="card-title" title="@lab.Name">@lab.Name</h5>
+                            <hr />
+                            
+                            @* Základní vlastnosti ze společného DTO *@
+
+                             @{
+                                 string badgeClass = (lab.Status ?? "").ToUpper() switch
+                                 {
+                                     "STARTED" or "RUNNING" => "bg-success", // Green
+                                     "STOPPED" => "bg-danger",               // Red
+                                     "UNKNOWN" => "bg-warning text-dark",    // Yellow
+                                     _ => "bg-secondary"                     // Gray (Fallback for anything else)
+                                 };                     
+                             }
+                            
+                            @if (lab.Status.ToLower() == "started" || lab.Status.ToLower() == "running")
+                            {
+                                <span class="badge @badgeClass mb-2">@Localizer["StartedState"]</span>
+                                <br/>
+                            }
+                            else if(lab.Status.ToLower() == "stopped")
+                            {
+                                <span class="badge @badgeClass mb-2">@Localizer["StoppedState"]</span>
+                                <br/>
+                            }
+                            else
+                            {
+                                <span class="badge @badgeClass mb-2">@Localizer["UnknownState"]</span>
+                                <br/>
+                            }
+                            @* Specifické vlastnosti z Metadata (pokud existují) *@
+                            @if (lab.Metadata.ContainsKey("LastModified") && !string.IsNullOrEmpty(lab.Metadata["LastModified"]))
+                            {
+                                <small class="text-muted d-block">@Localizer["ModifiedLab"]: @lab.Metadata["LastModified"]</small>
+                            }
+                            
+                            @if (lab.Metadata.ContainsKey("NodeCount"))
+                            {
+                                <small class="text-muted d-block">@Localizer["NodesCount"]: @lab.Metadata["NodeCount"]</small>
+                            }
+                            
+                            @* Ukázka pro EVE-NG, kdyby tam mělo jiná data *@
+                            @if (lab.Metadata.ContainsKey("Author"))
+                            {
+                                <small class="text-muted d-block">@Localizer["AuthorLab"]: @lab.Metadata["Author"]</small>
+                            }
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            @* Zalamování řádků *@
+            @if ((i + 1) % 4 == 0)
+            {
+                <div class="w-100 d-none d-lg-block"></div>
+            }
+        }
+    }
+    else
+    {
+        <div class="col-12 text-center mt-4">
+            <div class="alert alert-info" role="alert">
+                No labs available on this server.
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        setInterval(async function () {
+            try {
+                const response = await fetch('@Url.Action("CheckServerStatus", "Platform", new { serverId = ViewBag.ServerId })');
+                const data = await response.json();
+
+                if (data.isOnline === false) {
+                    window.location.href = '@Url.Action("Index", "Home")?error=connection_lost';
+                }
+            } catch (error) {
+                console.error("Status check failed", error);
+            }
+        }, 15000);
+    </script>
+}

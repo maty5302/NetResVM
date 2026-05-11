@@ -1,0 +1,84 @@
+name: Tests
+on:
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev, main, release-* ]
+
+jobs:
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore
+      run: dotnet restore NetResVM.sln
+
+    - name: Build
+      run: dotnet build NetResVM.sln --no-restore --configuration Release
+
+    - name: Test with coverage
+      run: dotnet test NetResVM.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --filter "Category!=Integration"
+
+    - name: Install ReportGenerator
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+    - name: Generate coverage report
+      run: |
+        reportgenerator \
+          -reports:**/coverage.cobertura.xml \
+          -targetdir:coverage \
+          -reporttypes:Cobertura
+
+    - name: Upload unit test coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: coverage/Cobertura.xml
+        flags: unittests
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore
+      run: dotnet restore NetResVM.sln
+
+    - name: Build
+      run: dotnet build NetResVM.sln --no-restore --configuration Release
+
+    # Zde bylo přidáno sbírání coverage (--collect)
+    - name: Run integration tests with coverage
+      run: |
+        dotnet test NetResVM.sln \
+        --no-build --configuration Release \
+        --filter "Category=Integration" \
+        --collect:"XPlat Code Coverage"
+
+    # Codecov si sám najde vygenerované XML soubory a pošle je
+    - name: Upload integration test coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: integrationtests

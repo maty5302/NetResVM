@@ -1,0 +1,55 @@
+﻿@using BusinessLayer.Enum
+@model BusinessLayer.Models.ServerModel
+@{
+    ViewData["Title"] = @Localizer["AddNewServ"];
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>@ViewData["Title"]</h1>
+            <hr />
+            
+            <form method="post" class="p-4 border rounded shadow-sm">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold" asp-for="Platform">@Localizer["ServerType"]:</label>
+                    <select asp-for="Platform" class="form-select" asp-items="@(Html.GetEnumSelectList<PlatformType>().Where(e => e.Value != "0"))">
+                        <option value="">-- @Localizer["SelectPlatform"] --</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold" asp-for="IpAddress">@Localizer["IPadd"]:</label>       
+                    <input type="text" class="form-control" value="https://" asp-for="IpAddress" required />
+                </div>
+             
+                <div class="mb-3">
+                    <label class="form-label fw-bold" asp-for="Name">@Localizer["Name"]:</label>
+                    <input type="text" class="form-control" asp-for="Name" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold" asp-for="Username">@Localizer["Username"]:</label>
+                    <input type="text" class="form-control" asp-for="Username" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold" asp-for="Password">@Localizer["Password"]:</label>
+                    <input type="password" class="form-control" asp-for="Password" required />
+                </div>
+
+                <hr class="my-4" />
+
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-outline-secondary" type="submit" formaction="@Url.Action("TestConnection", "Server")">
+                        <i class="bi bi-wifi"></i> @Localizer["TestConn"]
+                    </button>
+                    <button class="btn btn-primary" type="submit" formaction="@Url.Action("AddTestedConnection", "Server")">
+                        <i class="bi bi-plus-circle"></i> @Localizer["AddNewServ"]
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

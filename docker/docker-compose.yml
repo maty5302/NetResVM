@@ -1,0 +1,50 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql-server-2022
+
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD}
+
+    ports:
+      - "1433:1433"
+
+    volumes:
+      - mssql_data:/var/opt/mssql
+    command: >
+      /bin/bash -c "
+        /opt/mssql/bin/sqlservr &
+        echo 'Waiting for SQL Server startup...' &&
+        sleep 30s &&
+        echo 'Downloading SQL script from GitHub...' &&
+        wget -O /tmp/init.sql https://raw.githubusercontent.com/maty5302/NetResVM/dev/assets/SQLCreateTablesBc.sql &&
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD}' -i /tmp/init.sql -C &&
+        echo 'Database initialized.' &&
+        wait
+      "
+
+    restart: unless-stopped
+
+  netresvm:
+    image: ghcr.io/maty5302/netresvm:latest # Use the latest image from GitHub Container Registry or dev branch for testing
+    container_name: netresvm-app
+
+    depends_on:
+      - mssql
+
+    ports:
+      - "8080:8080"
+      - "2323:2323"
+
+    environment:
+        - ConnectionStrings__DefaultConnection=Server=mssql;Database=DB_NetResVM;User Id=${DB_USER};Password=${DB_PASSWORD};Encrypt=False;TrustServerCertificate=True;
+        - ASPNETCORE_ENVIRONMENT=Production
+    volumes:
+      - dp-keys:/root/.aspnet/DataProtection-Keys
+
+    restart: unless-stopped
+
+volumes:
+  mssql_data:
+  dp-keys:

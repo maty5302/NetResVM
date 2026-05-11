@@ -1,0 +1,528 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="Username" xml:space="preserve">
+        <value>Uživatelské jméno</value>
+    </data>
+    <data name="Password" xml:space="preserve">
+        <value>Heslo</value>
+    </data>
+    <data name="Login" xml:space="preserve">
+        <value>Přihlášení</value>
+    </data>
+    <data name="LoginButton" xml:space="preserve">
+        <value>Přihlásit se</value>
+    </data>
+    <data name="HomeTitle" xml:space="preserve">
+        <value>Výběr serveru</value>
+    </data>
+    <data name="ConnectButton" xml:space="preserve">
+        <value>Připojit k serveru</value>
+    </data>
+    <data name="Home" xml:space="preserve">
+        <value>Domů</value>
+    </data>
+    <data name="ReservationLayout" xml:space="preserve">
+        <value>Rezervace</value>
+    </data>
+    <data name="MyLabLayout" xml:space="preserve">
+        <value>Moje laboratoře</value>
+    </data>
+    <data name="BackupsLayout" xml:space="preserve">
+        <value>Zálohy</value>
+    </data>
+    <data name="LogoutLayout" xml:space="preserve">
+        <value>Odhlásit se</value>
+    </data>
+    <data name="ServerType" xml:space="preserve">
+        <value>Platforma</value>
+    </data>
+    <data name="State" xml:space="preserve">
+        <value>Stav</value>
+    </data>
+    <data name="SettingsTitle" xml:space="preserve">
+        <value>Nastavení</value>
+    </data>
+    <data name="ChangePassLDAP" xml:space="preserve">
+        <value>Změna hesla pro uživatele LDAP je nedostupná</value>
+    </data>
+    <data name="ManageUsers" xml:space="preserve">
+        <value>Správa uživatelů</value>
+    </data>
+    <data name="AddUser" xml:space="preserve">
+        <value>Přidat uživatele</value>
+    </data>
+    <data name="AuthType" xml:space="preserve">
+        <value>Typ autorizace</value>
+    </data>
+    <data name="localhost" xml:space="preserve">
+        <value>Místní</value>
+    </data>
+    <data name="Active" xml:space="preserve">
+        <value>Povolen</value>
+    </data>
+    <data name="ChangePass" xml:space="preserve">
+        <value>Změna hesla</value>
+    </data>
+    <data name="OldPass" xml:space="preserve">
+        <value>Původní heslo</value>
+    </data>
+    <data name="NewPass" xml:space="preserve">
+        <value>Nové heslo</value>
+    </data>
+    <data name="ConfirmNewPass" xml:space="preserve">
+        <value>Potvrdit nové heslo</value>
+    </data>
+    <data name="Role" xml:space="preserve">
+        <value>Role</value>
+    </data>
+    <data name="DeleteButton" xml:space="preserve">
+        <value>Smazat</value>
+    </data>
+    <data name="DeactivateButton" xml:space="preserve">
+        <value>Zakázat</value>
+    </data>
+    <data name="Activate" xml:space="preserve">
+        <value>Povolit</value>
+    </data>
+    <data name="NewReservation" xml:space="preserve">
+        <value>Vytvořit novou rezervaci</value>
+    </data>
+    <data name="MyReservations" xml:space="preserve">
+        <value>Moje rezervace</value>
+    </data>
+    <data name="SelectView" xml:space="preserve">
+        <value>Vyber zobrazení</value>
+    </data>
+    <data name="ListView" xml:space="preserve">
+        <value>Seznam</value>
+    </data>
+    <data name="MonthView" xml:space="preserve">
+        <value>Kalendář (aktuální měsíc)</value>
+    </data>
+    <data name="PlannedReservations" xml:space="preserve">
+        <value>Plánované rezervace</value>
+    </data>
+    <data name="Lab" xml:space="preserve">
+        <value>Laboratoř</value>
+    </data>
+    <data name="FromTime" xml:space="preserve">
+        <value>Od</value>
+    </data>
+    <data name="ToTime" xml:space="preserve">
+        <value>Do</value>
+    </data>
+    <data name="User" xml:space="preserve">
+        <value>Uživatel</value>
+    </data>
+    <data name="Export" xml:space="preserve">
+        <value>Exportovat</value>
+    </data>
+    <data name="Server" xml:space="preserve">
+        <value>Server</value>
+    </data>
+    <data name="Monday" xml:space="preserve">
+        <value>Pondělí</value>
+    </data>
+    <data name="Tuesday" xml:space="preserve">
+        <value>Úterý</value>
+    </data>
+    <data name="Wednesday" xml:space="preserve">
+        <value>Středa</value>
+    </data>
+    <data name="Thursday" xml:space="preserve">
+        <value>Čtvrtek</value>
+    </data>
+    <data name="Friday" xml:space="preserve">
+        <value>Pátek</value>
+    </data>
+    <data name="Saturday" xml:space="preserve">
+        <value>Sobota</value>
+    </data>
+    <data name="Sunday" xml:space="preserve">
+        <value>Neděle</value>
+    </data>
+    <data name="SelectLab" xml:space="preserve">
+        <value>Vyber laboratoř...</value>
+    </data>
+    <data name="SelectServer" xml:space="preserve">
+        <value>Vyber server...</value>
+    </data>
+    <data name="NoReservation" xml:space="preserve">
+        <value>Žádné plánované rezervace</value>
+    </data>
+    <data name="ExpiredReservations" xml:space="preserve">
+        <value>Vypršelé rezervace</value>
+    </data>
+    <data name="ExpiredResWarning" xml:space="preserve">
+        <value>Rezervace, jejichž platnost vypršela, se po 6 měsících automaticky smažou</value>
+    </data>
+    <data name="NoExpired" xml:space="preserve">
+        <value>Nejsou k dispozici žádné rezervace s prošlou platností</value>
+    </data>
+    <data name="RemoveOwnership" xml:space="preserve">
+        <value>Odebrat vlastnictví</value>
+    </data>
+    <data name="NoOwnedLab" xml:space="preserve">
+        <value>Zatím nevlastníš žádné laboratoře.</value>
+    </data>
+    <data name="Name" xml:space="preserve">
+        <value>Jméno</value>
+    </data>
+    <data name="IPadd" xml:space="preserve">
+        <value>IP adresa serveru nebo URL</value>
+    </data>
+    <data name="EditServer" xml:space="preserve">
+        <value>Upravit server</value>
+    </data>
+    <data name="TestConn" xml:space="preserve">
+        <value>Ověřit připojení</value>
+    </data>
+    <data name="SaveChanges" xml:space="preserve">
+        <value>Uložit změny</value>
+    </data>
+    <data name="placeholderPass" xml:space="preserve">
+        <value>(Nechte prázdné, pokud chcete zachovat stávající)</value>
+    </data>
+    <data name="AddNewServ" xml:space="preserve">
+        <value>Přidat nový server</value>
+    </data>
+    <data name="SelectPlatform" xml:space="preserve">
+        <value>Vyber platformu</value>
+    </data>
+    <data name="ManageBackup" xml:space="preserve">
+        <value>Správa záloh</value>
+    </data>
+    <data name="NoBackups" xml:space="preserve">
+        <value>Nebyly nalezeny žádné zálohy</value>
+    </data>
+    <data name="CreatedAt" xml:space="preserve">
+        <value>Vytvořeno dne</value>
+    </data>
+    <data name="Actions" xml:space="preserve">
+        <value>Akce</value>
+    </data>
+    <data name="ServerName" xml:space="preserve">
+        <value>Jméno serveru</value>
+    </data>
+    <data name="MessageWarningRestoreBackup" xml:space="preserve">
+        <value>Opravdu chcete tuto zálohu obnovit? Tato operace přepíše aktuální stav laboratoře.</value>
+    </data>
+    <data name="MessageWarningDeleteBackup" xml:space="preserve">
+        <value>Opravdu chcete tuto zálohu smazat? Tato akce je nevratná!</value>
+    </data>
+    <data name="ImportLab" xml:space="preserve">
+        <value>Importovat laboratoř</value>
+    </data>
+    <data name="StoppedState" xml:space="preserve">
+        <value>Zastaveno</value>
+    </data>
+    <data name="StartedState" xml:space="preserve">
+        <value>V provozu </value>
+    </data>
+    <data name="UnknownState" xml:space="preserve">
+        <value>Neznámý</value>
+    </data>
+    <data name="ModifiedLab" xml:space="preserve">
+        <value>Upraveno</value>
+    </data>
+    <data name="NodesCount" xml:space="preserve">
+        <value>Počet uzlů</value>
+    </data>
+    <data name="AuthorLab" xml:space="preserve">
+        <value>Autor</value>
+    </data>
+    <data name="LabInfo" xml:space="preserve">
+        <value>Info o laboratoři</value>
+    </data>
+    <data name="GeneralDetails" xml:space="preserve">
+        <value>Obecné informace</value>
+    </data>
+    <data name="LabId" xml:space="preserve">
+        <value>ID laboratoře</value>
+    </data>
+    <data name="LabName" xml:space="preserve">
+        <value>Jméno laboratoře</value>
+    </data>
+    <data name="NoneOwns" xml:space="preserve">
+        <value>Nikdo</value>
+    </data>
+    <data name="LabOwners" xml:space="preserve">
+        <value>Vlastníci laboratoří</value>
+    </data>
+    <data name="DescriptionLab" xml:space="preserve">
+        <value>Popis laboratoře</value>
+    </data>
+    <data name="PlatformSpecifics" xml:space="preserve">
+        <value>Specifikace platformy</value>
+    </data>
+    <data name="BackToLabList" xml:space="preserve">
+        <value>Zpět na výpis laboratoří</value>
+    </data>
+    <data name="ShowNodes" xml:space="preserve">
+        <value>Zobrazit uzly</value>
+    </data>
+    <data name="BackupLab" xml:space="preserve">
+        <value>Zálohovat laboratoř</value>
+    </data>
+    <data name="DownloadLab" xml:space="preserve">
+        <value>Stáhnout laboratoř</value>
+    </data>
+    <data name="ReserveLab" xml:space="preserve">
+        <value>Rezervovat laboratoř</value>
+    </data>
+    <data name="AddCollaborator" xml:space="preserve">
+        <value>Přidat spolupracovníka</value>
+    </data>
+    <data name="OwnLab" xml:space="preserve">
+        <value>Vlastnit laboratoř</value>
+    </data>
+    <data name="StartLab" xml:space="preserve">
+        <value>Zapnout laboratoř</value>
+    </data>
+    <data name="StopLab" xml:space="preserve">
+        <value>Zastavit laboratoř</value>
+    </data>
+    <data name="DeleteLab" xml:space="preserve">
+        <value>Smazat laboratoř</value>
+    </data>
+    <data name="addcollabenterusername" xml:space="preserve">
+        <value>Zadejte uživatelské jméno osoby, které chcete udělit přístup k této laboratoři</value>
+    </data>
+    <data name="CancelB" xml:space="preserve">
+        <value>Zrušit</value>
+    </data>
+    <data name="DeleteConfirmLab" xml:space="preserve">
+        <value>Opravdu chcete tuto laboratoř trvale smazat?</value>
+    </data>
+    <data name="AccessDenied" xml:space="preserve">
+        <value>Přístup odepřen. Chcete-li tuto funkci použít, přihlaste se.</value>
+    </data>
+    <data name="BackupSuccess" xml:space="preserve">
+        <value>Zálohování proběhlo úspěšně.</value>
+    </data>
+    <data name="BackupFailed" xml:space="preserve">
+        <value>Zálohování se nezdařilo.</value>
+    </data>
+    <data name="BackupRestoreFailed" xml:space="preserve">
+        <value>Obnovení se nezdařilo</value>
+    </data>
+    <data name="BackupRestoreSuccess" xml:space="preserve">
+        <value>Obnovení laboratoře proběhlo úspěšně.</value>
+    </data>
+    <data name="BackupRestoreFailNotOwned" xml:space="preserve">
+        <value>Nelze obnovit zálohu laboratoře... Tato laboratoř není ve vašem vlastnictví.</value>
+    </data>
+    <data name="BackupDeleteFailNotOwned" xml:space="preserve">
+        <value>Nelze smazat zálohu laboratoře... Tato laboratoř není ve vašem vlastnictví.</value>
+    </data>
+    <data name="BackupDeleteSuccess" xml:space="preserve">
+        <value>Záloha byla smazána.</value>
+    </data>
+    <data name="BackupDeleteFailed" xml:space="preserve">
+        <value>Smazání zálohy se nezdařilo.</value>
+    </data>
+    <data name="BackupDownloadFailed" xml:space="preserve">
+        <value>Stažení zálohy se nezdařilo.</value>
+    </data>
+    <data name="ConnectionLost" xml:space="preserve">
+        <value>Připojení bylo přerušeno! Během vaší práce došlo k výpadku serveru.</value>
+    </data>
+    <data name="InvalidCredentials" xml:space="preserve">
+        <value>Neplatné přihlašovací údaje</value>
+    </data>
+    <data name="ServerNotFound" xml:space="preserve">
+        <value>Server nebyl nalezen.</value>
+    </data>
+    <data name="UnsupportedPlatform" xml:space="preserve">
+        <value>Nepodporovaná platforma.</value>
+    </data>
+    <data name="AuthFailed" xml:space="preserve">
+        <value>Ověření se nezdařilo:</value>
+    </data>
+    <data name="LabWithIDNotFound" xml:space="preserve">
+        <value>Laboratoř s ID nebyla nalezena.</value>
+    </data>
+    <data name="UserNotFound" xml:space="preserve">
+        <value>Uživatel neexistuje.</value>
+    </data>
+    <data name="UserCollaboratorAdded" xml:space="preserve">
+        <value>Uživatel byl úspěšně přidán jako spolupracovník.</value>
+    </data>
+    <data name="FileNotFound" xml:space="preserve">
+        <value>Soubor nenalezen.</value>
+    </data>
+    <data name="LabImportSuccess" xml:space="preserve">
+        <value>Laboratoř byla úspěšně importována.</value>
+    </data>
+    <data name="AnErrorOccured" xml:space="preserve">
+        <value>Nastala chyba. Kontaktujte administrátora.</value>
+    </data>
+    <data name="LabDeleteSuccess" xml:space="preserve">
+        <value>Laboratoř byla smazána.</value>
+    </data>
+    <data name="LabDeleteError" xml:space="preserve">
+        <value>Při mazání laboratoře došlo k chybě.</value>
+    </data>
+    <data name="LabStartedSuccess" xml:space="preserve">
+        <value>Laboratoř spuštěna.</value>
+    </data>
+    <data name="LabStartError" xml:space="preserve">
+        <value>Při spouštění laboratoře došlo k chybě.</value>
+    </data>
+    <data name="LabStoppedSuccess" xml:space="preserve">
+        <value>Laboratoř zastavena.</value>
+    </data>
+    <data name="LabStopError" xml:space="preserve">
+        <value>Při zastavování laboratoře došlo k chybě.</value>
+    </data>
+    <data name="LabNodesError" xml:space="preserve">
+        <value>Při načítání uzlů došlo k chybě.</value>
+    </data>
+    <data name="ServerOffline" xml:space="preserve">
+        <value>Server je mimo provoz.</value>
+    </data>
+    <data name="NoLabsFound" xml:space="preserve">
+        <value>Pro vybraný server nebyly nalezeny žádné laboratoře.</value>
+    </data>
+    <data name="ReservationDeleted" xml:space="preserve">
+        <value>Rezervace smazána.</value>
+    </data>
+    <data name="SomethingWrong" xml:space="preserve">
+        <value>Došlo k chybě. Podívejte se do protokolu.</value>
+    </data>
+    <data name="ServerNotSelected" xml:space="preserve">
+        <value>Nevybrán server.</value>
+    </data>
+    <data name="LabNotSelected" xml:space="preserve">
+        <value>Nevybrána laboratoř.</value>
+    </data>
+    <data name="InvalidTime" xml:space="preserve">
+        <value>Neplatný čas rezervace.</value>
+    </data>
+    <data name="ResOneHour" xml:space="preserve">
+        <value>Rezervace musí být minimálně na 1 hodinu.</value>
+    </data>
+    <data name="ResSameDay" xml:space="preserve">
+        <value>Začátek a konec rezervace musí být ve stejný den.</value>
+    </data>
+    <data name="UserNotSelected" xml:space="preserve">
+        <value>Uživatel nebyl vybrán.</value>
+    </data>
+    <data name="ReservationCreated" xml:space="preserve">
+        <value>Rezervace byla vytvořena.</value>
+    </data>
+    <data name="ReservationExistsError" xml:space="preserve">
+        <value>V současné době již existuje rezervace nebo došlo k chybě.</value>
+    </data>
+    <data name="ServerRemoved" xml:space="preserve">
+        <value>Server smazán.</value>
+    </data>
+    <data name="ServerNotExist" xml:space="preserve">
+        <value>Server neexistuje nebo došlo k chybě. Podívejte se do protokolu.</value>
+    </data>
+    <data name="ServerUpdated" xml:space="preserve">
+        <value>Server aktualizován.</value>
+    </data>
+    <data name="ServerNotUpdated" xml:space="preserve">
+        <value>Server nelze aktualizovat. Viz protokol.</value>
+    </data>
+    <data name="YouNeedPassword" xml:space="preserve">
+        <value>K otestování připojení potřebujete heslo.</value>
+    </data>
+    <data name="ConnectionSuccess" xml:space="preserve">
+        <value>Připojení proběhlo úspěšně.</value>
+    </data>
+    <data name="ConnectionFailed" xml:space="preserve">
+        <value>Připojení se nezdařilo.</value>
+    </data>
+    <data name="ServerAdded" xml:space="preserve">
+        <value>Server byl úspěšně přidán.</value>
+    </data>
+    <data name="ServerNotAdded" xml:space="preserve">
+        <value>Server nelze přidat. Viz protokol.</value>
+    </data>
+    <data name="LabOwnedSuccess" xml:space="preserve">
+        <value>Laboratoř přiřazena.</value>
+    </data>
+    <data name="LabOwnedRemoved" xml:space="preserve">
+        <value>Vlastnictví laboratoře bylo úspěšně odstraněno.</value>
+    </data>
+    <data name="LabOwnedRemoveError" xml:space="preserve">
+        <value>Vlastnictví laboratoře nebylo možné odstranit.</value>
+    </data>
+    <data name="OldPassIcorrect" xml:space="preserve">
+        <value>Staré heslo je nesprávné.</value>
+    </data>
+    <data name="PasswordNotMatch" xml:space="preserve">
+        <value>Hesla se neshodují.</value>
+    </data>
+    <data name="PasswordChanged" xml:space="preserve">
+        <value>Heslo bylo úspěšně změněno.</value>
+    </data>
+    <data name="PasswordError" xml:space="preserve">
+        <value>Heslo se nepodařilo změnit.</value>
+    </data>
+    <data name="PasswordRequired" xml:space="preserve">
+        <value>Pro místní účet je nutné zadat heslo.</value>
+    </data>
+    <data name="UserAddedSuccess" xml:space="preserve">
+        <value>Uživatel byl úspěšně přidán.</value>
+    </data>
+    <data name="UserAddedFail" xml:space="preserve">
+        <value>Uživatel nemohl být přidán.</value>
+    </data>
+    <data name="AccessDeniedAdmin" xml:space="preserve">
+        <value>Přístup odepřen. Je vyžadována role správce.</value>
+    </data>
+    <data name="UserDeactivated" xml:space="preserve">
+        <value>Uživatel byl úspěšně deaktivován.</value>
+    </data>
+    <data name="UserDeactivatedFail" xml:space="preserve">
+        <value>Uživatel nemohl být deaktivován.</value>
+    </data>
+    <data name="UserActivated" xml:space="preserve">
+        <value>Uživatel byl úspěšně aktivován.</value>
+    </data>
+    <data name="UserActivatedFail" xml:space="preserve">
+        <value>Uživatel nemohl být aktivován.</value>
+    </data>
+    <data name="UserRemoved" xml:space="preserve">
+        <value>Uživatel byl úspěšně odstraněn.</value>
+    </data>
+    <data name="UserRemovedFail" xml:space="preserve">
+        <value>Uživatel nemohl být odstraněn. Viz protokol.</value>
+    </data>
+    <data name="ManageCollaborators" xml:space="preserve">
+        <value>Správa spolupracovníků</value>
+    </data>
+    <data name="CurrentCollaborators" xml:space="preserve">
+        <value>Spolupracovníci</value>
+    </data>
+    <data name="RemoveCollab" xml:space="preserve">
+        <value>Odebrat</value>
+    </data>
+    <data name="NoCollaboratorsYet" xml:space="preserve">
+        <value>Zatím nemáte žádného spolupracovníka</value>
+    </data>
+    <data name="Close" xml:space="preserve">
+        <value>Zavřít</value>
+    </data>
+</root>

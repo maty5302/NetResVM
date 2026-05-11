@@ -1,22 +1,31 @@
-﻿using DataLayer;
+﻿using System.Net.NetworkInformation;
+using DataLayer;
 using BusinessLayer.Models;
 using BusinessLayer.MapperDT;
 using SimpleLogger;
 using BusinessLayer.DTOs;
+using BusinessLayer.Enum;
+using BusinessLayer.Extensions;
+using BusinessLayer.Interface;
+using DataLayer.Interface;
 
 namespace BusinessLayer.Services
 {
     /// <summary>
     /// Service class for managing server operations.
     /// </summary>
-    public class ServerService
+    public class ServerService : IServerService
     {
-        private readonly ServerTableDataGateway _gateway;
+        private readonly IServerTableDataGateway _gateway;
         private static ILogger _logger = FileLogger.Instance;
-
-        public ServerService()
+        
+        public ServerService(IServerTableDataGateway gateway)
         {
-            _gateway = new ServerTableDataGateway();
+            _gateway = gateway;
+        }
+        
+        public ServerService() : this(new ServerTableDataGateway())
+        {
         }
 
         /// <summary>
@@ -89,25 +98,42 @@ namespace BusinessLayer.Services
         }
 
         /// <summary>
+        /// Získá bezpečně pouze přihlašovací údaje k serveru pro potřeby adaptérů.
+        /// </summary>
+        public (string Url, string Username, string Password)? GetServerCredentials(int id)
+        {
+            // Zde využijeme tvou internal metodu, která se k heslu v modelu dostane
+            var server = GetServerByIdInternal(id);
+
+            if (server == null)
+            {
+                return null;
+            }
+
+            // Vrátíme pouze Tuple s potřebnými daty (heslo nejde do DTO, zůstává na backendu)
+            return (server.IpAddress, server.Username, server.Password);
+        }
+
+        /// <summary>
         /// Retrieves the type of a server by its unique identifier.
         /// </summary>
         /// <param name="id">The unique identifier (ID) of the server.</param>
         /// <returns>
         /// The server type as a string if the server exists; otherwise, an empty string.
         /// </returns>
-        public string GetServerType(int id)
+        public PlatformType GetServerType(int id)
         {
             try
             {
                 var server=GetServerByIdInternal(id);
                 if (server == null)
-                    return "";
-                return server.ServerType;
+                    return PlatformType.Unknown;
+                return server.Platform;
 
             }
             catch (Exception)
             {
-                return "";
+                return PlatformType.Unknown;
             }
         }
 
@@ -143,7 +169,7 @@ namespace BusinessLayer.Services
             var servers = GetAllServers();
             if (servers != null)
             {
-                if(servers.Any(servers => servers.Name == server.Name))
+                if(servers.Any(servers => servers.Name == server.Name) || servers.Any(servers => servers.IpAddress == server.IpAddress))
                 {
                     _logger.LogWarning($"Server with name {server.Name} already exists.");
                     return false;
@@ -156,12 +182,14 @@ namespace BusinessLayer.Services
             }
             try
             {
-                if (server.ServerType == "EVE" && !server.IpAddress.StartsWith("http")) 
-                    server.IpAddress = "http://" + server.IpAddress;
-                else if (server.ServerType == "CML" && !server.IpAddress.StartsWith("http"))
-                    server.IpAddress = "https://" + server.IpAddress;
+                var protocol = PlatformTypeExtensions.GetSettings(server.Platform).DefaultProtocol;
+                if (!server.IpAddress.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                {
+                    server.IpAddress = protocol + server.IpAddress;
+                }
+
                 string ip = new Uri(server.IpAddress).Host; //To get the IP address from the URL
-                _gateway.InsertServer(server.ServerType, server.Name, ip, server.Username, server.Password);
+                _gateway.InsertServer(server.Platform.ToString(), server.Name, ip, server.Username, server.Password);
                 _logger.Log($"Server with name {server.Name} has been inserted.");
                 return true;
             }
@@ -186,13 +214,13 @@ namespace BusinessLayer.Services
             {
                 return false;
             }
-            if (server.Password == String.Empty)
+            if (server.Password == String.Empty || server.Password == null)
             {
                 server.Password = serverToUpdate.Password;
             }
             try
             {
-                _gateway.UpdateServer(server.Id, server.ServerType, server.Name, server.IpAddress, server.Username, server.Password);
+                _gateway.UpdateServer(server.Id, server.Platform.ToString(), server.Name, server.IpAddress, server.Username, server.Password);
                 _logger.Log($"Server with id {server.Id} has been updated.");
                 return true;
             }
@@ -226,6 +254,34 @@ namespace BusinessLayer.Services
             catch(Exception e)
             {
                 _logger.LogError($"Server with id {id} couldn't be removed. {e.Message}");
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// Asynchronously determines whether the specified server is reachable by sending a network ping request.
+        /// </summary>
+        /// <remarks>If the input is not a valid IP address or URI, or if the server does not respond
+        /// within the timeout, the method returns <see langword="false"/>. This method suppresses exceptions and
+        /// returns <see langword="false"/> on error.</remarks>
+        /// <param name="ipAddress">The IP address or URI of the server to check. If a URI is provided, the host portion is used. Cannot be
+        /// null, empty, or whitespace.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains <see langword="true"/> if the
+        /// server responds to a ping request within the timeout period; otherwise, <see langword="false"/>.</returns>
+        public async Task<bool> IsServerOnlineAsync(string ipAddress)
+        {
+            if (string.IsNullOrWhiteSpace(ipAddress)) return false;
+
+            try
+            {
+                string host = ipAddress.Contains("://") ? new Uri(ipAddress).Host : ipAddress;
+
+                using var pinger = new Ping();
+                var reply = await pinger.SendPingAsync(host, 1000);
+                return reply.Status == IPStatus.Success;
+            }
+            catch
+            {
                 return false;
             }
         }

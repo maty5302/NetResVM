@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace TelnetConsole
 {
@@ -43,7 +39,7 @@ namespace TelnetConsole
                         continue;
                     }
 
-                    string response = ExecuteCommand(command);
+                    string response = await ExecuteCommand(command);
                     await writer.WriteLineAsync(response);
                 }
             }
@@ -57,7 +53,7 @@ namespace TelnetConsole
         /// <returns>
         /// A response string based on the result of the executed command, or a help message if the command is invalid.
         /// </returns>
-        static string ExecuteCommand (string command)
+        static async Task<string> ExecuteCommand (string command)
         {
             
             
@@ -75,7 +71,7 @@ namespace TelnetConsole
                         else if (args[1] == "labs" && args.Length == 3)
                         {
                             if (!String.IsNullOrEmpty(args[2]))
-                                return Command.ListLabs(args[2]);
+                                return await Command.ListLabs(args[2]);
                             return GetHelp();
                         }
                         else if (args[1] == "users")
@@ -88,13 +84,13 @@ namespace TelnetConsole
                     else if(args[0] == "start" && args.Length == 3)
                     {
                         if(!String.IsNullOrEmpty(args[1]) && !String.IsNullOrEmpty(args[2]))
-                            return Command.StartLab(args[1], args[2]);
+                            return await Command.StartLab(args[1], args[2]);
                         return GetHelp();
                     }
                     else if (args[0] == "stop" && args.Length == 3)
                     {
                         if (!String.IsNullOrEmpty(args[1]) && !String.IsNullOrEmpty(args[2]))
-                            return Command.StopLab(args[1], args[2]);
+                            return await Command.StopLab(args[1], args[2]);
                         return GetHelp();
                     }
                     else if (args[0] == "deactivate")
@@ -123,12 +119,12 @@ namespace TelnetConsole
                         return GetHelp();
                     }
                     else
-                        return $"Unknown command {command}";
+                        return $"Unknown command {command}\n" + GetHelp();
                 }
                 else if (args[0] == "")
                     return "";
                 else
-                    return $"Unknown command {command}";
+                    return $"Unknown command {command}\n" + GetHelp();
             }
             return "";
         }

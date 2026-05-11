@@ -3,6 +3,7 @@ using BusinessLayer.Models;
 using DataLayer;
 using SimpleLogger;
 using System.Text;
+using DataLayer.Interface;
 
 namespace BusinessLayer.Services
 {
@@ -11,12 +12,16 @@ namespace BusinessLayer.Services
     /// </summary>
     public class ReservationService
     {
-        private readonly ReservationTableDataGateway _reservationTableDataGateway;
+        private readonly IReservationTableDataGateway _reservationTableDataGateway;
         private static ILogger _logger = FileLogger.Instance;
 
-        public ReservationService()
+        public ReservationService(IReservationTableDataGateway reservationTableDataGateway)
         {
-            _reservationTableDataGateway = new ReservationTableDataGateway();
+            _reservationTableDataGateway = reservationTableDataGateway;
+        }
+        
+        public ReservationService() : this(new ReservationTableDataGateway())
+        {
         }
 
         /// <summary>

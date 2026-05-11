@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Data;
+using Microsoft.Data.SqlClient;
+using DataLayer.Interface;
 
 namespace DataLayer
 {
     /// <summary>
     /// This class is responsible for interacting with the Server table in the database.
     /// </summary>
-    public class ServerTableDataGateway
+    public class ServerTableDataGateway : IServerTableDataGateway
     {
         /// <summary>
         /// Retrieves all servers from the Server table.

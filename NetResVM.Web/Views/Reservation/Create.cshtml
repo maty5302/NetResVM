@@ -1,0 +1,55 @@
+﻿@{
+	ViewBag.Title = @Localizer["NewReservation"];
+}
+@model BusinessLayer.Models.ReservationModel
+
+<div>
+	<h1>@ViewBag.Title</h1>
+	<hr />
+	<form method="post" class="p-3 border rounded" asp-action="Create">
+		<div class="mb-3">
+			<label class="form-label fw-bold">@Localizer["Server"]:</label>
+			<select id="server" name="selectedServer" asp-for="ServerId" class="form-select me-2" onchange="this.form.submit()">
+				<option value="">@Localizer["SelectServer"]</option>
+				@for (int i = 0; i < ((List<BusinessLayer.DTOs.ServerDTO>)ViewBag.Servers).Count; i++)
+				{
+					<option value="@ViewBag.Servers[i].Id">@ViewBag.Servers[i].Name - @ViewBag.Servers[i].Platform</option>
+				}
+				)
+			</select>
+		</div>
+		<div class="mb-3">
+			<label class="form-label fw-bold">@Localizer["Lab"]:</label>
+			<select id="lab" name="labId" asp-for="LabId" class="form-select me-2">
+				<option value="">@Localizer["SelectLab"]</option>
+				@if (ViewBag.Labs3 != null)
+				{
+
+					var labs = (List<BusinessLayer.DTOs.LabDTO>)ViewBag.Labs3;
+					foreach (var lab in labs)
+					{
+						@if (Model.LabId == lab.Id)
+						{
+							<option value="@lab.Id" selected>@lab.Name + @lab.Id</option>
+						}
+						else
+						{
+							<option value="@lab.Id">@lab.Name + @lab.Id</option>
+						}
+					}
+
+				}
+			</select>
+		</div>
+		<div class="mb-3">
+			<label class="form-label fw-bold">@Localizer["FromTime"]:</label>
+			<input type="datetime-local" id="date" asp-for="ReservationStart" class="form-control" min="@DateTime.Now.AddMinutes(2).ToString("yyyy-MM-ddTHH:mm")"/>
+		</div>
+		<div class="mb-3">
+			<label class="form-label fw-bold">@Localizer["ToTime"]:</label>
+			<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" min="@DateTime.Now.AddMinutes(62).ToString("yyyy-MM-ddTHH:mm")"/>
+		</div>
+		<hr class="my-4"/>
+		<button class="btn btn-primary" formaction="@Url.Action("MakeReservation", "Reservation")"> <i class="bi bi-calendar-check"></i> @Localizer["NewReservation"]</button>
+	</form>
+</div>

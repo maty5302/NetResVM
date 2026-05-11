@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
+﻿using Microsoft.Data.SqlClient;
 using System.Text.Json;
-using System.Threading.Tasks;
 using SimpleLogger;
 
 namespace DataLayer
@@ -12,8 +7,9 @@ namespace DataLayer
     /// <summary>
     /// This class is responsible for establishing a connection to the database.
     /// </summary>
-    internal class DBConnector
+    public class DBConnector
     {
+        public static string? TestConnectionString { get; set; }
         static ILogger _logger = FileLogger.Instance;
         /// <summary>
         /// This method returns a SqlConnection object that can be used to connect to the database.
@@ -22,6 +18,17 @@ namespace DataLayer
         /// <exception cref="DatabaseConfigurationException"> Exception is triggered if sqlconnection.json has invalid settings or missing settings </exception>
         public static SqlConnection GetConnection()
         {
+            if(!string.IsNullOrEmpty(TestConnectionString))
+            {
+                return new SqlConnection(TestConnectionString);
+            }
+            
+            string? envConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+            if (!string.IsNullOrEmpty(envConnectionString))
+            {
+                return new SqlConnection(envConnectionString);
+            }
+            
             var builder = GetBuilder();
             if (builder == null || string.IsNullOrEmpty(builder.UserID) || string.IsNullOrEmpty(builder.Password) || string.IsNullOrEmpty(builder.DataSource))
             {
@@ -29,7 +36,7 @@ namespace DataLayer
             
                 throw new DatabaseConfigurationException("Database connection settings are missing or invalid.");                
             }
-            
+
             return new SqlConnection(builder.ConnectionString);
         }
 
@@ -47,6 +54,9 @@ namespace DataLayer
                 builder.UserID = userIdValue;
                 builder.Password = passValue;
                 builder.InitialCatalog = "DB_NetResVM";
+                
+                builder.TrustServerCertificate = true;
+                builder.Encrypt = false;
                 return builder;
             }
             else

@@ -1,0 +1,70 @@
+﻿@{
+    ViewData["Title"] = @Localizer["Home"];
+}
+<div class="text-center">
+    <br />
+    <h1 class="display-4">@Localizer["HomeTitle"]</h1>
+    <br /><br />
+    <!-- Displaying server cards -->
+    <div class="row justify-content-center">
+        @if (ViewBag.Servers != null){
+            @for (int i = 0; i < ((List<BusinessLayer.DTOs.ServerDTO>)ViewBag.Servers).Count; i++)
+            {
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex">
+                    <div class="card flex-fill d-flex flex-column">
+                        <div class="card-body d-flex flex-column" style="height: auto;">
+                            <h5 class="card-title">@ViewBag.Servers[i].Name</h5><hr />
+                            <span>@Localizer["ServerType"]: @ViewBag.Servers[i].Platform</span>
+                            
+                            <div class="mb-2">
+                                <strong>@Localizer["State"]:</strong>
+                                @if (@ViewBag.Servers[i].IsOnline)
+                                {
+                                    <span class="badge bg-success">Online</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Offline</span>
+                                }
+                            </div>
+                            <hr />
+                            <form method="post">
+                                <button class="btn btn-primary" type="submit" formaction="@Url.Action("Index","Platform", new{serverId=@ViewBag.Servers[i].Id})">@Localizer["ConnectButton"]</button>
+                                <!--Only for admin-->
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <button class="btn btn-primary" type="submit" formaction="@Url.Action("Edit","Server",new{id=@ViewBag.Servers[i].Id})">
+                                        <i class="bi bi-pen"></i>
+                                    </button>
+
+                                    <button class="btn btn-danger" type="submit" onclick="return confirm('Are you sure you want to delete a server? This operation is pernament!')" formaction="@Url.Action("Remove","Server",new{id=@ViewBag.Servers[i].Id})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                }
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+
+                @if ((i + 1) % 4 == 0)
+                {
+                    <div class="w-100"></div>
+                }
+            } 
+        }
+    </div>
+
+        <!-- Add new card with only a plus icon -->
+        @if (User.IsInRole("Admin"))
+        {
+            <div class=" d-flex">
+                <a href="@Url.Action("Add", "Server")" class="card flex-fill text-center text-decoration-none ">
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <i class="bi bi-plus" style="font-size: 2rem;"></i>
+                    </div>
+                </a>
+            </div>
+         }
+
+</div>
