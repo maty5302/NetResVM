@@ -4,6 +4,7 @@ using BusinessLayer.Interface;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using SimpleLogger;
 
 namespace NetResVM.Web.Controllers
 {
@@ -14,6 +15,7 @@ namespace NetResVM.Web.Controllers
     /// </summary>
     public class PlatformController : Controller
     {
+        private readonly SimpleLogger.ILogger _logger = FileLogger.Instance;
         private readonly IPlatformManager _platformManager;
         private readonly ServerService _serverService;
         private readonly UserService _userService;
@@ -109,7 +111,8 @@ namespace NetResVM.Web.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                _logger.LogError($"PlatformController.LabList failed for serverId {serverId}: {ex}");
+                TempData["ErrorMessage"] = _localizer["AnErrorOccured"].Value;
                 return RedirectToAction("Index", "Home");
             }
         }
@@ -191,7 +194,8 @@ namespace NetResVM.Web.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                _logger.LogError($"PlatformController.LabInfo failed for serverId {serverId}, labId {labId}: {ex}");
+                TempData["ErrorMessage"] = _localizer["AnErrorOccured"].Value;
                 return RedirectToAction("Index", "Home");
             }
         }
@@ -254,7 +258,8 @@ namespace NetResVM.Web.Controllers
                 }
             }
             catch (Exception ex) {
-                    TempData["ErrorMessage"] = $"An error occurred: {ex.Message}";
+                _logger.LogError($"PlatformController.AddCollaborator failed for serverId {serverId}, labId {labId}, collaborator {collaboratorUsername}: {ex}");
+                TempData["ErrorMessage"] = _localizer["AnErrorOccured"].Value;
             }
             return RedirectToAction("LabInfo","Platform", new { serverId = serverId ,labId = labId});
         }
