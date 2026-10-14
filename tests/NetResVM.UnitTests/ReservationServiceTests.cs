@@ -416,6 +416,80 @@ public class ReservationServiceTests
         _mockDataGateway.Verify(m => m.RemoveReservation(1), Times.Once);
     }
 
+    [Fact]
+    public void DeleteReservation_WithOwnership_ShouldReturnTrue_WhenUserIsOwner()
+    {
+        var datatable = new DataTable();
+        datatable.Columns.Add("ReservationID", typeof(int));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Columns.Add("UserID", typeof(int));
+        datatable.Columns.Add("StartDate", typeof(DateTime));
+        datatable.Columns.Add("EndDate", typeof(DateTime));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Rows.Add(1, 1, 10, DateTime.Now, DateTime.Now.AddHours(1), "1");
+
+        _mockDataGateway.Setup(m => m.GetReservationById(1)).Returns(datatable);
+        _mockDataGateway.Setup(m => m.RemoveReservation(1));
+
+        var result = _reservationService.DeleteReservation(1, 10, isAdmin: false);
+
+        Assert.True(result);
+        _mockDataGateway.Verify(m => m.RemoveReservation(1), Times.Once);
+    }
+
+    [Fact]
+    public void DeleteReservation_WithOwnership_ShouldReturnTrue_WhenUserIsAdmin()
+    {
+        var datatable = new DataTable();
+        datatable.Columns.Add("ReservationID", typeof(int));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Columns.Add("UserID", typeof(int));
+        datatable.Columns.Add("StartDate", typeof(DateTime));
+        datatable.Columns.Add("EndDate", typeof(DateTime));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Rows.Add(1, 1, 10, DateTime.Now, DateTime.Now.AddHours(1), "1");
+
+        _mockDataGateway.Setup(m => m.GetReservationById(1)).Returns(datatable);
+        _mockDataGateway.Setup(m => m.RemoveReservation(1));
+
+        var result = _reservationService.DeleteReservation(1, 999, isAdmin: true);
+
+        Assert.True(result);
+        _mockDataGateway.Verify(m => m.RemoveReservation(1), Times.Once);
+    }
+
+    [Fact]
+    public void DeleteReservation_WithOwnership_ShouldReturnFalse_WhenUserIsNotOwnerAndNotAdmin()
+    {
+        var datatable = new DataTable();
+        datatable.Columns.Add("ReservationID", typeof(int));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Columns.Add("UserID", typeof(int));
+        datatable.Columns.Add("StartDate", typeof(DateTime));
+        datatable.Columns.Add("EndDate", typeof(DateTime));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Rows.Add(1, 1, 10, DateTime.Now, DateTime.Now.AddHours(1), "1");
+
+        _mockDataGateway.Setup(m => m.GetReservationById(1)).Returns(datatable);
+
+        var result = _reservationService.DeleteReservation(1, 999, isAdmin: false);
+
+        Assert.False(result);
+        _mockDataGateway.Verify(m => m.RemoveReservation(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public void DeleteReservation_WithOwnership_ShouldReturnFalse_WhenReservationNotFound()
+    {
+        var datatable = new DataTable();
+        _mockDataGateway.Setup(m => m.GetReservationById(1)).Returns(datatable);
+
+        var result = _reservationService.DeleteReservation(1, 10, isAdmin: false);
+
+        Assert.False(result);
+        _mockDataGateway.Verify(m => m.RemoveReservation(It.IsAny<int>()), Times.Never);
+    }
+
     #endregion
 
     #region SaveReservation Tests

@@ -1,4 +1,4 @@
-﻿using BusinessLayer.DTOs;
+using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.Services;
@@ -18,14 +18,16 @@ namespace NetResVM.Web.Controllers
         private readonly ServerService _serverService;
         private readonly UserService _userService;
         private readonly UserLabOwnershipService _userLabOwnership;
+        private readonly ReservationService _reservationService;
         private readonly IStringLocalizer<SharedResource> _localizer;
 
-        public PlatformController(IPlatformManager platformManager, ServerService serverService, UserService userService, UserLabOwnershipService userLabOwnership, IStringLocalizer<SharedResource> localizer)
+        public PlatformController(IPlatformManager platformManager, ServerService serverService, UserService userService, UserLabOwnershipService userLabOwnership, ReservationService reservationService, IStringLocalizer<SharedResource> localizer)
         {
             _platformManager = platformManager;
             _serverService = serverService;
             _userService = userService;
             _userLabOwnership = userLabOwnership;
+            _reservationService = reservationService;
             _localizer = localizer;
         }
 
@@ -367,7 +369,7 @@ namespace NetResVM.Web.Controllers
         /// that redirects the user to the appropriate view based on the outcome of the deletion.</returns>
         public async Task<IActionResult> DeleteLab(int serverId, string labId)
         {
-            if (User.Identity != null && !User.Identity.IsAuthenticated)
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
             var server = _serverService.GetServerById(serverId);
             if (server == null)
@@ -386,6 +388,16 @@ namespace NetResVM.Web.Controllers
                 TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                 return RedirectToAction("Index", "Home");
             }
+
+            // SECURITY CHECK: Ownership
+            int currentUserId = _userService.GetUserId(User.Identity.Name);
+            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
+            if (ownership.owned && !ownership.userOwns)
+            {
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";
+                return RedirectToAction("LabList", "Platform", new { serverId = serverId });
+            }
+
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
             var result = await adapter.DeleteLab(serverId, labId);
             if (result.value)
@@ -412,7 +424,7 @@ namespace NetResVM.Web.Controllers
         /// to the lab information page if the operation succeeds, or to an error page if the operation fails.</returns>
         public async Task<IActionResult> StartLab(int serverId, string labId)
         {
-            if (User.Identity != null && !User.Identity.IsAuthenticated)
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
             var server = _serverService.GetServerById(serverId);
             if (server == null)
@@ -431,6 +443,39 @@ namespace NetResVM.Web.Controllers
                 TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                 return RedirectToAction("Index", "Home");
             }
+
+            // SECURITY CHECK: Ownership
+            int currentUserId = _userService.GetUserId(User.Identity.Name);
+            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
+            if (ownership.owned && !ownership.userOwns)
+            {
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";
+                return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+            }
+
+            // SECURITY CHECK: Active Reservation
+            var reservations = _reservationService.GetReservationsByServerId(serverId);
+            if (reservations != null)
+            {
+                var now = DateTime.Now;
+                var activeReservation = reservations.FirstOrDefault(r => r.ReservationStart <= now && r.ReservationEnd >= now);
+                
+                if (activeReservation != null)
+                {
+                    if (activeReservation.LabId != labId || (!ownership.userOwns && activeReservation.UserId != currentUserId))
+                    {
+                        TempData["ErrorMessage"] = _localizer["ServerReservedByAnother"].Value ?? "The server is currently reserved for another lab or by another user.";
+                        return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+                    }
+                }
+                else
+                {
+                    // Strict reservation policy: Cannot start without an active reservation right now.
+                    TempData["ErrorMessage"] = _localizer["NoActiveReservation"].Value ?? "You must have an active reservation to start a lab.";
+                    return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+                }
+            }
+
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
             var result = await adapter.StartLabAsync(serverId, labId);
             if (result.value)
@@ -456,7 +501,7 @@ namespace NetResVM.Web.Controllers
         /// that redirects to the lab information page with a success or error message.</returns>
         public async Task<IActionResult> StopLab(int serverId, string labId)
         {
-            if (User.Identity != null && !User.Identity.IsAuthenticated)
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
             var server = _serverService.GetServerById(serverId);
             if (server == null)
@@ -475,6 +520,16 @@ namespace NetResVM.Web.Controllers
                 TempData["ErrorMessage"] = _localizer["UnsupportedPlatform"].Value;
                 return RedirectToAction("Index", "Home");
             }
+
+            // SECURITY CHECK: Ownership
+            int currentUserId = _userService.GetUserId(User.Identity.Name);
+            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
+            if (ownership.owned && !ownership.userOwns)
+            {
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";
+                return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+            }
+
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
             var result = await adapter.StopLabAsync(serverId, labId);
             if (result.value)

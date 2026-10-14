@@ -1,4 +1,4 @@
-﻿using BusinessLayer.DTOs;
+using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.Models;
@@ -34,19 +34,29 @@ namespace NetResVM.Web.Controllers
         /// <summary>
         /// Displays the list of reservations.
         /// </summary>
+        /// <param name="month">Optional month for calendar view (1-12)</param>
+        /// <param name="year">Optional year for calendar view</param>
+        /// <param name="view">Optional active view ('list' or 'month')</param>
         /// <returns> An <see cref="IActionResult"/> that renders main reservations page </returns>
-        public IActionResult Index()
+        public IActionResult Index(int? month, int? year, string? view = "list")
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
 
-            
+            int targetMonth = (month.HasValue && month.Value >= 1 && month.Value <= 12) ? month.Value : DateTime.Now.Month;
+            int targetYear = (year.HasValue && year.Value >= 2000 && year.Value <= 2100) ? year.Value : DateTime.Now.Year;
+
             var reservations = _reservationService.GetAllReservations();          
             List<ReservationInformationModel> plannedReservations = new List<ReservationInformationModel>();
             List<ReservationInformationModel> allReservations = new List<ReservationInformationModel>();
             if (reservations == null)
             {
                 ViewBag.Reservations = plannedReservations;
+                ViewBag.PlannedReservations = plannedReservations;
+                ViewBag.AllReservations = allReservations;
+                ViewBag.CurrentMonth = targetMonth;
+                ViewBag.CurrentYear = targetYear;
+                ViewBag.ActiveView = view ?? "list";
                 return View();
             }
             // goes though all reservations and adds them to the list
@@ -69,8 +79,8 @@ namespace NetResVM.Web.Controllers
                         UserId = reservation.UserId,
                         UserName = user
                     });
-                //this month
-                if(reservation.ReservationStart.Month==DateTime.Now.Month)
+                // strictly this selected month and year
+                if (reservation.ReservationStart.Month == targetMonth && reservation.ReservationStart.Year == targetYear)
                     allReservations.Add(new ReservationInformationModel
                     {
                         Id = reservation.Id,
@@ -86,6 +96,9 @@ namespace NetResVM.Web.Controllers
             }
             ViewBag.AllReservations = allReservations;
             ViewBag.PlannedReservations = plannedReservations;
+            ViewBag.CurrentMonth = targetMonth;
+            ViewBag.CurrentYear = targetYear;
+            ViewBag.ActiveView = view ?? "list";
             return View();
         }
 
@@ -200,7 +213,10 @@ namespace NetResVM.Web.Controllers
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
-            var reservation = _reservationService.DeleteReservation(reservationId);
+            
+            var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
+            bool isAdmin = User.IsInRole("Admin");
+            var reservation = _reservationService.DeleteReservation(reservationId, userId, isAdmin);
             if (reservation)
                 TempData["SuccessMessage"] = _localizer["ReservationDeleted"].Value;
             else
@@ -219,8 +235,8 @@ namespace NetResVM.Web.Controllers
         {
             if (User.Identity!=null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
-            var userId = _userService.GetUserId(User.Identity.Name);
-            if (!selectedServer.HasValue && selectedServer == 0 || selectedServer==null)
+            var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
+            if (!selectedServer.HasValue || selectedServer.Value == 0)
             {
                 TempData["ErrorMessage"] = _localizer["ServerNotSelected"].Value;
                 _logger.LogWarning("Server not selected, while creating reservation");
@@ -253,7 +269,7 @@ namespace NetResVM.Web.Controllers
                 _logger.LogWarning("Reservation must be on the same day, while creating reservation");
                 return RedirectToAction("Create", new {reserve,selectedServer});
             }
-            if (reserve.UserId == -1)
+            if (userId <= 0)
             {
                 TempData["ErrorMessage"] = _localizer["UserNotSelected"].Value;
                 _logger.LogWarning("User not selected, while creating reservation");
@@ -285,6 +301,12 @@ namespace NetResVM.Web.Controllers
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
             var reservation = _reservationService.SaveReservation(reservationId);
+            if (reservation == null)
+            {
+                TempData["ErrorMessage"] = _localizer["ReservationNotFound"].Value;
+                _logger.LogWarning($"Reservation with ID {reservationId} not found for saving event.");
+                return RedirectToAction("UserReservation", "Reservation");
+            }
 
             return File(Encoding.UTF8.GetBytes(reservation.ToString()), "text/calendar", "reservation.ics");
         }
