@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +20,7 @@ namespace NetResVM.Web.Controllers
         /// application's root.</param>
         /// <returns>A redirect result to the specified return URL or the application's root if no return URL is provided.</returns>
         [HttpPost]
+        [AllowAnonymous]
         public IActionResult SetLanguage(string culture, string returnUrl)
         {
             Response.Cookies.Append(

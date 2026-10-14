@@ -3,6 +3,7 @@ using BusinessLayer.Interface;
 using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 
@@ -27,6 +28,7 @@ namespace NetResVM.Web.Controllers
         /// Displays the list of servers.
         /// </summary>
         /// <returns> An <see cref="IActionResult"/> that renders Add page</returns>
+        [Authorize(Roles = "Admin")]
         public IActionResult Add()
         {
             if (User.Identity!=null && !User.Identity.IsAuthenticated)
@@ -42,6 +44,7 @@ namespace NetResVM.Web.Controllers
         /// </summary>
         /// <param name="id"> ID of server to edit</param>
         /// <returns> An <see cref="IActionResult"/> that renders edit page  </returns>
+        [Authorize(Roles = "Admin")]
         public IActionResult Edit(int id)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -64,6 +67,7 @@ namespace NetResVM.Web.Controllers
         /// </summary>
         /// <param name="id"> ID of the server to remove </param>
         /// <returns> An <see cref="IActionResult"/> that renders Home and message about success or failure of operation</returns>
+        [Authorize(Roles = "Admin")]
         public IActionResult Remove(int id)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -85,6 +89,7 @@ namespace NetResVM.Web.Controllers
         /// <param name="server"> Model where information about server is stored for updating </param>
         /// <returns> An <see cref="IActionResult"/> that renders Home and message about success or failure of operation </returns>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public IActionResult SaveChanges(ServerModel server)
         {
             if(User.Identity != null && !User.Identity.IsAuthenticated)
@@ -151,6 +156,7 @@ namespace NetResVM.Web.Controllers
         /// <param name="server">Model where information about server is stored for adding server </param>
         /// <returns> An <see  cref="Task{IActionResult}"/> that renders Home or Add page and message about success or failure of operation </returns>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddTestedConnection(ServerModel server)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)

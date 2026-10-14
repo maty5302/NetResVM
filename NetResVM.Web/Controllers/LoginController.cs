@@ -2,6 +2,7 @@
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NetResVM.Web.Models;
@@ -29,6 +30,7 @@ namespace NetResVM.Web.Controllers
         /// Displays the login page.
         /// </summary>
         /// <returns>  An <see cref="IActionResult"/> that renders login page </returns>
+        [AllowAnonymous]
         public IActionResult Index()
         {
             if(User.Identity != null && User.Identity.IsAuthenticated) {
@@ -43,6 +45,7 @@ namespace NetResVM.Web.Controllers
         /// <param name="user"> Model where username and password is stored for verify</param>
         /// <returns>  An <see cref="Task{IActionResult}"/> that renders home or login page and message about success or failure of operation </returns>
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> LoginASync(LoginModel user)
         {
             if (ModelState.IsValid && !User.Identity.IsAuthenticated)

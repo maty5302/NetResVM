@@ -3,6 +3,7 @@ using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NetResVM.Web.Models;
@@ -105,7 +106,7 @@ namespace NetResVM.Web.Controllers
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
-                return RedirectToAction("Login", "Home");
+                return RedirectToAction("Index", "Login");
             }
             var server = _serverService.ServerExists(serverID);
             if (!server)
@@ -140,7 +141,7 @@ namespace NetResVM.Web.Controllers
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
-                return RedirectToAction("Login", "Home");
+                return RedirectToAction("Index", "Login"); 
             }
             var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
             UserLabOwnershipModel model = new UserLabOwnershipModel
@@ -200,7 +201,7 @@ namespace NetResVM.Web.Controllers
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
-                return RedirectToAction("Login", "Home");
+                return RedirectToAction("Index", "Login"); 
             }
             if (!_userService.ValidateCredentials(User.Identity.Name, PassModel.oldPassword))
             {
@@ -226,12 +227,13 @@ namespace NetResVM.Web.Controllers
         /// </summary>
         /// <param name="model"> Model where new user is stored </param>
         /// <returns>  An <see cref="IActionResult"/> that renders user settings and message if it was successful or not </returns>
+        [Authorize(Roles = "Admin")]
         public IActionResult AddUser(UserModel model)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
-                return RedirectToAction("Login", "Home");
+                return RedirectToAction("Index", "Login");
             }
             if(model.AuthorizationType=="localhost" && model.Password==null)
             {
@@ -251,12 +253,13 @@ namespace NetResVM.Web.Controllers
         /// Displays the user management page.
         /// </summary>
         /// <returns>  An <see cref="IActionResult"/> that renders ManageUser page </returns>
+        [Authorize(Roles = "Admin")]
         public IActionResult ManageUser()
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
-                return RedirectToAction("Login", "Home");
+                return RedirectToAction("Index", "Login");
             }
             if(!User.IsInRole("Admin"))
             {
@@ -276,12 +279,13 @@ namespace NetResVM.Web.Controllers
         /// </summary>
         /// <param name="UserId"> ID of user to deactivate </param>
         /// <returns>  An <see cref="IActionResult"/> that renders ManageUser and if it was successful or not </returns>
+        [Authorize(Roles = "Admin")]
         public IActionResult DeactivateUser(int UserId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
-                return RedirectToAction("Login", "Home");
+                return RedirectToAction("Index", "Login");
             }
             if (!User.IsInRole("Admin"))
             {
@@ -302,12 +306,13 @@ namespace NetResVM.Web.Controllers
         /// </summary>
         /// <param name="UserId"> ID of user to activate </param>
         ///  <returns>  An <see cref="IActionResult"/> that renders ManageUser and if it was successful or not </returns>
+        [Authorize(Roles = "Admin")]
         public IActionResult ActivateUser(int UserId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
-                return RedirectToAction("Login", "Home");
+                return RedirectToAction("Index", "Login");
             }
             if (!User.IsInRole("Admin"))
             {
@@ -328,12 +333,13 @@ namespace NetResVM.Web.Controllers
         /// </summary>
         /// <param name="UserId"> ID of user to activate </param>
         /// <returns>  An <see cref="IActionResult"/> that renders ManageUser and if it was successful or not </returns>
+        [Authorize(Roles = "Admin")]
         public IActionResult RemoveUser(int UserId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
-                return RedirectToAction("Login", "Home");
+                return RedirectToAction("Index", "Login");
             }
             if (!User.IsInRole("Admin"))
             {
