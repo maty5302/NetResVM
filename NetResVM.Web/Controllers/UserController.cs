@@ -196,6 +196,7 @@ namespace NetResVM.Web.Controllers
         /// </summary>
         /// <param name="PassModel"> Model where old and new password is forwarded to </param>
         /// <returns>  An <see cref="IActionResult"/> that renders user settings and message if it was successful or not </returns>
+        [HttpPost]
         public IActionResult ChangePassword(ChangePasswordModel PassModel)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
