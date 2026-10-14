@@ -1,4 +1,4 @@
-﻿using BusinessLayer.Enum;
+using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.Services;
 using SimpleLogger;
@@ -99,13 +99,17 @@ namespace NetResVM.Web
             }
         }
 
+        private readonly HashSet<int> _startedReservations = new HashSet<int>();
+        private readonly HashSet<int> _stoppedReservations = new HashSet<int>();
+        private readonly HashSet<int> _loggedStoppedDuringReservation = new HashSet<int>();
+
         /// <summary>
         /// Checks all current reservations and performs necessary actions such as starting or stopping reservations
         /// based on their scheduled times and removing expired reservations.
         /// </summary>
         /// <remarks>This method retrieves all reservations and processes each one according to its
-        /// schedule. Reservations that have expired for more than six months are deleted. Reservations are started or
-        /// stopped based on the current time relative to their scheduled start and end times. Logging is performed for
+        /// schedule. Reservations that have expired for more than six months are deleted. Reservations are started on
+        /// start time, stopped on end time, and monitored during the active window. Logging is performed for
         /// key actions and errors. This method is intended to be called periodically to maintain reservation
         /// state.</remarks>
         /// <returns>A task that represents the asynchronous operation.</returns>
@@ -137,14 +141,50 @@ namespace NetResVM.Web
                             if (reservation.ReservationEnd.AddMonths(6) < DateTime.Now)
                             {
                                 reservationService.DeleteReservation(reservation.Id);
+                                _startedReservations.Remove(reservation.Id);
+                                _stoppedReservations.Remove(reservation.Id);
+                                _loggedStoppedDuringReservation.Remove(reservation.Id);
+                                continue;
                             }
-                            if ((reservation.ReservationStart == time || (reservation.ReservationStart < time && reservation.ReservationEnd > time)))
+
+                            // 1. Start reservation (within 2 minutes of ReservationStart)
+                            if (time >= reservation.ReservationStart && time < reservation.ReservationStart.AddMinutes(2))
                             {
-                                await StartReservation(platformManager, serverType, reservation.ServerId, reservation.LabId);
+                                if (_startedReservations.Add(reservation.Id))
+                                {
+                                    await StartReservation(platformManager, serverType, reservation.ServerId, reservation.LabId);
+                                }
                             }
-                            if (reservation.ReservationEnd <= time && reservation.ReservationEnd.AddMinutes(5) > time)
+                            // 2. Stop reservation (within 2 minutes of ReservationEnd)
+                            else if (time >= reservation.ReservationEnd && time < reservation.ReservationEnd.AddMinutes(2))
                             {
-                                await StopReservation(platformManager, serverType, reservation.ServerId, reservation.LabId);
+                                if (_stoppedReservations.Add(reservation.Id))
+                                {
+                                    await StopReservation(platformManager, serverType, reservation.ServerId, reservation.LabId);
+                                    _startedReservations.Remove(reservation.Id);
+                                    _loggedStoppedDuringReservation.Remove(reservation.Id);
+                                }
+                            }
+                            // 3. Monitor active reservation window without forcing a restart
+                            else if (time > reservation.ReservationStart && time < reservation.ReservationEnd)
+                            {
+                                IVirtualizationAdapter adapter = platformManager.GetAdapter(serverType);
+                                var labState = await adapter.StateOfLab(reservation.ServerId, reservation.LabId);
+                                if (labState == "STOPPED" && _loggedStoppedDuringReservation.Add(reservation.Id))
+                                {
+                                    _logger.LogWarning($"Lab {reservation.LabId} on server {reservation.ServerId} was detected as STOPPED during active reservation ID:{reservation.Id} (stopped externally or manually).");
+                                }
+                                else if (labState == "STARTED" || labState == "RUNNING")
+                                {
+                                    _loggedStoppedDuringReservation.Remove(reservation.Id);
+                                }
+                            }
+                            // 4. Cleanup memory caches after reservation has passed
+                            else if (time >= reservation.ReservationEnd.AddMinutes(2))
+                            {
+                                _startedReservations.Remove(reservation.Id);
+                                _stoppedReservations.Remove(reservation.Id);
+                                _loggedStoppedDuringReservation.Remove(reservation.Id);
                             }
                         }
                     }
