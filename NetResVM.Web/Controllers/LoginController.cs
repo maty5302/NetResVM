@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -75,6 +75,7 @@ namespace NetResVM.Web.Controllers
         /// Handles the logout process.
         /// </summary>
         /// <returns> An <see cref="Task{IActionResult}"/> that renders login page and signs out user</returns>
+        [HttpPost]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
