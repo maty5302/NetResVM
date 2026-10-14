@@ -209,6 +209,7 @@ namespace NetResVM.Web.Controllers
         /// </summary>
         /// <param name="reservationId"> Id of the reservation </param>
         /// <returns>  An <see cref="IActionResult"/> that redirects to user reservation and informs if reservation was deleted successfully </returns>
+        [HttpPost]
         public IActionResult DeleteReservation(int reservationId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)

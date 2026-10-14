@@ -372,6 +372,7 @@ namespace NetResVM.Web.Controllers
         /// <param name="labId">The unique identifier of the lab to delete.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IActionResult"/>
         /// that redirects the user to the appropriate view based on the outcome of the deletion.</returns>
+        [HttpPost]
         public async Task<IActionResult> DeleteLab(int serverId, string labId)
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
@@ -427,6 +428,7 @@ namespace NetResVM.Web.Controllers
         /// <param name="labId">The identifier of the lab to be started.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains an IActionResult that redirects
         /// to the lab information page if the operation succeeds, or to an error page if the operation fails.</returns>
+        [HttpPost]
         public async Task<IActionResult> StartLab(int serverId, string labId)
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
@@ -504,6 +506,7 @@ namespace NetResVM.Web.Controllers
         /// <param name="labId">The identifier of the lab to stop on the specified server.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IActionResult"/>
         /// that redirects to the lab information page with a success or error message.</returns>
+        [HttpPost]
         public async Task<IActionResult> StopLab(int serverId, string labId)
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)

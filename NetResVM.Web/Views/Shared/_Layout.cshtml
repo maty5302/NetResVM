@@ -71,7 +71,7 @@
                     </form>
                     <ul class="navbar-nav">
                         <li class="nav-item">
-                        <form>
+                            <form method="post">
                                 @if (User.Identity != null && User.Identity.IsAuthenticated)
                                 {
                                     <button class="btn btn-danger" type="submit" formaction="@Url.Action("Logout","Login")">@Localizer["LogoutLayout"]<i class="bi bi-box-arrow-in-right"></i></button>

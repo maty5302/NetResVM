@@ -1,4 +1,4 @@
-﻿using BusinessLayer.Enum;
+using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
@@ -112,9 +112,21 @@ namespace NetResVM.Web.Controllers
         /// <param name="server"> Model where information about server is stored for testing connection </param>
         /// <param name="edit"> </param>
         /// <returns>  An <see cref="Task{IActionResult}"/> that renders Add page and message about success or failure of operation </returns>
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> TestConnection(ServerModel server, bool edit = false)
         {
-            if (server.Password == null)
+            if (edit && string.IsNullOrEmpty(server.Password))
+            {
+                var credentials = _serverService.GetServerCredentials(server.Id);
+                if (credentials != null)
+                {
+                    server.Password = credentials.Value.Password;
+                    ModelState.Remove(nameof(server.Password));
+                }
+            }
+
+            if (string.IsNullOrEmpty(server.Password))
             {
                 TempData["ErrorMessage"] = _localizer["YouNeedPassword"].Value;
                 if (edit)
@@ -123,7 +135,11 @@ namespace NetResVM.Web.Controllers
             }
             if (!ModelState.IsValid)
             {
-                return View("Error");
+                var errors = string.Join(" ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                TempData["ErrorMessage"] = errors;
+                if (edit)
+                    return RedirectToAction("Edit", "Server", new { id = server.Id });
+                return View("Add", server);
             }
             if (server.Platform == PlatformType.Unknown)
             {
