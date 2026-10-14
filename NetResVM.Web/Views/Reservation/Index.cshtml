@@ -1,21 +1,20 @@
-﻿@{
+@{
 	ViewBag.Title = @Localizer["ReservationLayout"];
-	
+	string activeView = ViewBag.ActiveView as string ?? "list";
 }
-<script src="~/js/CalendarSwitch.js" asp-append-version="true"></script>
 <h1>@ViewBag.Title</h1>
 <form>
 	<button class="btn btn-primary" formaction="@Url.Action("Create","Reservation")">@Localizer["NewReservation"]</button>
 	<button class="btn btn-primary" formaction="@Url.Action("UserReservation","Reservation")">@Localizer["MyReservations"]</button>
 </form>
 <hr />
-<!--Show other planned reservation with time, user and wwhich server and lab-->
+<!--Show other planned reservation with time, user and which server and lab-->
 <div>
 	<div class="form-group mb-3">
-		<label for="view" >@Localizer["SelectView"]:</label>
-		<select id="view" class="form-control" onchange="this.form.submit()">
-			<option value="list">@Localizer["ListView"]</option>
-			<option value="month">@Localizer["MonthView"]</option>
+		<label for="view" class="fw-semibold">@Localizer["SelectView"]:</label>
+		<select id="view" class="form-select" style="max-width: 250px;">
+			<option value="list" selected="@(activeView == "list")">@Localizer["ListView"]</option>
+			<option value="month" selected="@(activeView == "month")">@Localizer["MonthView"]</option>
 		</select>
 	</div>
 	<br />
@@ -24,11 +23,10 @@
 </div>
 
 <script>
-		// Get references to the select dropdown and views
 	const viewSelect = document.getElementById('view');
 	const monthView = document.getElementById('month-view');
 	const listView = document.getElementById('list-view');
-	// Event listener for changing views
+
 	viewSelect.addEventListener('change', function () {
 		if (this.value === 'month') {
 			monthView.hidden = false;

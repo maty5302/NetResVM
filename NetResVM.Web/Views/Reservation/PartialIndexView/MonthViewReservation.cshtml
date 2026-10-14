@@ -1,15 +1,47 @@
-﻿@using NetResVM.Web.Models
+@using NetResVM.Web.Models
+@using System.Globalization
 @{
-	// Parameters for the current month and year
-	int currentMonth = DateTime.Now.Month;
-	int currentYear = DateTime.Now.Year;
+	// Parameters for the selected month and year
+	int currentMonth = ViewBag.CurrentMonth is int m ? m : DateTime.Now.Month;
+	int currentYear = ViewBag.CurrentYear is int y ? y : DateTime.Now.Year;
+
 	// Get the first and last days of the current month
 	var firstDayOfMonth = new DateTime(currentYear, currentMonth, 1);
 	var daysInMonth = DateTime.DaysInMonth(currentYear, currentMonth);
 
-	List<ReservationInformationModel> reserve = (List<ReservationInformationModel>)ViewBag.AllReservations;
+	var prevPeriod = firstDayOfMonth.AddMonths(-1);
+	var nextPeriod = firstDayOfMonth.AddMonths(1);
+
+	List<ReservationInformationModel> reserve = (List<ReservationInformationModel>)ViewBag.AllReservations ?? new List<ReservationInformationModel>();
+
+	// Calculate empty cells before the first day (Monday = 0, ..., Sunday = 6)
+	int dayOffset = ((int)firstDayOfMonth.DayOfWeek + 6) % 7;
 }
-<div id="month-view" hidden>
+<div id="month-view" @(ViewBag.ActiveView == "month" ? "" : "hidden")>
+	<!-- Calendar Navigation Header -->
+	<div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-body-tertiary rounded border">
+		<div>
+			<a href="@Url.Action("Index", "Reservation", new { month = prevPeriod.Month, year = prevPeriod.Year, view = "month" })" class="btn btn-outline-primary btn-sm">
+				<i class="bi bi-chevron-left"></i> @prevPeriod.ToString("MMM yyyy", CultureInfo.CurrentCulture)
+			</a>
+		</div>
+		<div class="text-center">
+			<h4 class="mb-0 text-capitalize">
+				<i class="bi bi-calendar3"></i> @firstDayOfMonth.ToString("MMMM yyyy", CultureInfo.CurrentCulture)
+			</h4>
+		</div>
+		<div class="d-flex gap-2">
+			@if (currentMonth != DateTime.Now.Month || currentYear != DateTime.Now.Year)
+			{
+				<a href="@Url.Action("Index", "Reservation", new { month = DateTime.Now.Month, year = DateTime.Now.Year, view = "month" })" class="btn btn-outline-secondary btn-sm">
+					@Localizer["Today"]
+				</a>
+			}
+			<a href="@Url.Action("Index", "Reservation", new { month = nextPeriod.Month, year = nextPeriod.Year, view = "month" })" class="btn btn-outline-primary btn-sm">
+				@nextPeriod.ToString("MMM yyyy", CultureInfo.CurrentCulture) <i class="bi bi-chevron-right"></i>
+			</a>
+		</div>
+	</div>
 	<div class="calendar">		
 		<div class="calendar-grid">
 			<!-- Weekday headers -->			
@@ -22,7 +54,7 @@
 			<div class="day-header">@Localizer["Sunday"]</div>
 
 			<!-- Empty cells before the first day -->
-			@for (var i = 1; i < (int)firstDayOfMonth.DayOfWeek; i++)
+			@for (var i = 0; i < dayOffset; i++)
 			{
 				<div class="day empty"></div>
 			}
@@ -31,33 +63,91 @@
 			@for (var day = 1; day <= daysInMonth; day++)
 			{
 				var currentDate = new DateTime(currentYear, currentMonth, day);
-				var hasEvent2 = reserve.Contains(reserve.FirstOrDefault(o => o.ReservationStart.Date == currentDate));
+				var todayEvents = reserve.FindAll(o => o.ReservationStart.Date == currentDate);
 
 				<div class="day @(currentDate == DateTime.Now.Date ? "today" : "")">
 					<div class="date">@day</div>
-					@if (hasEvent2)
+					@if (todayEvents.Count > 0)
 					{
-						var todayEvents = reserve.FindAll(o => o.ReservationStart.Date == currentDate);
 						foreach (var item in todayEvents)
 						{
-							<a href="@Url.Action("SaveEvent","Reservation", new {reservationId=item.Id}) " target="_blank">
-							<div class="event">@item.ReservationStart.TimeOfDay.Hours:@item.ReservationStart.TimeOfDay.Minutes-@item.ReservationEnd.TimeOfDay.Hours:@item.ReservationEnd.TimeOfDay.Minutes @item.ServerName - @item.UserName</div>
-							</a>
+							<div class="event" role="button" tabindex="0"
+								 style="cursor: pointer;"
+								 onclick="openReservationModal('@item.Id', '@item.ServerName', '@item.Platform', '@item.ServerId', '@item.LabId', '@item.UserName', '@item.ReservationStart.ToString("yyyy-MM-dd HH:mm")', '@item.ReservationEnd.ToString("yyyy-MM-dd HH:mm")', '@Url.Action("LabInfo", "Platform", new { serverId = item.ServerId, labId = item.LabId })', '@Url.Action("SaveEvent", "Reservation", new { reservationId = item.Id })')">
+								<span>@item.ReservationStart.ToString("HH:mm")-@item.ReservationEnd.ToString("HH:mm")</span>
+								<span>@item.ServerName - @item.UserName</span>
+							</div>
 						}
-
 					}
 				</div>
 			}
 
 			<!-- Empty cells after the last day -->
-			@for (var i = ((int)firstDayOfMonth.DayOfWeek + daysInMonth -1) % 7; i < 7 && i > 0; i++)
+			@{
+				int totalCells = dayOffset + daysInMonth;
+				int trailingEmpty = (7 - (totalCells % 7)) % 7;
+			}
+			@for (var i = 0; i < trailingEmpty; i++)
 			{
 				<div class="day empty"></div>
 			}
 		</div>
 	</div>
 
-	<style>
-		
-	</style>
+	<!-- Modal for Reservation Details -->
+	<div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="reservationModalLabel">@Localizer["ReservationLayout"]</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<dl class="row mb-0">
+						<dt class="col-sm-4">@Localizer["Server"]:</dt>
+						<dd class="col-sm-8" id="modalServer"></dd>
+
+						<dt class="col-sm-4">@Localizer["Lab"]:</dt>
+						<dd class="col-sm-8" id="modalLabId"></dd>
+
+						<dt class="col-sm-4">@Localizer["User"]:</dt>
+						<dd class="col-sm-8" id="modalUser"></dd>
+
+						<dt class="col-sm-4">@Localizer["FromTime"]:</dt>
+						<dd class="col-sm-8" id="modalStart"></dd>
+
+						<dt class="col-sm-4">@Localizer["ToTime"]:</dt>
+						<dd class="col-sm-8" id="modalEnd"></dd>
+					</dl>
+				</div>
+				<div class="modal-footer">
+					<a id="modalGoToLabBtn" href="#" class="btn btn-success">
+						<i class="bi bi-box-arrow-in-right"></i> @Localizer["LabInfo"]
+					</a>
+					<a id="modalExportIcsBtn" href="#" class="btn btn-primary">
+						<i class="bi bi-floppy"></i> @Localizer["Export"]
+					</a>
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Close"]</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		function openReservationModal(id, serverName, platform, serverId, labId, userName, start, end, labUrl, exportUrl) {
+			document.getElementById('modalServer').innerText = serverName + " (" + platform + ")";
+			document.getElementById('modalLabId').innerText = labId;
+			document.getElementById('modalUser').innerText = userName;
+			document.getElementById('modalStart').innerText = start;
+			document.getElementById('modalEnd').innerText = end;
+			document.getElementById('modalGoToLabBtn').href = labUrl;
+			document.getElementById('modalExportIcsBtn').href = exportUrl;
+
+			const modalEl = document.getElementById('reservationModal');
+			if (window.bootstrap && window.bootstrap.Modal) {
+				const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+				modal.show();
+			}
+		}
+	</script>
 </div>

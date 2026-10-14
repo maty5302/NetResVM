@@ -1,8 +1,8 @@
-﻿@using NetResVM.Web.Models
+@using NetResVM.Web.Models
 @{
 	var plannedReservations = (List<ReservationInformationModel>)ViewBag.PlannedReservations;
 }
-<div id="list-view">
+<div id="list-view" @(ViewBag.ActiveView == "month" ? "hidden" : "")>
 	<h3>@Localizer["PlannedReservations"]</h3>
 	<table class="table">
 		<thead>
