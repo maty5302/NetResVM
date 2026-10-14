@@ -46,7 +46,6 @@ jobs:
           dotnet publish NetResVM.Web/NetResVM.Web.csproj \
             --configuration Release \
             --runtime linux-x64 \
-            --no-restore \
             --self-contained false \
             -p:PublishSingleFile=true \
             -p:DebugType=None \
@@ -82,7 +81,6 @@ jobs:
           dotnet publish NetResVM.Web/NetResVM.Web.csproj \
             --configuration Release \
             --runtime win-x64 \
-            --no-restore \
             --self-contained false \
             -p:PublishSingleFile=true \
             -p:DebugType=None \
