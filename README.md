@@ -40,6 +40,15 @@ docker compose pull && docker compose up
 #### 5. You can use the app usually hosted on http://localhost:8080/ and sign in with default login=admin and password=Password123.
 >Note after first login you should change the password for a stronger one!!!
 
+> [!WARNING]
+> **Database Access from Host:**
+> By default, the MS SQL database port (`1433`) is not exposed outside the Docker network as the application communicates with it internally. If you need direct database access from the host system (e.g. via SSMS or DBeaver), you can add the following under the `mssql` service in `docker-compose.yml`:
+> ```yaml
+> ports:
+>   - "1433:1433" # or for better security bind to localhost only: "127.0.0.1:1433:1433"
+> ```
+> **Warning:** Exposing port `1433` on a server or public network without firewall restrictions is a security risk. Ensure you use a strong `DB_PASSWORD`.
+
 
 ## Installation without Docker
 #### 1. Download and unzip archive for your operating system

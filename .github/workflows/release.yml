@@ -118,8 +118,8 @@ jobs:
           cp docker/docker-compose.yml ./docker-compose.yml
           cp docker/.env.example ./.env.example
 
-          # Nahradit image tag podle verze releasu
-          sed -i -E "s|image: ghcr.io/[^/]+/netresvm:.*|image: ghcr.io/${OWNER_LC}/netresvm:${TAG}|g" ./docker-compose.yml
+          # Nastavit image tag na latest
+          sed -i -E "s|image: ghcr.io/[^/]+/netresvm:.*|image: ghcr.io/${OWNER_LC}/netresvm:latest|g" ./docker-compose.yml
 
           # Nahradit odkaz na SQL skript podle tagu releasu
           sed -i -E "s|https://raw.githubusercontent.com/[^/]+/[^/]+/dev/assets/SQLCreateTablesBc.sql|https://raw.githubusercontent.com/${REPO}/${TAG}/assets/SQLCreateTablesBc.sql|g" ./docker-compose.yml
