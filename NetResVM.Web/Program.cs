@@ -6,6 +6,8 @@ using DataLayer;
 using DataLayer.Interface;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using SimpleLogger;
 using System.Globalization;
 
@@ -26,12 +28,20 @@ namespace NetResVM.Web
 
 			// Add services to the container.
 			builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-			builder.Services.AddControllersWithViews().AddViewLocalization(Microsoft.AspNetCore.Mvc.Razor.LanguageViewLocationExpanderFormat.Suffix)
-				.AddDataAnnotationsLocalization();;
+			builder.Services.AddControllersWithViews(options =>
+			{
+				options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+				options.Filters.Add(new AuthorizeFilter());
+			})
+			.AddViewLocalization(Microsoft.AspNetCore.Mvc.Razor.LanguageViewLocationExpanderFormat.Suffix)
+			.AddDataAnnotationsLocalization();
 			builder.Services.AddSession(options =>
 			{
                 options.Cookie.Name = "SessionCookie";
-                options.IdleTimeout = TimeSpan.FromMinutes(5);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
                 options.Cookie.IsEssential = true;
             });
 
@@ -55,7 +65,10 @@ namespace NetResVM.Web
 			.AddCookie(options =>
 			{
 				options.Cookie.Name = "AuthCookies";
-				options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+				options.Cookie.HttpOnly = true;
+				options.Cookie.SameSite = SameSiteMode.Lax;
+				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+				options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
 				options.SlidingExpiration = true;
                 options.LoginPath = "/Login/Index";
                 options.LogoutPath = "/Login/Logout";
@@ -91,9 +104,18 @@ namespace NetResVM.Web
 				// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 				app.UseHsts();
 			}
+			
+			app.Use(async (context, next) =>
+			{
+				context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+				context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
+				context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+				await next();
+			});
+			
+			app.UseStaticFiles();
 			app.UseSession();
 			app.UseHttpsRedirection();
-			app.UseStaticFiles();
 
 			app.UseRouting();
             app.UseAuthentication();
