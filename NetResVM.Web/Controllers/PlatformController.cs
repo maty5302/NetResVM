@@ -384,11 +384,22 @@ namespace NetResVM.Web.Controllers
         /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IActionResult"/>
         /// that redirects the user to the appropriate view based on the outcome of the deletion.</returns>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteLab(int serverId, string labId)
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
+
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
+                string referer = Request.Headers.Referer.ToString();
+                if (!string.IsNullOrEmpty(referer) && Uri.TryCreate(referer, UriKind.Absolute, out var uri) && uri.Host == Request.Host.Host)
+                {
+                    return Redirect(referer);
+                }
+                return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+            }
+
             var server = _serverService.GetServerById(serverId);
             if (server == null)
             {

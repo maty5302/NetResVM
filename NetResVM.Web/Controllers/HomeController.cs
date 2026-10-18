@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net.NetworkInformation;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -106,6 +106,21 @@ namespace NetResVM.Web.Controllers
 		public IActionResult Error()
 		{
 			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+		}
+
+		/// <summary>
+		/// Handles access denied redirections, setting an error message and redirecting to the home page.
+		/// </summary>
+		[AllowAnonymous]
+		public IActionResult AccessDenied()
+		{
+			TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
+			string referer = Request.Headers.Referer.ToString();
+			if (!string.IsNullOrEmpty(referer) && Uri.TryCreate(referer, UriKind.Absolute, out var uri) && uri.Host == Request.Host.Host)
+			{
+				return Redirect(referer);
+			}
+			return RedirectToAction("Index", "Home");
 		}
 	}
 }

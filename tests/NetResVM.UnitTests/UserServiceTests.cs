@@ -160,6 +160,32 @@ namespace NetResVM.UnitTests
             Assert.False(result);
         }
 
+        [Fact]
+        public void ValidateCredentials_WithInactiveUser_ReturnsFalse()
+        {
+            var datatable = new DataTable();
+            datatable.Columns.Add("UserID", typeof(int));
+            datatable.Columns.Add("Username", typeof(string));
+            datatable.Columns.Add("Password", typeof(string));
+            datatable.Columns.Add("Role", typeof(string));
+            datatable.Columns.Add("AuthorizationType", typeof(string));
+            datatable.Columns.Add("Active", typeof(int));
+            datatable.Rows.Add(1, "inactive_user", "password123", "Admin", "localhost", 0);
+            _mockUserTableDataGateway.Setup(g => g.GetUserByUsername("inactive_user")).Returns(datatable);
+            var result = _userService.ValidateCredentials("inactive_user", "password123");
+            Assert.False(result);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        public void ValidateCredentials_WithNullOrWhitespaceUsername_ReturnsFalse(string? username)
+        {
+            var result = _userService.ValidateCredentials(username, "password123");
+            Assert.False(result);
+        }
+
         #endregion
 
         #region GetUserId Tests
@@ -509,6 +535,111 @@ namespace NetResVM.UnitTests
             var result = _userService.RemoveUser(999);
             Assert.False(result);
         }
+        #endregion
+
+        #region IsUserActive Tests
+
+        [Fact]
+        public void IsUserActive_WithActiveUser_ReturnsTrue()
+        {
+            var datatable = new DataTable();
+            datatable.Columns.Add("UserID", typeof(int));
+            datatable.Columns.Add("Username", typeof(string));
+            datatable.Columns.Add("Password", typeof(string));
+            datatable.Columns.Add("Role", typeof(string));
+            datatable.Columns.Add("AuthorizationType", typeof(string));
+            datatable.Columns.Add("Active", typeof(int));
+            datatable.Rows.Add(1, "active_user", "password123", "Admin", "localhost", 1);
+            _mockUserTableDataGateway.Setup(g => g.GetUserByUsername("active_user")).Returns(datatable);
+
+            var result = _userService.IsUserActive("active_user");
+
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void IsUserActive_WithInactiveUser_ReturnsFalse()
+        {
+            var datatable = new DataTable();
+            datatable.Columns.Add("UserID", typeof(int));
+            datatable.Columns.Add("Username", typeof(string));
+            datatable.Columns.Add("Password", typeof(string));
+            datatable.Columns.Add("Role", typeof(string));
+            datatable.Columns.Add("AuthorizationType", typeof(string));
+            datatable.Columns.Add("Active", typeof(int));
+            datatable.Rows.Add(2, "inactive_user", "password123", "User", "localhost", 0);
+            _mockUserTableDataGateway.Setup(g => g.GetUserByUsername("inactive_user")).Returns(datatable);
+
+            var result = _userService.IsUserActive("inactive_user");
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void IsUserActive_WithNonExistingUser_ReturnsFalse()
+        {
+            var datatable = new DataTable();
+            datatable.Columns.Add("UserID", typeof(int));
+            datatable.Columns.Add("Username", typeof(string));
+            datatable.Columns.Add("Password", typeof(string));
+            datatable.Columns.Add("Role", typeof(string));
+            datatable.Columns.Add("AuthorizationType", typeof(string));
+            datatable.Columns.Add("Active", typeof(int));
+            _mockUserTableDataGateway.Setup(g => g.GetUserByUsername("nonexistent")).Returns(datatable);
+
+            var result = _userService.IsUserActive("nonexistent");
+
+            Assert.False(result);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        public void IsUserActive_WithNullOrWhitespaceUsername_ReturnsFalse(string? username)
+        {
+            var result = _userService.IsUserActive(username);
+
+            Assert.False(result);
+        }
+
+        #endregion
+
+        #region LDAP Escaping and Injection Tests
+
+        [Theory]
+        [InlineData("john.doe", "john.doe")]
+        [InlineData("admin,ou=Admins", "admin\\,ou\\=Admins")]
+        [InlineData("test+user", "test\\+user")]
+        [InlineData("test\"user", "test\\\"user")]
+        [InlineData("test\\user", "test\\\\user")]
+        [InlineData("test<user>", "test\\<user\\>")]
+        [InlineData("test;user", "test\\;user")]
+        [InlineData(" leading", "\\ leading")]
+        [InlineData("trailing ", "trailing\\ ")]
+        [InlineData("#hash", "\\#hash")]
+        [InlineData("mid#hash", "mid#hash")]
+        [InlineData("", "")]
+        [InlineData(null, "")]
+        public void EscapeLdapDn_EscapesSpecialCharactersCorrectly(string? input, string expected)
+        {
+            var result = UserService.EscapeLdapDn(input!);
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData(null, "pass")]
+        [InlineData("", "pass")]
+        [InlineData("   ", "pass")]
+        [InlineData("user", null)]
+        [InlineData("user", "")]
+        [InlineData("user", "   ")]
+        public void ValidateCredentials_WithNullOrWhitespaceInputs_ReturnsFalse(string? username, string? password)
+        {
+            var result = _userService.ValidateCredentials(username!, password!);
+            Assert.False(result);
+        }
+
         #endregion
     }
 }
