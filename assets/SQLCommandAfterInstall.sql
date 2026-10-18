@@ -4,3 +4,7 @@ CREATE LOGIN "YourName" WITH PASSWORD = 'YourPassword';
 ALTER SERVER ROLE sysadmin ADD MEMBER "YourName";
 -- Disable the sa account
 ALTER LOGIN sa DISABLE;
+
+ALTER TABLE dbo.UserLabOwnership DROP CONSTRAINT PK_OwnedLab;
+ALTER TABLE dbo.UserLabOwnership ADD CONSTRAINT PK_OwnedLab PRIMARY KEY (LabId, ServerId, UserId);
+GO
