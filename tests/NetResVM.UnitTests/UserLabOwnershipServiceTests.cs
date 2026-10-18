@@ -110,6 +110,50 @@ public class UserLabOwnershipServiceTests
 
     #endregion
 
+    #region IsMainOwner Tests
+
+    [Fact]
+    public void IsMainOwner_FirstOwner_ShouldReturnTrue()
+    {
+        var datatable = new DataTable();
+        datatable.Columns.Add("UserID", typeof(int));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Rows.Add(1, "LabA", 101);
+        datatable.Rows.Add(2, "LabA", 101);
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByLabId("LabA")).Returns(datatable);
+
+        Assert.True(_labOwnershipService.IsMainOwner(1, "LabA"));
+    }
+
+    [Fact]
+    public void IsMainOwner_Collaborator_ShouldReturnFalse()
+    {
+        var datatable = new DataTable();
+        datatable.Columns.Add("UserID", typeof(int));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Rows.Add(1, "LabA", 101);
+        datatable.Rows.Add(2, "LabA", 101);
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByLabId("LabA")).Returns(datatable);
+
+        Assert.False(_labOwnershipService.IsMainOwner(2, "LabA"));
+    }
+
+    [Fact]
+    public void IsMainOwner_UnownedLab_ShouldReturnFalse()
+    {
+        var datatable = new DataTable();
+        datatable.Columns.Add("UserID", typeof(int));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Columns.Add("ServerID", typeof(int));
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByLabId("LabA")).Returns(datatable);
+
+        Assert.False(_labOwnershipService.IsMainOwner(1, "LabA"));
+    }
+
+    #endregion
+
     #region IsLabAlreadyOwned Tests
 
     [Fact]

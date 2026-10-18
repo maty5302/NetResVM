@@ -43,6 +43,15 @@ docker compose pull && docker compose up
 
 > Poznámka: Po prvním přihlášení byste měli změnit heslo za silnější!!!
 
+> [!WARNING]
+> **Přístup k databázi z hostitele:**
+> Ve výchozím nastavení není port databáze MS SQL (`1433`) vystaven ven ze sítě Dockeru, jelikož aplikace s databází komunikuje v rámci interní sítě kontejnerů. Pokud potřebujete k databázi přistupovat přímo z hostitelského počítače (např. přes SSMS nebo DBeaver), můžete v `docker-compose.yml` u služby `mssql` přidat:
+> ```yaml
+> ports:
+>   - "1433:1433" # případně pro vyšší bezpečnost pouze pro localhost: "127.0.0.1:1433:1433"
+> ```
+> **Varování:** Vystavení portu `1433` do veřejné sítě nebo na serveru bez dodatečné ochrany firewallem představuje bezpečnostní riziko. Vždy se ujistěte, že používáte dostatečně silné heslo (`DB_PASSWORD`).
+
 ## Instalace bez Dockeru 
 
 #### 1. Stáhněte a rozbalte archiv pro váš operační systém

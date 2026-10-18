@@ -31,6 +31,11 @@ RUN apt-get update && \
 
 COPY --from=build /app/publish .
 
+RUN mkdir -p /app/keys /app/logs /app/backups && \
+    chown -R app:app /app
+
+USER app
+
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 

@@ -1,8 +1,9 @@
-﻿using BusinessLayer.Enum;
+using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 
@@ -27,6 +28,7 @@ namespace NetResVM.Web.Controllers
         /// Displays the list of servers.
         /// </summary>
         /// <returns> An <see cref="IActionResult"/> that renders Add page</returns>
+        [Authorize(Roles = "Admin")]
         public IActionResult Add()
         {
             if (User.Identity!=null && !User.Identity.IsAuthenticated)
@@ -42,6 +44,7 @@ namespace NetResVM.Web.Controllers
         /// </summary>
         /// <param name="id"> ID of server to edit</param>
         /// <returns> An <see cref="IActionResult"/> that renders edit page  </returns>
+        [Authorize(Roles = "Admin")]
         public IActionResult Edit(int id)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -64,6 +67,8 @@ namespace NetResVM.Web.Controllers
         /// </summary>
         /// <param name="id"> ID of the server to remove </param>
         /// <returns> An <see cref="IActionResult"/> that renders Home and message about success or failure of operation</returns>
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
         public IActionResult Remove(int id)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -85,6 +90,7 @@ namespace NetResVM.Web.Controllers
         /// <param name="server"> Model where information about server is stored for updating </param>
         /// <returns> An <see cref="IActionResult"/> that renders Home and message about success or failure of operation </returns>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public IActionResult SaveChanges(ServerModel server)
         {
             if(User.Identity != null && !User.Identity.IsAuthenticated)
@@ -107,9 +113,21 @@ namespace NetResVM.Web.Controllers
         /// <param name="server"> Model where information about server is stored for testing connection </param>
         /// <param name="edit"> </param>
         /// <returns>  An <see cref="Task{IActionResult}"/> that renders Add page and message about success or failure of operation </returns>
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> TestConnection(ServerModel server, bool edit = false)
         {
-            if (server.Password == null)
+            if (edit && string.IsNullOrEmpty(server.Password))
+            {
+                var credentials = _serverService.GetServerCredentials(server.Id);
+                if (credentials != null)
+                {
+                    server.Password = credentials.Value.Password;
+                    ModelState.Remove(nameof(server.Password));
+                }
+            }
+
+            if (string.IsNullOrEmpty(server.Password))
             {
                 TempData["ErrorMessage"] = _localizer["YouNeedPassword"].Value;
                 if (edit)
@@ -118,7 +136,11 @@ namespace NetResVM.Web.Controllers
             }
             if (!ModelState.IsValid)
             {
-                return View("Error");
+                var errors = string.Join(" ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                TempData["ErrorMessage"] = errors;
+                if (edit)
+                    return RedirectToAction("Edit", "Server", new { id = server.Id });
+                return View("Add", server);
             }
             if (server.Platform == PlatformType.Unknown)
             {
@@ -151,6 +173,7 @@ namespace NetResVM.Web.Controllers
         /// <param name="server">Model where information about server is stored for adding server </param>
         /// <returns> An <see  cref="Task{IActionResult}"/> that renders Home or Add page and message about success or failure of operation </returns>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddTestedConnection(ServerModel server)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)

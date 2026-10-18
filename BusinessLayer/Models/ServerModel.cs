@@ -1,4 +1,4 @@
-﻿using BusinessLayer.Enum;
+using BusinessLayer.Enum;
 
 namespace BusinessLayer.Models
 {
@@ -10,7 +10,7 @@ namespace BusinessLayer.Models
         /// <summary>
         /// Gets or sets the unique identifier of the server.
         /// </summary>
-        public required int Id { get; set; }
+        public int Id { get; set; }
 
         /// <summary>
         /// Gets or sets the platform type for the current context.
@@ -35,7 +35,7 @@ namespace BusinessLayer.Models
         /// <summary>
         /// Gets or sets the password used to authenticate with the server.
         /// </summary>
-        public required string Password { get; set; }
+        public string? Password { get; set; }
     }
 
 }

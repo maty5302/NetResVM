@@ -525,4 +525,16 @@
     <data name="Close" xml:space="preserve">
         <value>Close</value>
     </data>
+    <data name="ReservationNotFound" xml:space="preserve">
+        <value>Reservation not found</value>
+    </data>
+    <data name="ServerReservedByAnother" xml:space="preserve">
+        <value>The server is currently reserved for another lab or by another user.</value>
+    </data>
+    <data name="NoActiveReservation" xml:space="preserve">
+        <value>You must have an active reservation to start a lab.</value>
+    </data>
+    <data name="Today" xml:space="preserve">
+        <value>Today</value>
+    </data>
 </root>

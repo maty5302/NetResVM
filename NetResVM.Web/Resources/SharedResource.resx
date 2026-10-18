@@ -525,4 +525,16 @@
     <data name="Close" xml:space="preserve">
         <value>Closed</value>
     </data>
+    <data name="ReservationNotFound" xml:space="preserve">
+        <value>ReservationNotFound!</value>
+    </data>
+    <data name="ServerReservedByAnother" xml:space="preserve">
+        <value>ServerReservedByAnother</value>
+    </data>
+    <data name="NoActiveReservation" xml:space="preserve">
+        <value>NoActiveReservation</value>
+    </data>
+    <data name="Today" xml:space="preserve">
+        <value>Today</value>
+    </data>
 </root>

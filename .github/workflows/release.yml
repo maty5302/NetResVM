@@ -1,0 +1,138 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+      - '[0-9]+.*'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build, Package and Release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore NetResVM.sln
+
+      - name: Publish Linux (linux-x64)
+        run: |
+          dotnet publish NetResVM.Web/NetResVM.Web.csproj \
+            --configuration Release \
+            --runtime linux-x64 \
+            --self-contained false \
+            -p:PublishSingleFile=true \
+            -p:DebugType=None \
+            -p:DebugSymbols=false \
+            --output ./publish/linux-x64
+
+          # Odstranit veškeré .pdb soubory
+          find ./publish/linux-x64 -name "*.pdb" -type f -delete
+
+          # Spustitelná práva a binární alias NetResVM
+          chmod +x ./publish/linux-x64/NetResVM.Web
+          cp ./publish/linux-x64/NetResVM.Web ./publish/linux-x64/NetResVM
+          chmod +x ./publish/linux-x64/NetResVM
+
+          # Zkopírovat SQL inicializační skript
+          cp assets/SQLCreateTablesBc.sql ./publish/linux-x64/
+
+          # Zkopírovat .env.example
+          cp docker/.env.example ./publish/linux-x64/.env.example
+
+          # Ověřit přítomnost konfigurace
+          if [ ! -f ./publish/linux-x64/sqlconnection.json ]; then
+            cp NetResVM.Web/sqlconnection.json ./publish/linux-x64/
+          fi
+
+          # Zabalit do ZIP
+          cd ./publish/linux-x64
+          zip -r ../../NetResVM-linux-x64.zip .
+          cd -
+
+      - name: Publish Windows (win-x64)
+        run: |
+          dotnet publish NetResVM.Web/NetResVM.Web.csproj \
+            --configuration Release \
+            --runtime win-x64 \
+            --self-contained false \
+            -p:PublishSingleFile=true \
+            -p:DebugType=None \
+            -p:DebugSymbols=false \
+            --output ./publish/win-x64
+
+          # Odstranit veškeré .pdb soubory
+          find ./publish/win-x64 -name "*.pdb" -type f -delete
+
+          # Binární alias NetResVM.exe
+          cp ./publish/win-x64/NetResVM.Web.exe ./publish/win-x64/NetResVM.exe
+
+          # Zkopírovat SQL inicializační skript
+          cp assets/SQLCreateTablesBc.sql ./publish/win-x64/
+
+          # Zkopírovat .env.example
+          cp docker/.env.example ./publish/win-x64/.env.example
+
+          # Ověřit přítomnost konfigurace
+          if [ ! -f ./publish/win-x64/sqlconnection.json ]; then
+            cp NetResVM.Web/sqlconnection.json ./publish/win-x64/
+          fi
+
+          # Zabalit do ZIP
+          cd ./publish/win-x64
+          zip -r ../../NetResVM-win-x64.zip .
+          cd -
+
+      - name: Prepare docker-compose.yml and .env.example for release
+        run: |
+          TAG="${{ github.ref_name }}"
+          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          REPO="${{ github.repository }}"
+
+          cp docker/docker-compose.yml ./docker-compose.yml
+          cp docker/.env.example ./.env.example
+
+          # Nastavit image tag na latest
+          sed -i -E "s|image: ghcr.io/[^/]+/netresvm:.*|image: ghcr.io/${OWNER_LC}/netresvm:latest|g" ./docker-compose.yml
+
+          # Nahradit odkaz na SQL skript podle tagu releasu
+          sed -i -E "s|https://raw.githubusercontent.com/[^/]+/[^/]+/dev/assets/SQLCreateTablesBc.sql|https://raw.githubusercontent.com/${REPO}/${TAG}/assets/SQLCreateTablesBc.sql|g" ./docker-compose.yml
+
+          echo "Generated docker-compose.yml for release $TAG:"
+          cat ./docker-compose.yml
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            NetResVM-linux-x64.zip
+            NetResVM-win-x64.zip
+            docker-compose.yml
+            .env.example
+          generate_release_notes: true
