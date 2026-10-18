@@ -46,5 +46,18 @@ namespace NetResVM.UnitTests
             var exception = await Record.ExceptionAsync(() => Task.WhenAll(tasks));
             Assert.Null(exception);
         }
+
+        [Fact]
+        public void FileLogger_LogsDirectory_ShouldExistAfterLogging()
+        {
+            var logger = FileLogger.Instance;
+            logger.Log("Directory verification message");
+
+            string logDirectory = Path.Combine(Directory.GetCurrentDirectory(), "logs");
+            Assert.True(Directory.Exists(logDirectory));
+
+            string logFile = Path.Combine(logDirectory, $"log-{DateTime.Today:yyyy-MM-dd}.txt");
+            Assert.True(File.Exists(logFile));
+        }
     }
 }

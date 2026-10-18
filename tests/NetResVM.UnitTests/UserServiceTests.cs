@@ -640,6 +640,88 @@ namespace NetResVM.UnitTests
             Assert.False(result);
         }
 
+        [Fact]
+        public void ValidateCredentials_WithVsbUser_CallsLdapAndReturnsFalseWhenUnreachable()
+        {
+            var datatable = new DataTable();
+            datatable.Columns.Add("UserID", typeof(int));
+            datatable.Columns.Add("Username", typeof(string));
+            datatable.Columns.Add("Password", typeof(string));
+            datatable.Columns.Add("Role", typeof(string));
+            datatable.Columns.Add("AuthorizationType", typeof(string));
+            datatable.Columns.Add("Active", typeof(int));
+            datatable.Rows.Add(1, "stu0123", "", "student", "vsb", 1);
+
+            _mockUserTableDataGateway.Setup(g => g.GetUserByUsername("stu0123")).Returns(datatable);
+
+            var result = _userService.ValidateCredentials("stu0123", "somePassword");
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void ValidateCredentials_WithVsbUserEndingInNonAlphanumeric_ReturnsFalseImmediately()
+        {
+            var datatable = new DataTable();
+            datatable.Columns.Add("UserID", typeof(int));
+            datatable.Columns.Add("Username", typeof(string));
+            datatable.Columns.Add("Password", typeof(string));
+            datatable.Columns.Add("Role", typeof(string));
+            datatable.Columns.Add("AuthorizationType", typeof(string));
+            datatable.Columns.Add("Active", typeof(int));
+            datatable.Rows.Add(2, "badlogin_", "", "student", "vsb", 1);
+
+            _mockUserTableDataGateway.Setup(g => g.GetUserByUsername("badlogin_")).Returns(datatable);
+
+            var result = _userService.ValidateCredentials("badlogin_", "somePassword");
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void ValidateCredentials_WithUnknownAuthorizationType_ReturnsFalse()
+        {
+            var datatable = new DataTable();
+            datatable.Columns.Add("UserID", typeof(int));
+            datatable.Columns.Add("Username", typeof(string));
+            datatable.Columns.Add("Password", typeof(string));
+            datatable.Columns.Add("Role", typeof(string));
+            datatable.Columns.Add("AuthorizationType", typeof(string));
+            datatable.Columns.Add("Active", typeof(int));
+            datatable.Rows.Add(3, "userUnknown", "pass", "student", "oauth", 1);
+
+            _mockUserTableDataGateway.Setup(g => g.GetUserByUsername("userUnknown")).Returns(datatable);
+
+            var result = _userService.ValidateCredentials("userUnknown", "pass");
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void AddUser_WhenGatewayThrowsException_ReturnsFalse()
+        {
+            var emptyDt = new DataTable();
+            emptyDt.Columns.Add("UserID", typeof(int));
+            emptyDt.Columns.Add("Username", typeof(string));
+            _mockUserTableDataGateway.Setup(g => g.GetUserByUsername("newuser")).Returns(emptyDt);
+            _mockUserTableDataGateway.Setup(g => g.AddUser(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()))
+                .Throws(new Exception("Database connection error"));
+
+            var result = _userService.AddUser("newuser", "password", "student", "localhost", true);
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void UpdateUser_WhenGatewayThrowsException_ReturnsFalse()
+        {
+            var userDt = new DataTable();
+            userDt.Columns.Add("UserID", typeof(int));
+            userDt.Rows.Add(1);
+            _mockUserTableDataGateway.Setup(g => g.GetUserById(1)).Returns(userDt);
+            _mockUserTableDataGateway.Setup(g => g.UpdateUserActive(It.IsAny<int>(), It.IsAny<int>()))
+                .Throws(new Exception("Database timeout"));
+
+            var result = _userService.UpdateUser(1, true);
+            Assert.False(result);
+        }
+
         #endregion
     }
 }
