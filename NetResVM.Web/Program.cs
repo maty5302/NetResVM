@@ -9,8 +9,10 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using SimpleLogger;
 using System.Globalization;
+using System.Threading.RateLimiting;
 
 namespace NetResVM.Web
 {
@@ -73,6 +75,7 @@ namespace NetResVM.Web
 				options.SlidingExpiration = true;
                 options.LoginPath = "/Login/Index";
                 options.LogoutPath = "/Login/Logout";
+                options.AccessDeniedPath = "/Home/AccessDenied";
                 options.Events = new CookieAuthenticationEvents
                 {
                     OnValidatePrincipal = async context =>
@@ -91,6 +94,41 @@ namespace NetResVM.Web
                             context.RejectPrincipal();
                             await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                         }
+                    }
+                };
+            });
+
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.AddPolicy("login-policy", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        factory: partition => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 5,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                            QueueLimit = 0
+                        }));
+                options.OnRejected = async (context, cancellationToken) =>
+                {
+                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                    if (context.HttpContext.Request.Headers.Accept.ToString().Contains("text/html"))
+                    {
+                        context.HttpContext.Response.ContentType = "text/html; charset=utf-8";
+                        await context.HttpContext.Response.WriteAsync(
+                            "<!DOCTYPE html><html><head><meta charset='utf-8'><title>429 Too Many Requests</title>" +
+                            "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'></head>" +
+                            "<body class='container py-5 text-center'>" +
+                            "<div class='alert alert-warning py-4'><h4>Příliš mnoho pokusů o přihlášení (Rate Limit)</h4>" +
+                            "<p>Z bezpečnostních důvodů byl přístup dočasně pozastaven. Zkuste to prosím znovu za 1 minutu.</p>" +
+                            "<a href='/Login/Index' class='btn btn-primary mt-3'>Zpět na přihlášení</a></div></body></html>",
+                            cancellationToken);
+                    }
+                    else
+                    {
+                        await context.HttpContext.Response.WriteAsync("Too many login attempts. Please try again in 1 minute.", cancellationToken);
                     }
                 };
             });
@@ -145,6 +183,7 @@ namespace NetResVM.Web
 			app.UseHttpsRedirection();
 
 			app.UseRouting();
+			app.UseRateLimiter();
             app.UseAuthentication();
             app.UseAuthorization();
 			

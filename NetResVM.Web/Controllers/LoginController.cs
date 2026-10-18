@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Localization;
 using NetResVM.Web.Models;
 using SuperReservationSystem.Models;
@@ -46,6 +47,7 @@ namespace NetResVM.Web.Controllers
         /// <returns>  An <see cref="Task{IActionResult}"/> that renders home or login page and message about success or failure of operation </returns>
         [HttpPost]
         [AllowAnonymous]
+        [EnableRateLimiting("login-policy")]
         public async Task<IActionResult> LoginASync(LoginModel user)
         {
             if (ModelState.IsValid && !User.Identity.IsAuthenticated)
