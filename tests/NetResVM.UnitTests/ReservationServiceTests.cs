@@ -171,7 +171,7 @@ public class ReservationServiceTests
             ReservationEnd = DateTime.Now.AddHours(1)
         };
         _mockDataGateway.Setup(m => m.GetAllReservations()).Returns(new DataTable());
-        _mockDataGateway.Setup(m => m.InsertReservation(reservation.ServerId, reservation.UserId, reservation.ReservationStart, reservation.ReservationEnd, reservation.LabId));
+        _mockDataGateway.Setup(m => m.InsertReservation(reservation.ServerId, reservation.UserId, reservation.ReservationStart, reservation.ReservationEnd, reservation.LabId)).Returns(true);
         
         var result = _reservationService.MakeReservation(reservation);
         
@@ -229,7 +229,7 @@ public class ReservationServiceTests
         datatable.Rows.Add(1, 1, 1, baseTime, baseTime.AddHours(2), "old-lab");
         
         _mockDataGateway.Setup(m => m.GetAllReservations()).Returns(datatable);
-        _mockDataGateway.Setup(m => m.InsertReservation(newReservation.ServerId, newReservation.UserId, newReservation.ReservationStart, newReservation.ReservationEnd, newReservation.LabId));
+        _mockDataGateway.Setup(m => m.InsertReservation(newReservation.ServerId, newReservation.UserId, newReservation.ReservationStart, newReservation.ReservationEnd, newReservation.LabId)).Returns(true);
         
         var result = _reservationService.MakeReservation(newReservation);
         
@@ -260,7 +260,7 @@ public class ReservationServiceTests
         datatable.Rows.Add(1, 1, 1, baseTime, baseTime.AddHours(1), "lab");
         
         _mockDataGateway.Setup(m => m.GetAllReservations()).Returns(datatable);
-        _mockDataGateway.Setup(m => m.InsertReservation(newReservation.ServerId, newReservation.UserId, newReservation.ReservationStart, newReservation.ReservationEnd, newReservation.LabId));
+        _mockDataGateway.Setup(m => m.InsertReservation(newReservation.ServerId, newReservation.UserId, newReservation.ReservationStart, newReservation.ReservationEnd, newReservation.LabId)).Returns(true);
         
         var result = _reservationService.MakeReservation(newReservation);
         
@@ -388,6 +388,43 @@ public class ReservationServiceTests
         _mockDataGateway.Verify(m => m.InsertReservation(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>()), Times.Never);
     }
 
+    [Fact]
+    public void MakeReservation_ShouldReturnFalse_WhenDbAtomicInsertDetectsOverlap()
+    {
+        var reservation = new ReservationModel
+        {
+            ServerId = 1,
+            UserId = 1,
+            LabId = "1",
+            ReservationStart = DateTime.Now,
+            ReservationEnd = DateTime.Now.AddHours(1)
+        };
+        _mockDataGateway.Setup(m => m.GetAllReservations()).Returns(new DataTable());
+        _mockDataGateway.Setup(m => m.InsertReservation(reservation.ServerId, reservation.UserId, reservation.ReservationStart, reservation.ReservationEnd, reservation.LabId)).Returns(false);
+        
+        var result = _reservationService.MakeReservation(reservation);
+        
+        Assert.False(result);
+        _mockDataGateway.Verify(m => m.InsertReservation(reservation.ServerId, reservation.UserId, reservation.ReservationStart, reservation.ReservationEnd, reservation.LabId), Times.Once);
+    }
+
+    [Fact]
+    public void MakeReservation_ShouldReturnFalse_WhenStartDateAfterEndDate()
+    {
+        var reservation = new ReservationModel
+        {
+            ServerId = 1,
+            UserId = 1,
+            LabId = "1",
+            ReservationStart = DateTime.Now.AddHours(1),
+            ReservationEnd = DateTime.Now
+        };
+        
+        var result = _reservationService.MakeReservation(reservation);
+        
+        Assert.False(result);
+        _mockDataGateway.Verify(m => m.InsertReservation(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>()), Times.Never);
+    }
 
     #endregion
 
