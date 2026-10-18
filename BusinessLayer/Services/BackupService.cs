@@ -62,7 +62,7 @@ public class BackupService
         var response = await adapter.DownloadLab(serverId, labId, labInfo.Lab);
         if(response.FileContent != null)
         {
-            _localBackupStorage.SaveBackup(server.Platform.ToString(), labId, response.FileContent, settings.FileExtension);
+            await _localBackupStorage.SaveBackup(server.Platform.ToString(), labId, response.FileContent, settings.FileExtension);
             return (true, "Backup successful");
         }
         else

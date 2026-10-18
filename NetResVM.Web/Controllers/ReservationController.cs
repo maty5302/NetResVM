@@ -208,20 +208,35 @@ namespace NetResVM.Web.Controllers
         /// Deletes a reservation by its ID.
         /// </summary>
         /// <param name="reservationId"> Id of the reservation </param>
-        /// <returns>  An <see cref="IActionResult"/> that redirects to user reservation and informs if reservation was deleted successfully </returns>
+        /// <param name="id"> Optional alias for reservationId </param>
+        /// <param name="returnUrl"> Optional URL to redirect back to </param>
+        /// <returns>  An <see cref="IActionResult"/> that redirects to user reservation or returnUrl and informs if reservation was deleted successfully </returns>
         [HttpPost]
-        public IActionResult DeleteReservation(int reservationId)
+        public IActionResult DeleteReservation(int reservationId = 0, int? id = null, string? returnUrl = null)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
+
+            int targetId = reservationId != 0 ? reservationId : (id ?? 0);
+            if (targetId == 0)
+            {
+                TempData["ErrorMessage"] = _localizer["SomethingWrong"].Value;
+                return RedirectToAction("UserReservation", "Reservation");
+            }
             
             var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
             bool isAdmin = User.IsInRole("Admin");
-            var reservation = _reservationService.DeleteReservation(reservationId, userId, isAdmin);
+            var reservation = _reservationService.DeleteReservation(targetId, userId, isAdmin);
             if (reservation)
                 TempData["SuccessMessage"] = _localizer["ReservationDeleted"].Value;
             else
                 TempData["ErrorMessage"] = _localizer["SomethingWrong"].Value;
+
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
             return RedirectToAction("UserReservation", "Reservation");
         }
 

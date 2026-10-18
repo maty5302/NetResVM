@@ -2,6 +2,7 @@ using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using SimpleLogger;
@@ -211,10 +212,19 @@ namespace NetResVM.Web.Controllers
         /// <param name="collaboratorUsername">The username of the user to be added as a collaborator.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains an IActionResult that redirects
         /// to the appropriate view based on the outcome of the operation.</returns>
+        [HttpPost]
         public async Task<IActionResult> AddCollaborator(int serverId, string labId, string collaboratorUsername)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
+
+            // SECURITY: only admin or the main owner of the lab can add collaborators
+            int currentUserId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
+            if (!User.IsInRole("Admin") && !_userLabOwnership.IsMainOwner(currentUserId, labId))
+            {
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
+                return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+            }
 
             try
             {
@@ -271,6 +281,7 @@ namespace NetResVM.Web.Controllers
         /// <param name="serverId"> ID of the server where to import </param>
         /// <returns> An <see cref="Task{IActionResult}"/> that renders LabList and gives a message about success or failure </returns>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ImportLab(IFormFile file, int serverId)
         {
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -373,6 +384,7 @@ namespace NetResVM.Web.Controllers
         /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IActionResult"/>
         /// that redirects the user to the appropriate view based on the outcome of the deletion.</returns>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteLab(int serverId, string labId)
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
@@ -454,7 +466,7 @@ namespace NetResVM.Web.Controllers
             // SECURITY CHECK: Ownership
             int currentUserId = _userService.GetUserId(User.Identity.Name);
             var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
-            if (ownership.owned && !ownership.userOwns)
+            if (!User.IsInRole("Admin") && !ownership.userOwns && !HasActiveReservationForLab(serverId, labId, currentUserId))
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";
                 return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
@@ -532,7 +544,7 @@ namespace NetResVM.Web.Controllers
             // SECURITY CHECK: Ownership
             int currentUserId = _userService.GetUserId(User.Identity.Name);
             var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
-            if (ownership.owned && !ownership.userOwns)
+            if (!User.IsInRole("Admin") && !ownership.userOwns && !HasActiveReservationForLab(serverId, labId, currentUserId))
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";
                 return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
@@ -594,6 +606,17 @@ namespace NetResVM.Web.Controllers
         }
 
         
+        /// <summary>
+        /// Returns true when the user has a reservation for this lab that is active right now.
+        /// </summary>
+        private bool HasActiveReservationForLab(int serverId, string labId, int userId)
+        {
+            var now = DateTime.Now;
+            var reservations = _reservationService.GetReservationsByServerId(serverId);
+            return reservations != null && reservations.Any(r =>
+                r.UserId == userId && r.LabId == labId && r.ReservationStart <= now && r.ReservationEnd >= now);
+        }
+
         /// <summary>
         /// Checks the online status of the specified server and returns the result as a JSON response.
         /// </summary>

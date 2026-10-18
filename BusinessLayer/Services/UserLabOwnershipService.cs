@@ -77,6 +77,19 @@ namespace BusinessLayer.Services
         }
 
         /// <summary>
+        /// Determines whether the specified user is the main (first) owner of the lab.
+        /// The main owner is the one allowed to manage collaborators.
+        /// </summary>
+        /// <param name="userId">The ID of the user to check.</param>
+        /// <param name="labId">The unique identifier of the lab.</param>
+        /// <returns><c>true</c> if the user is the main owner; otherwise, <c>false</c>.</returns>
+        public bool IsMainOwner(int userId, string labId)
+        {
+            var owners = GetAllUserLabsByLabId(labId);
+            return owners != null && owners.Count > 0 && owners[0].UserId == userId;
+        }
+
+        /// <summary>
         /// Checks whether a lab is already owned and whether it is owned by a specific user.
         /// </summary>
         /// <param name="userId">The ID of the user to check ownership for.</param>

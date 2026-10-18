@@ -71,9 +71,11 @@
 					{
 						foreach (var item in todayEvents)
 						{
+							bool canDelete = User.IsInRole("Admin") || (User.Identity != null && User.Identity.IsAuthenticated && item.UserName == User.Identity.Name);
+							string deleteUrl = canDelete ? Url.Action("DeleteReservation", "Reservation", new { reservationId = item.Id, returnUrl = Url.Action("Index", "Reservation", new { view = "month", month = currentMonth, year = currentYear }) }) ?? "" : "";
 							<div class="event" role="button" tabindex="0"
 								 style="cursor: pointer;"
-								 onclick="openReservationModal('@item.Id', '@item.ServerName', '@item.Platform', '@item.ServerId', '@item.LabId', '@item.UserName', '@item.ReservationStart.ToString("yyyy-MM-dd HH:mm")', '@item.ReservationEnd.ToString("yyyy-MM-dd HH:mm")', '@Url.Action("LabInfo", "Platform", new { serverId = item.ServerId, labId = item.LabId })', '@Url.Action("SaveEvent", "Reservation", new { reservationId = item.Id })')">
+								 onclick="openReservationModal('@item.Id', '@item.ServerName', '@item.Platform', '@item.ServerId', '@item.LabId', '@item.UserName', '@item.ReservationStart.ToString("yyyy-MM-dd HH:mm")', '@item.ReservationEnd.ToString("yyyy-MM-dd HH:mm")', '@Url.Action("LabInfo", "Platform", new { serverId = item.ServerId, labId = item.LabId })', '@Url.Action("SaveEvent", "Reservation", new { reservationId = item.Id })', '@deleteUrl')">
 								<span>@item.ReservationStart.ToString("HH:mm")-@item.ReservationEnd.ToString("HH:mm")</span>
 								<span>@item.ServerName - @item.UserName</span>
 							</div>
@@ -127,6 +129,14 @@
 					<a id="modalExportIcsBtn" href="#" class="btn btn-primary">
 						<i class="bi bi-floppy"></i> @Localizer["Export"]
 					</a>
+					<form method="post" id="modalDeleteForm" action="@Url.Action("DeleteReservation", "Reservation")" style="display: none;">
+						@Html.AntiForgeryToken()
+						<input type="hidden" name="reservationId" id="modalDeleteReservationId" value="" />
+						<input type="hidden" name="returnUrl" id="modalDeleteReturnUrl" value="" />
+						<button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete a reservation? This operation is pernament!')">
+							<i class="bi bi-trash"></i> @Localizer["DeleteButton"]
+						</button>
+					</form>
 					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Close"]</button>
 				</div>
 			</div>
@@ -134,7 +144,7 @@
 	</div>
 
 	<script>
-		function openReservationModal(id, serverName, platform, serverId, labId, userName, start, end, labUrl, exportUrl) {
+		function openReservationModal(id, serverName, platform, serverId, labId, userName, start, end, labUrl, exportUrl, deleteUrl) {
 			document.getElementById('modalServer').innerText = serverName + " (" + platform + ")";
 			document.getElementById('modalLabId').innerText = labId;
 			document.getElementById('modalUser').innerText = userName;
@@ -142,6 +152,22 @@
 			document.getElementById('modalEnd').innerText = end;
 			document.getElementById('modalGoToLabBtn').href = labUrl;
 			document.getElementById('modalExportIcsBtn').href = exportUrl;
+
+			const deleteForm = document.getElementById('modalDeleteForm');
+			const deleteResId = document.getElementById('modalDeleteReservationId');
+			const deleteReturnUrl = document.getElementById('modalDeleteReturnUrl');
+			if (deleteForm) {
+				if (deleteUrl) {
+					deleteForm.action = deleteUrl;
+					if (deleteResId) deleteResId.value = id;
+					if (deleteReturnUrl) deleteReturnUrl.value = '@Url.Action("Index", "Reservation", new { view = "month", month = currentMonth, year = currentYear })';
+					deleteForm.style.display = 'inline-block';
+				} else {
+					deleteForm.action = '#';
+					if (deleteResId) deleteResId.value = '';
+					deleteForm.style.display = 'none';
+				}
+			}
 
 			const modalEl = document.getElementById('reservationModal');
 			if (window.bootstrap && window.bootstrap.Modal) {

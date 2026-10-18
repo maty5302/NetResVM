@@ -67,6 +67,7 @@ namespace NetResVM.Web.Controllers
         /// </summary>
         /// <param name="id"> ID of the server to remove </param>
         /// <returns> An <see cref="IActionResult"/> that renders Home and message about success or failure of operation</returns>
+        [HttpPost]
         [Authorize(Roles = "Admin")]
         public IActionResult Remove(int id)
         {

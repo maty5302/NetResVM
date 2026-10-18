@@ -43,7 +43,7 @@ namespace NetResVM.Web
             {
                 _logger.Log($"Lab {labId} already started");
             }
-            else if (labState == "STOPPED")
+            else if (labState == "STOPPED" || labState == "DEFINED_ON_CORE")
             {
                 var labs = await adapter.GetLabsAsync(serverId);
                 if(labs.Labs == null)
@@ -90,7 +90,7 @@ namespace NetResVM.Web
                     _logger.LogWarning($"Lab {labId} on server {serverId} could not be stopped");
 
             }
-            else if (labState == "STOPPED")
+            else if (labState == "STOPPED" || labState == "DEFINED_ON_CORE")
             {
                 _logger.Log($"Lab {labId} already stopped.");
             }
@@ -170,7 +170,7 @@ namespace NetResVM.Web
                             {
                                 IVirtualizationAdapter adapter = platformManager.GetAdapter(serverType);
                                 var labState = await adapter.StateOfLab(reservation.ServerId, reservation.LabId);
-                                if (labState == "STOPPED" && _loggedStoppedDuringReservation.Add(reservation.Id))
+                                if ((labState == "STOPPED" || labState == "DEFINED_ON_CORE") && _loggedStoppedDuringReservation.Add(reservation.Id))
                                 {
                                     _logger.LogWarning($"Lab {reservation.LabId} on server {reservation.ServerId} was detected as STOPPED during active reservation ID:{reservation.Id} (stopped externally or manually).");
                                 }

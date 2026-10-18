@@ -13,6 +13,7 @@
 				<th>@Localizer["ToTime"]</th>
 				<th>@Localizer["User"]</th>
 				<th>@Localizer["Export"]</th>
+				<th>@Localizer["Actions"]</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -20,6 +21,7 @@
 			{
 				@foreach (var reservation in plannedReservations)
 				{
+					bool canDelete = User.IsInRole("Admin") || (User.Identity != null && User.Identity.IsAuthenticated && reservation.UserName == User.Identity.Name);
 					<tr>
 						<td>@reservation.ServerName - @reservation.Platform </td>
 						<td>@reservation.LabId</td>
@@ -28,8 +30,22 @@
 						<td>@reservation.UserName</td>
 						<td>
 							<form method="post" action="@Url.Action("SaveEvent", "Reservation", new { reservationId = reservation.Id })">
+								@Html.AntiForgeryToken()
 								<button type="submit" class="btn btn-primary"><i class="bi bi-floppy"></i></button>
 							</form>
+						</td>
+						<td>
+							@if (canDelete)
+							{
+								<form method="post" action="@Url.Action("DeleteReservation", "Reservation")">
+									@Html.AntiForgeryToken()
+									<input type="hidden" name="reservationId" value="@reservation.Id" />
+									<input type="hidden" name="returnUrl" value="@Url.Action("Index", "Reservation", new { view = "list" })" />
+									<button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete a reservation? This operation is pernament!')">
+										<i class="bi bi-trash"></i>
+									</button>
+								</form>
+							}
 						</td>
 					</tr>
 				}
