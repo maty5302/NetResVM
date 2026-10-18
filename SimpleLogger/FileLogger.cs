@@ -1,11 +1,13 @@
-﻿namespace SimpleLogger
+namespace SimpleLogger
 {
     /// <summary>
     /// Singleton class that handles logging to a file.
+    /// Thread-safe and supports daily file rotation.
     /// </summary>
     public class FileLogger : ILogger
     {
         private static readonly Lazy<FileLogger> _instance = new Lazy<FileLogger>(() => new FileLogger());
+        private static readonly object _lock = new object();
 
         /// <summary>
         /// Gets the singleton instance of the <see cref="FileLogger"/> class.
@@ -14,39 +16,64 @@
         {
             get { return _instance.Value; }
         }
-        private string CurrentDirectory;
-        private string _logFilePath;
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileLogger"/> class.
         /// </summary>
         private FileLogger()
         {
-            CurrentDirectory = Directory.GetCurrentDirectory();
-            string logDirectory = Path.Combine(CurrentDirectory, "logs");
-            Directory.CreateDirectory(logDirectory); // Ensure the directory exists
-            _logFilePath = Path.Combine(logDirectory, $"log-{DateTime.Today:yyyy-MM-dd}.txt");
+            EnsureLogsDirectoryExists();
+        }
+
+        private static void EnsureLogsDirectoryExists()
+        {
+            try
+            {
+                string logDirectory = Path.Combine(Directory.GetCurrentDirectory(), "logs");
+                if (!Directory.Exists(logDirectory))
+                {
+                    Directory.CreateDirectory(logDirectory);
+                }
+            }
+            catch
+            {
+                // Suppress if directory creation fails during startup
+            }
+        }
+
+        private static string GetLogFilePath()
+        {
+            string logDirectory = Path.Combine(Directory.GetCurrentDirectory(), "logs");
+            if (!Directory.Exists(logDirectory))
+            {
+                Directory.CreateDirectory(logDirectory);
+            }
+            return Path.Combine(logDirectory, $"log-{DateTime.Today:yyyy-MM-dd}.txt");
         }
 
         /// <summary>
         /// Writes a log message to the log file with the specified message type.
+        /// Thread-safe via lock synchronization.
         /// </summary>
         /// <param name="messageType">The type of message (INFO, ERROR, WARNING).</param>
         /// <param name="message">The log message to write.</param>
         private void WriteLog(string messageType, string message)
         {
-            try
+            lock (_lock)
             {
-                using (var writer = new StreamWriter(_logFilePath, true))
+                try
                 {
-                    writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {messageType}: {message}");
+                    string logFilePath = GetLogFilePath();
+                    using (var writer = new StreamWriter(logFilePath, true))
+                    {
+                        writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {messageType}: {message}");
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                // If the log writing fails, write the exception message to the console.
-                Console.WriteLine($"Failed to write log: {ex.Message}");
+                catch (Exception ex)
+                {
+                    // If the log writing fails, write the exception message to the console.
+                    Console.WriteLine($"Failed to write log: {ex.Message}");
+                }
             }
         }
 
