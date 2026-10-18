@@ -95,8 +95,6 @@ namespace NetResVM.Web
                 }
             };
             
-            app.UseRequestLocalization(localizationOptions);
-            
 			// Configure the HTTP request pipeline.
 			if (!app.Environment.IsDevelopment())
 			{
@@ -110,10 +108,18 @@ namespace NetResVM.Web
 				context.Response.Headers["X-Content-Type-Options"] = "nosniff";
 				context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
 				context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+				context.Response.Headers["Content-Security-Policy"] =
+					"default-src 'self'; " +
+					"script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+					"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+					"font-src 'self' data: https://cdn.jsdelivr.net; " +
+					"img-src 'self' data:; connect-src 'self'; object-src 'none'; " +
+					"base-uri 'self'; form-action 'self'; frame-ancestors 'self'";
 				await next();
 			});
 			
 			app.UseStaticFiles();
+			app.UseRequestLocalization(localizationOptions);
 			app.UseSession();
 			app.UseHttpsRedirection();
 
