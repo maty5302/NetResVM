@@ -146,6 +146,51 @@ namespace BusinessLayer.Services
         }
 
         /// <summary>
+        /// Escapes special characters in an LDAP Distinguished Name (DN) component per RFC 4514.
+        /// </summary>
+        /// <param name="input">The raw string to escape.</param>
+        /// <returns>The escaped string safe for LDAP DN usage.</returns>
+        public static string EscapeLdapDn(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return string.Empty;
+            }
+
+            var sb = new System.Text.StringBuilder(input.Length * 2);
+            for (int i = 0; i < input.Length; i++)
+            {
+                char c = input[i];
+                switch (c)
+                {
+                    case '\\':
+                    case ',':
+                    case '+':
+                    case '"':
+                    case '<':
+                    case '>':
+                    case ';':
+                    case '=':
+                        sb.Append('\\').Append(c);
+                        break;
+                    case ' ' when (i == 0 || i == input.Length - 1):
+                        sb.Append('\\').Append(' ');
+                        break;
+                    case '#' when (i == 0):
+                        sb.Append('\\').Append('#');
+                        break;
+                    case '\0':
+                        sb.Append("\\00");
+                        break;
+                    default:
+                        sb.Append(c);
+                        break;
+                }
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// Validates user credentials against an LDAP server.
         /// </summary>
         /// <param name="username">The username to validate.</param>
@@ -155,15 +200,26 @@ namespace BusinessLayer.Services
         /// </returns>
         private bool ValidateCredentialsLdap(string username, string password)
         {
-            if (string.IsNullOrWhiteSpace(username))
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
+                return false;
+            }
+
+            string cleanUsername = username.Trim();
+            char userContext = cleanUsername.Last();
+
+            // VSB LDAP partitions users by the last character of their login (must be letter or digit)
+            if (!char.IsLetterOrDigit(userContext))
+            {
+                _logger.LogWarning($"Invalid user context character '{userContext}' for LDAP authentication.");
                 return false;
             }
 
             try
             {
-                var userContext = username.Last();
-                var bindDn = $"cn={username},ou={userContext},ou=Users,o=VSB";
+                string escapedUsername = EscapeLdapDn(cleanUsername);
+                string escapedUserContext = EscapeLdapDn(userContext.ToString());
+                var bindDn = $"cn={escapedUsername},ou={escapedUserContext},ou=Users,o=VSB";
 
 
                 var connection = new LdapConnection(new LdapDirectoryIdentifier("ldap.vsb.cz", 636));
@@ -199,6 +255,11 @@ namespace BusinessLayer.Services
         /// </returns>
         public bool ValidateCredentials(string username, string password)
         {
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            {
+                return false;
+            }
+
             var user = GetUser(username);
             if (user != null)
             {
