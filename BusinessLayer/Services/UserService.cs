@@ -1,4 +1,4 @@
-﻿using DataLayer;
+using DataLayer;
 using BusinessLayer.Models;
 using BusinessLayer.MapperDT;
 using SimpleLogger;
@@ -129,6 +129,23 @@ namespace BusinessLayer.Services
         }
 
         /// <summary>
+        /// Checks whether the user exists and is active.
+        /// </summary>
+        /// <param name="username">The username of the user.</param>
+        /// <returns>
+        /// <c>true</c> if the user exists and is active; otherwise, <c>false</c>.
+        /// </returns>
+        public bool IsUserActive(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                return false;
+            }
+            var user = GetUser(username);
+            return user != null && user.Active;
+        }
+
+        /// <summary>
         /// Validates user credentials against an LDAP server.
         /// </summary>
         /// <param name="username">The username to validate.</param>
@@ -138,6 +155,11 @@ namespace BusinessLayer.Services
         /// </returns>
         private bool ValidateCredentialsLdap(string username, string password)
         {
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                return false;
+            }
+
             try
             {
                 var userContext = username.Last();
@@ -159,7 +181,7 @@ namespace BusinessLayer.Services
                 //if the authentication is successful, the connection will not throw an exception
                 return true;
             }
-            catch (LdapException ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return false;

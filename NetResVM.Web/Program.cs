@@ -4,6 +4,7 @@ using BusinessLayer.Interface;
 using BusinessLayer.Services;
 using DataLayer;
 using DataLayer.Interface;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
@@ -72,6 +73,26 @@ namespace NetResVM.Web
 				options.SlidingExpiration = true;
                 options.LoginPath = "/Login/Index";
                 options.LogoutPath = "/Login/Logout";
+                options.Events = new CookieAuthenticationEvents
+                {
+                    OnValidatePrincipal = async context =>
+                    {
+                        var username = context.Principal?.Identity?.Name;
+                        if (string.IsNullOrEmpty(username))
+                        {
+                            context.RejectPrincipal();
+                            await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                            return;
+                        }
+
+                        var userService = context.HttpContext.RequestServices.GetRequiredService<UserService>();
+                        if (!userService.IsUserActive(username))
+                        {
+                            context.RejectPrincipal();
+                            await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                        }
+                    }
+                };
             });
 
             var app = builder.Build();

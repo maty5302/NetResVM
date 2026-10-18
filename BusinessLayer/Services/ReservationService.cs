@@ -120,6 +120,18 @@ namespace BusinessLayer.Services
         /// </returns>
         public bool MakeReservation(ReservationModel reservation)
         {
+            if (reservation == null)
+            {
+                _logger.LogError("Reservation model is null.");
+                return false;
+            }
+
+            if (reservation.ReservationStart >= reservation.ReservationEnd)
+            {
+                _logger.LogWarning("Reservation start time must be before end time.");
+                return false;
+            }
+
             var reservations = GetAllReservations();
             if (reservations == null)
             {
@@ -133,7 +145,13 @@ namespace BusinessLayer.Services
             }
             try
             {
-                _reservationTableDataGateway.InsertReservation(reservation.ServerId, reservation.UserId, reservation.ReservationStart, reservation.ReservationEnd, reservation.LabId);
+                bool inserted = _reservationTableDataGateway.InsertReservation(reservation.ServerId, reservation.UserId, reservation.ReservationStart, reservation.ReservationEnd, reservation.LabId);
+                if (!inserted)
+                {
+                    _logger.LogWarning($"Reservation for server ID:{reservation.ServerId} already exists at the time (atomic DB check).");
+                    return false;
+                }
+
                 _logger.Log($"Reservation has been made. ServerID:{reservation.ServerId}, UserID:{reservation.UserId}, StartDate:{reservation.ReservationStart}, EndDate:{reservation.ReservationEnd}, LabID:{reservation.LabId}");
                 return true;
             }
