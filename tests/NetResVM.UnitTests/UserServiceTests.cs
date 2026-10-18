@@ -604,5 +604,42 @@ namespace NetResVM.UnitTests
         }
 
         #endregion
+
+        #region LDAP Escaping and Injection Tests
+
+        [Theory]
+        [InlineData("john.doe", "john.doe")]
+        [InlineData("admin,ou=Admins", "admin\\,ou\\=Admins")]
+        [InlineData("test+user", "test\\+user")]
+        [InlineData("test\"user", "test\\\"user")]
+        [InlineData("test\\user", "test\\\\user")]
+        [InlineData("test<user>", "test\\<user\\>")]
+        [InlineData("test;user", "test\\;user")]
+        [InlineData(" leading", "\\ leading")]
+        [InlineData("trailing ", "trailing\\ ")]
+        [InlineData("#hash", "\\#hash")]
+        [InlineData("mid#hash", "mid#hash")]
+        [InlineData("", "")]
+        [InlineData(null, "")]
+        public void EscapeLdapDn_EscapesSpecialCharactersCorrectly(string? input, string expected)
+        {
+            var result = UserService.EscapeLdapDn(input!);
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData(null, "pass")]
+        [InlineData("", "pass")]
+        [InlineData("   ", "pass")]
+        [InlineData("user", null)]
+        [InlineData("user", "")]
+        [InlineData("user", "   ")]
+        public void ValidateCredentials_WithNullOrWhitespaceInputs_ReturnsFalse(string? username, string? password)
+        {
+            var result = _userService.ValidateCredentials(username!, password!);
+            Assert.False(result);
+        }
+
+        #endregion
     }
 }
