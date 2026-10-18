@@ -32,7 +32,7 @@ namespace BusinessLayer.Services
         /// <returns>
         /// A <see cref="UserModel"/> object if a user with the specified username exists; otherwise, <c>null</c>.
         /// </returns>
-        private UserModel? GetUser(string username)
+        public virtual UserModel? GetUser(string username)
         {
             try
             {
@@ -52,6 +52,16 @@ namespace BusinessLayer.Services
                 _logger.LogError(ex.Message);
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Checks whether a user with the specified username exists in the system.
+        /// </summary>
+        /// <param name="username">The username to check.</param>
+        /// <returns><c>true</c> if the user exists; otherwise, <c>false</c>.</returns>
+        public virtual bool UserExists(string username)
+        {
+            return GetUser(username) != null;
         }
 
         /// <summary>
@@ -373,7 +383,7 @@ namespace BusinessLayer.Services
         /// <returns>
         /// <c>true</c> if the user was successfully added; otherwise, <c>false</c>.
         /// </returns>
-        public bool AddUser(string username, string? password, string role ,string authorizationType, bool active)
+        public virtual bool AddUser(string username, string? password, string role ,string authorizationType, bool active)
         {
             try
             {

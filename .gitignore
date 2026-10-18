@@ -398,5 +398,6 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /Testovaci_Konzole
-/SuperReservationSystem/sqlconnection.json
+/NetResVM.Web/sqlconnection.json
 .env
+/NetResVM.Web/keys
