@@ -1,39 +1,81 @@
 @{
-	ViewBag.Title = @Localizer["ReservationLayout"];
+	ViewBag.Title = Localizer["ReservationLayout"];
 	string activeView = ViewBag.ActiveView as string ?? "list";
 }
-<h1>@ViewBag.Title</h1>
-<form>
-	<button class="btn btn-primary" formaction="@Url.Action("Create","Reservation")">@Localizer["NewReservation"]</button>
-	<button class="btn btn-primary" formaction="@Url.Action("UserReservation","Reservation")">@Localizer["MyReservations"]</button>
-</form>
-<hr />
-<!--Show other planned reservation with time, user and which server and lab-->
-<div>
-	<div class="form-group mb-3">
-		<label for="view" class="fw-semibold">@Localizer["SelectView"]:</label>
-		<select id="view" class="form-select" style="max-width: 250px;">
-			<option value="list" selected="@(activeView == "list")">@Localizer["ListView"]</option>
-			<option value="month" selected="@(activeView == "month")">@Localizer["MonthView"]</option>
-		</select>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+	<div>
+		<h1 class="mb-1">
+			@ViewBag.Title
+		</h1>
 	</div>
-	<br />
-	@Html.Partial("PartialIndexView/ListViewReservation")
-	@Html.Partial("PartialIndexView/MonthViewReservation")
+	<div class="d-flex flex-wrap align-items-center gap-2">
+		<a href="@Url.Action("Create", "Reservation")" class="btn btn-primary shadow-sm">
+			<i class="bi bi-calendar-plus me-1"></i> @Localizer["NewReservation"]
+		</a>
+		<a href="@Url.Action("UserReservation", "Reservation")" class="btn btn-outline-primary">
+			<i class="bi bi-person-badge me-1"></i> @Localizer["MyReservations"]
+		</a>
+	</div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+	<div class="btn-group shadow-sm" role="group" aria-label="@Localizer["SelectView"]">
+		<button type="button" class="btn @(activeView == "list" ? "btn-primary" : "btn-outline-primary")" id="btnViewList">
+			<i class="bi bi-list-ul me-1"></i> @Localizer["ListView"]
+		</button>
+		<button type="button" class="btn @(activeView == "month" ? "btn-primary" : "btn-outline-primary")" id="btnViewMonth">
+			<i class="bi bi-calendar3 me-1"></i> @Localizer["MonthView"]
+		</button>
+	</div>
+</div>
+
+<div id="reservationViewsContainer">
+	<partial name="PartialIndexView/ListViewReservation" />
+	<partial name="PartialIndexView/MonthViewReservation" />
 </div>
 
 <script>
-	const viewSelect = document.getElementById('view');
-	const monthView = document.getElementById('month-view');
-	const listView = document.getElementById('list-view');
+	document.addEventListener('DOMContentLoaded', function () {
+		const btnViewList = document.getElementById('btnViewList');
+		const btnViewMonth = document.getElementById('btnViewMonth');
+		const listView = document.getElementById('list-view');
+		const monthView = document.getElementById('month-view');
 
-	viewSelect.addEventListener('change', function () {
-		if (this.value === 'month') {
-			monthView.hidden = false;
-			listView.hidden = true;
-		} else if (this.value === 'list') {
-			monthView.hidden = true;
-			listView.hidden = false;
+		function switchView(viewName, updateUrl = true) {
+			if (viewName === 'month') {
+				if (listView) listView.hidden = true;
+				if (monthView) monthView.hidden = false;
+				btnViewMonth.classList.remove('btn-outline-primary');
+				btnViewMonth.classList.add('btn-primary');
+				btnViewList.classList.remove('btn-primary');
+				btnViewList.classList.add('btn-outline-primary');
+			} else {
+				if (listView) listView.hidden = false;
+				if (monthView) monthView.hidden = true;
+				btnViewList.classList.remove('btn-outline-primary');
+				btnViewList.classList.add('btn-primary');
+				btnViewMonth.classList.remove('btn-primary');
+				btnViewMonth.classList.add('btn-outline-primary');
+			}
+
+			if (updateUrl && window.history.replaceState) {
+				const url = new URL(window.location.href);
+				url.searchParams.set('view', viewName);
+				window.history.replaceState({}, '', url.toString());
+			}
+		}
+
+		if (btnViewList) {
+			btnViewList.addEventListener('click', function () {
+				switchView('list');
+			});
+		}
+
+		if (btnViewMonth) {
+			btnViewMonth.addEventListener('click', function () {
+				switchView('month');
+			});
 		}
 	});
 </script>
