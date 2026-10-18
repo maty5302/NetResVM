@@ -6,6 +6,8 @@ using DataLayer;
 using DataLayer.Interface;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
@@ -46,6 +48,21 @@ namespace NetResVM.Web
                 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 options.IdleTimeout = TimeSpan.FromMinutes(30);
                 options.Cookie.IsEssential = true;
+            });
+
+            // Configure Data Protection keys persistence (persists auth ticket keys across restarts)
+            var keysFolder = Path.Combine(builder.Environment.ContentRootPath, "keys");
+            Directory.CreateDirectory(keysFolder);
+            builder.Services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
+                .SetApplicationName("NetResVM");
+
+            // Configure Forwarded Headers for reverse proxy (HTTPS and Client IP detection)
+            builder.Services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                options.KnownIPNetworks.Clear();
+                options.KnownProxies.Clear();
             });
 
             // Dependency Injection for services
@@ -155,6 +172,8 @@ namespace NetResVM.Web
             };
             
 			// Configure the HTTP request pipeline.
+			app.UseForwardedHeaders();
+
 			if (!app.Environment.IsDevelopment())
 			{
 				app.UseExceptionHandler("/Home/Error");

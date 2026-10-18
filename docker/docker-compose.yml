@@ -32,13 +32,13 @@ services:
 
     ports:
       - "8080:8080"
-      - "2323:2323"
+      - "127.0.0.1:2323:2323"
 
     environment:
         - ConnectionStrings__DefaultConnection=Server=mssql;Database=DB_NetResVM;User Id=${DB_USER};Password=${DB_PASSWORD};Encrypt=False;TrustServerCertificate=True;
         - ASPNETCORE_ENVIRONMENT=Production
     volumes:
-      - dp-keys:/root/.aspnet/DataProtection-Keys
+      - dp-keys:/app/keys
       - ./backups:/app/backups
       - ./logs:/app/logs
 
