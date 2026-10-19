@@ -9,3 +9,5 @@
 **/keys
 **/sqlconnection.json
 **/*.log
+**/.env
+**/TestResults
