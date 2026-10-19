@@ -118,7 +118,12 @@ namespace DataLayer
         /// <returns><c>true</c> if inserted successfully; <c>false</c> if a conflicting reservation exists.</returns>
         public bool InsertReservation(int serverId, int userId, DateTime startDate, DateTime endDate, string labId)
         {
+            // Explicit transaction is required: without it the UPDLOCK/HOLDLOCK range lock is released
+            // right after the SELECT (autocommit), so two concurrent requests could both insert.
             string query = @"
+                SET NOCOUNT ON;
+                SET XACT_ABORT ON;
+                BEGIN TRANSACTION;
                 IF NOT EXISTS (
                     SELECT 1 FROM Reservation WITH (UPDLOCK, HOLDLOCK)
                     WHERE ServerID = @ServerID 
@@ -128,10 +133,12 @@ namespace DataLayer
                 BEGIN
                     INSERT INTO Reservation (ServerID, UserID, StartDate, EndDate, LabID) 
                     VALUES (@ServerID, @UserID, @StartDate, @EndDate, @LabID);
+                    COMMIT TRANSACTION;
                     SELECT 1;
                 END
                 ELSE
                 BEGIN
+                    COMMIT TRANSACTION;
                     SELECT 0;
                 END";
 

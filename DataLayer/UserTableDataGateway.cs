@@ -179,7 +179,9 @@ namespace DataLayer
         /// <param name="id"> Id of user to be removed </param>
         public void RemoveUser(int id)
         {
+            // XACT_ABORT ON: any error rolls back the whole transaction (otherwise COMMIT would save a partial delete)
             string query = @"
+                SET XACT_ABORT ON;
                 BEGIN TRANSACTION;
                 DELETE FROM Reservation WHERE UserID = @Id;
                 DELETE FROM UserLabOwnership WHERE UserID = @Id;
