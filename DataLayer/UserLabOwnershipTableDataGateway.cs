@@ -1,4 +1,4 @@
-﻿
+
 using System.Data;
 using DataLayer.Interface;
 
@@ -50,6 +50,33 @@ namespace DataLayer
                 {
                     command.CommandText = query;
                     command.Parameters.AddWithValue("@LabID", labId);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        result.Load(reader);
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Retrieves all user lab ownership records from the UserLabOwnership table by ServerID and LabID.
+        /// </summary>
+        /// <param name="serverId"> ID of a server </param>
+        /// <param name="labId"> ID of a lab </param>
+        /// <returns></returns>
+        public DataTable GetAllUserLabsByServerAndLabId(int serverId, string labId)
+        {
+            string query = "SELECT * FROM UserLabOwnership WHERE LabID = @LabID AND ServerID = @ServerID";
+            var result = new DataTable();
+            using (var connection = DBConnector.GetConnection())
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = query;
+                    command.Parameters.AddWithValue("@LabID", labId);
+                    command.Parameters.AddWithValue("@ServerID", serverId);
                     using (var reader = command.ExecuteReader())
                     {
                         result.Load(reader);
