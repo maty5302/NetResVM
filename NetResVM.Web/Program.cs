@@ -73,6 +73,7 @@ namespace NetResVM.Web
             builder.Services.AddScoped<ReservationService>();
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<UserLabOwnershipService>();
+            builder.Services.AddScoped<UserImportService>();
 
 
             builder.Services.AddScoped<IPlatformManager, PlatformManager>();

@@ -1076,5 +1076,215 @@ namespace NetResVM.Resources {
                 return ResourceManager.GetString("NoActiveReservation", resourceCulture);
             }
         }
+        
+        internal static string Today {
+            get {
+                return ResourceManager.GetString("Today", resourceCulture);
+            }
+        }
+        
+        internal static string ImportUsersTitle {
+            get {
+                return ResourceManager.GetString("ImportUsersTitle", resourceCulture);
+            }
+        }
+        
+        internal static string SelectFilePrompt {
+            get {
+                return ResourceManager.GetString("SelectFilePrompt", resourceCulture);
+            }
+        }
+        
+        internal static string ImportFileHelp {
+            get {
+                return ResourceManager.GetString("ImportFileHelp", resourceCulture);
+            }
+        }
+        
+        internal static string ImportUsersButton {
+            get {
+                return ResourceManager.GetString("ImportUsersButton", resourceCulture);
+            }
+        }
+        
+        internal static string FileEmptyOrMissing {
+            get {
+                return ResourceManager.GetString("FileEmptyOrMissing", resourceCulture);
+            }
+        }
+        
+        internal static string UnsupportedFileFormat {
+            get {
+                return ResourceManager.GetString("UnsupportedFileFormat", resourceCulture);
+            }
+        }
+        
+        internal static string ImportSuccessMessage {
+            get {
+                return ResourceManager.GetString("ImportSuccessMessage", resourceCulture);
+            }
+        }
+        
+        internal static string ImportSkippedInfo {
+            get {
+                return ResourceManager.GetString("ImportSkippedInfo", resourceCulture);
+            }
+        }
+        
+        internal static string ImportAllSkippedMessage {
+            get {
+                return ResourceManager.GetString("ImportAllSkippedMessage", resourceCulture);
+            }
+        }
+        
+        internal static string ImportNoUsersFound {
+            get {
+                return ResourceManager.GetString("ImportNoUsersFound", resourceCulture);
+            }
+        }
+        
+        internal static string RoleStudent {
+            get {
+                return ResourceManager.GetString("RoleStudent", resourceCulture);
+            }
+        }
+        
+        internal static string RoleTeacher {
+            get {
+                return ResourceManager.GetString("RoleTeacher", resourceCulture);
+            }
+        }
+        
+        internal static string RoleAdmin {
+            get {
+                return ResourceManager.GetString("RoleAdmin", resourceCulture);
+            }
+        }
+        
+        internal static string UserProfile {
+            get {
+                return ResourceManager.GetString("UserProfile", resourceCulture);
+            }
+        }
+        
+        internal static string ManageUsersDescription {
+            get {
+                return ResourceManager.GetString("ManageUsersDescription", resourceCulture);
+            }
+        }
+        
+        internal static string OpenManageUsers {
+            get {
+                return ResourceManager.GetString("OpenManageUsers", resourceCulture);
+            }
+        }
+        
+        internal static string AddOrImportUsers {
+            get {
+                return ResourceManager.GetString("AddOrImportUsers", resourceCulture);
+            }
+        }
+        
+        internal static string LdapAddUserHelp {
+            get {
+                return ResourceManager.GetString("LdapAddUserHelp", resourceCulture);
+            }
+        }
+        
+        internal static string LocalPasswordHelp {
+            get {
+                return ResourceManager.GetString("LocalPasswordHelp", resourceCulture);
+            }
+        }
+        
+        internal static string ImportLdapNote {
+            get {
+                return ResourceManager.GetString("ImportLdapNote", resourceCulture);
+            }
+        }
+        
+        internal static string ChangePassLDAPInfo {
+            get {
+                return ResourceManager.GetString("ChangePassLDAPInfo", resourceCulture);
+            }
+        }
+        
+        internal static string BackToSettings {
+            get {
+                return ResourceManager.GetString("BackToSettings", resourceCulture);
+            }
+        }
+        
+        internal static string SearchUsersPlaceholder {
+            get {
+                return ResourceManager.GetString("SearchUsersPlaceholder", resourceCulture);
+            }
+        }
+        
+        internal static string TotalUsers {
+            get {
+                return ResourceManager.GetString("TotalUsers", resourceCulture);
+            }
+        }
+        
+        internal static string StatusActive {
+            get {
+                return ResourceManager.GetString("StatusActive", resourceCulture);
+            }
+        }
+        
+        internal static string StatusInactive {
+            get {
+                return ResourceManager.GetString("StatusInactive", resourceCulture);
+            }
+        }
+        
+        internal static string CurrentUserBadge {
+            get {
+                return ResourceManager.GetString("CurrentUserBadge", resourceCulture);
+            }
+        }
+        
+        internal static string ProtectedAccount {
+            get {
+                return ResourceManager.GetString("ProtectedAccount", resourceCulture);
+            }
+        }
+        
+        internal static string ConfirmDeleteUser {
+            get {
+                return ResourceManager.GetString("ConfirmDeleteUser", resourceCulture);
+            }
+        }
+        
+        internal static string NoUsersFound {
+            get {
+                return ResourceManager.GetString("NoUsersFound", resourceCulture);
+            }
+        }
+        
+        internal static string ConfirmDeleteReservation {
+            get {
+                return ResourceManager.GetString("ConfirmDeleteReservation", resourceCulture);
+            }
+        }
+        
+        internal static string ExportToCalendar {
+            get {
+                return ResourceManager.GetString("ExportToCalendar", resourceCulture);
+            }
+        }
+        
+        internal static string SearchReservationsPlaceholder {
+            get {
+                return ResourceManager.GetString("SearchReservationsPlaceholder", resourceCulture);
+            }
+        }
+        
+        internal static string Back {
+            get {
+                return ResourceManager.GetString("Back", resourceCulture);
+            }
+        }
     }
 }

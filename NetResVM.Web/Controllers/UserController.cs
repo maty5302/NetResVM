@@ -1,4 +1,4 @@
-﻿using BusinessLayer.DTOs;
+using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
 using BusinessLayer.Interface;
 using BusinessLayer.Models;
@@ -20,14 +20,22 @@ namespace NetResVM.Web.Controllers
         private readonly UserService _userService;
         private readonly ServerService _serverService;
         private readonly IStringLocalizer<SharedResource> _localizer;
+        private readonly UserImportService _userImportService;
 
-        public UserController(IPlatformManager platformManager, UserLabOwnershipService userLabOwnershipService, UserService userService, ServerService serverService, IStringLocalizer<SharedResource> localizer)
+        public UserController(
+            IPlatformManager platformManager,
+            UserLabOwnershipService userLabOwnershipService,
+            UserService userService,
+            ServerService serverService,
+            IStringLocalizer<SharedResource> localizer,
+            UserImportService? userImportService = null)
         {
             _platformManager = platformManager;
             _userLabOwnershipService = userLabOwnershipService;
             _userService = userService;
             _serverService = serverService;
             _localizer = localizer;
+            _userImportService = userImportService ?? new UserImportService(userService);
         }
         /// <summary>
         /// Displays the settings page for the user.
@@ -263,12 +271,79 @@ namespace NetResVM.Web.Controllers
                 TempData["ErrorMessage"] = _localizer["PasswordRequired"].Value;
                 return RedirectToAction("Settings", "User");
             }
-            if (_userService.AddUser(model.Username, model.Password, "student", model.AuthorizationType, model.Active))
+            string role = string.IsNullOrWhiteSpace(model.Role) ? "student" : model.Role;
+            if (_userService.AddUser(model.Username, model.Password, role, model.AuthorizationType, model.Active))
             {
                 TempData["SuccessMessage"] = _localizer["UserAddedSuccess"].Value;
                 return RedirectToAction("Settings", "User");
             }
             TempData["ErrorMessage"] = _localizer["UserAddedFail"].Value;
+            return RedirectToAction("Settings", "User");
+        }
+
+        /// <summary>
+        /// Imports users in bulk from a CSV or TXT file.
+        /// </summary>
+        /// <param name="file">The uploaded file (.csv or .txt).</param>
+        /// <param name="authType">Authentication type (vsb or localhost).</param>
+        /// <param name="role">Role assigned to imported users (default: student).</param>
+        /// <returns>Redirects back to Settings with a status message.</returns>
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public IActionResult ImportUsers(IFormFile? file, string authType = "vsb", string role = "student")
+        {
+            if (User.Identity != null && !User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
+                return RedirectToAction("Index", "Login");
+            }
+            if (!User.IsInRole("Admin"))
+            {
+                TempData["ErrorMessage"] = _localizer["AccessDeniedAdmin"].Value;
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (file == null || file.Length == 0)
+            {
+                TempData["ErrorMessage"] = _localizer["FileEmptyOrMissing"].Value;
+                return RedirectToAction("Settings", "User");
+            }
+
+            string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (extension != ".csv" && extension != ".txt")
+            {
+                TempData["ErrorMessage"] = _localizer["UnsupportedFileFormat"].Value;
+                return RedirectToAction("Settings", "User");
+            }
+
+            try
+            {
+                using var stream = file.OpenReadStream();
+                var result = _userImportService.ImportUsersFromStream(stream, file.FileName, role, authType, active: true);
+
+                if (result.TotalFound == 0)
+                {
+                    TempData["ErrorMessage"] = _localizer["ImportNoUsersFound"].Value;
+                }
+                else if (result.AddedCount == 0 && result.SkippedCount > 0)
+                {
+                    TempData["ErrorMessage"] = string.Format(_localizer["ImportAllSkippedMessage"].Value, result.SkippedCount);
+                }
+                else
+                {
+                    string msg = string.Format(_localizer["ImportSuccessMessage"].Value, result.AddedCount);
+                    if (result.SkippedCount > 0)
+                    {
+                        msg += string.Format(_localizer["ImportSkippedInfo"].Value, result.SkippedCount);
+                    }
+                    TempData["SuccessMessage"] = msg;
+                }
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = _localizer["AnErrorOccured"].Value;
+            }
+
             return RedirectToAction("Settings", "User");
         }
 

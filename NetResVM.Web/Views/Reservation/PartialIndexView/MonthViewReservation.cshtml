@@ -126,14 +126,14 @@
 					<a id="modalGoToLabBtn" href="#" class="btn btn-success">
 						<i class="bi bi-box-arrow-in-right"></i> @Localizer["LabInfo"]
 					</a>
-					<a id="modalExportIcsBtn" href="#" class="btn btn-primary">
-						<i class="bi bi-floppy"></i> @Localizer["Export"]
+					<a id="modalExportIcsBtn" href="#" class="btn btn-outline-primary">
+						<i class="bi bi-calendar-event"></i> @Localizer["ExportToCalendar"]
 					</a>
 					<form method="post" id="modalDeleteForm" action="@Url.Action("DeleteReservation", "Reservation")" style="display: none;">
 						@Html.AntiForgeryToken()
 						<input type="hidden" name="reservationId" id="modalDeleteReservationId" value="" />
 						<input type="hidden" name="returnUrl" id="modalDeleteReturnUrl" value="" />
-						<button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete a reservation? This operation is pernament!')">
+						<button type="submit" class="btn btn-danger" onclick="return confirm('@Localizer["ConfirmDeleteReservation"]');">
 							<i class="bi bi-trash"></i> @Localizer["DeleteButton"]
 						</button>
 					</form>
