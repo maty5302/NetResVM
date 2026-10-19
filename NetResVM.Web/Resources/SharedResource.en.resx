@@ -651,4 +651,19 @@
     <data name="ConfirmRemoveOwnership" xml:space="preserve">
         <value>Are you sure you want to remove ownership of this laboratory?</value>
     </data>
+    <data name="ImportMissingPasswords" xml:space="preserve">
+        <value>Import cancelled – every local (localhost) account needs a password (max. 50 characters). Missing or invalid for {0} users: {1}</value>
+    </data>
+    <data name="ImportPasswordHelp" xml:space="preserve">
+        <value>Local accounts need a password: in CSV in the column right after the login (i.e. the 2nd column without a header, e.g. nov0123;Password1) or in a column with the header "Password"; in TXT on the same line after the login, separated by a space, semicolon or comma (e.g. nov0123 Password1).</value>
+    </data>
+    <data name="ImportFailedMessage" xml:space="preserve">
+        <value>No users were added – {0} users could not be saved.</value>
+    </data>
+    <data name="ImportInvalidAuthType" xml:space="preserve">
+        <value>Invalid authentication type.</value>
+    </data>
+    <data name="TooManyLoginAttempts" xml:space="preserve">
+        <value>Too many failed login attempts. Please try again in 5 minutes.</value>
+    </data>
 </root>

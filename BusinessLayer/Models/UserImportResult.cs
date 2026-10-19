@@ -39,5 +39,10 @@ namespace BusinessLayer.Models
         /// List of raw entries that failed validation.
         /// </summary>
         public List<string> InvalidUsernames { get; set; } = new();
+
+        /// <summary>
+        /// Usernames without a valid password in a localhost import. When not empty, nothing was imported.
+        /// </summary>
+        public List<string> MissingPasswordUsernames { get; set; } = new();
     }
 }

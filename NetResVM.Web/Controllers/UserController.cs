@@ -316,18 +316,38 @@ namespace NetResVM.Web.Controllers
                 return RedirectToAction("Settings", "User");
             }
 
+            if (authType != "vsb" && authType != "localhost")
+            {
+                TempData["ErrorMessage"] = _localizer["ImportInvalidAuthType"].Value;
+                return RedirectToAction("Settings", "User");
+            }
+
             try
             {
                 using var stream = file.OpenReadStream();
                 var result = _userImportService.ImportUsersFromStream(stream, file.FileName, role, authType, active: true);
 
-                if (result.TotalFound == 0)
+                if (result.MissingPasswordUsernames.Count > 0)
+                {
+                    // localhost import: nothing was imported because some users have no password
+                    string preview = string.Join(", ", result.MissingPasswordUsernames.Take(5));
+                    if (result.MissingPasswordUsernames.Count > 5)
+                    {
+                        preview += ", ...";
+                    }
+                    TempData["ErrorMessage"] = string.Format(_localizer["ImportMissingPasswords"].Value, result.MissingPasswordUsernames.Count, preview);
+                }
+                else if (result.TotalFound == 0)
                 {
                     TempData["ErrorMessage"] = _localizer["ImportNoUsersFound"].Value;
                 }
-                else if (result.AddedCount == 0 && result.SkippedCount > 0)
+                else if (result.AddedCount == 0 && result.InvalidCount == 0 && result.SkippedCount > 0)
                 {
                     TempData["ErrorMessage"] = string.Format(_localizer["ImportAllSkippedMessage"].Value, result.SkippedCount);
+                }
+                else if (result.AddedCount == 0)
+                {
+                    TempData["ErrorMessage"] = string.Format(_localizer["ImportFailedMessage"].Value, result.InvalidCount);
                 }
                 else
                 {

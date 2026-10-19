@@ -254,9 +254,8 @@ nov0126@vsb.cz
         }
 
         [Fact]
-        public void ImportUsersFromStream_WithLocalhostAuthType_PassesNullPasswordAndFailsValidation()
+        public void ImportUsersFromStream_WithLocalhostAuthType_WithoutPassword_ImportsNothing()
         {
-            // Localhost requires a password in UserService.AddUser; null password will be rejected
             _mockGateway.Setup(g => g.GetUserByUsername(It.IsAny<string>()))
                 .Returns(CreateEmptyUserTable());
 
@@ -267,8 +266,112 @@ nov0126@vsb.cz
 
             Assert.Equal(1, result.TotalFound);
             Assert.Equal(0, result.AddedCount);
-            Assert.Equal(1, result.InvalidCount);
-            Assert.Contains("localuser", result.InvalidUsernames);
+            Assert.Contains("localuser", result.MissingPasswordUsernames);
+            _mockGateway.Verify(g => g.AddUser(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()), Times.Never);
+        }
+
+        [Fact]
+        public void ImportUsersFromStream_LocalhostTxtWithPasswords_PassesPasswords()
+        {
+            _mockGateway.Setup(g => g.GetUserByUsername(It.IsAny<string>()))
+                .Returns(CreateEmptyUserTable());
+
+            string content = "user01 Heslo1\nuser02;Heslo2\nuser03,  Heslo 3  ";
+            using var stream = CreateStream(content);
+
+            var result = _importService.ImportUsersFromStream(stream, "users.txt", role: "student", authType: "localhost");
+
+            Assert.Equal(3, result.AddedCount);
+            Assert.Empty(result.MissingPasswordUsernames);
+            _mockGateway.Verify(g => g.AddUser("user01", "Heslo1", "student", "localhost", 1), Times.Once);
+            _mockGateway.Verify(g => g.AddUser("user02", "Heslo2", "student", "localhost", 1), Times.Once);
+            _mockGateway.Verify(g => g.AddUser("user03", "Heslo 3", "student", "localhost", 1), Times.Once);
+        }
+
+        [Fact]
+        public void ImportUsersFromStream_LocalhostOneUserMissingPassword_ImportsNothing()
+        {
+            _mockGateway.Setup(g => g.GetUserByUsername(It.IsAny<string>()))
+                .Returns(CreateEmptyUserTable());
+
+            string content = "user01;Heslo1\nuser02\nuser03;Heslo3";
+            using var stream = CreateStream(content);
+
+            var result = _importService.ImportUsersFromStream(stream, "users.csv", role: "student", authType: "localhost");
+
+            Assert.Equal(3, result.TotalFound);
+            Assert.Equal(0, result.AddedCount);
+            Assert.Equal(new[] { "user02" }, result.MissingPasswordUsernames);
+            _mockGateway.Verify(g => g.AddUser(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()), Times.Never);
+        }
+
+        [Fact]
+        public void ImportUsersFromStream_LocalhostPasswordTooLong_ImportsNothing()
+        {
+            _mockGateway.Setup(g => g.GetUserByUsername(It.IsAny<string>()))
+                .Returns(CreateEmptyUserTable());
+
+            string content = "user01;" + new string('x', UserImportService.MaxPasswordLength + 1);
+            using var stream = CreateStream(content);
+
+            var result = _importService.ImportUsersFromStream(stream, "users.csv", role: "student", authType: "localhost");
+
+            Assert.Contains("user01", result.MissingPasswordUsernames);
+            Assert.Equal(0, result.AddedCount);
+        }
+
+        [Fact]
+        public void ImportUsersFromStream_VsbIgnoresPasswordColumn()
+        {
+            _mockGateway.Setup(g => g.GetUserByUsername(It.IsAny<string>()))
+                .Returns(CreateEmptyUserTable());
+
+            string content = "nov0123;Heslo1\nnov0124";
+            using var stream = CreateStream(content);
+
+            var result = _importService.ImportUsersFromStream(stream, "users.csv", role: "student", authType: "vsb");
+
+            Assert.Equal(2, result.AddedCount);
+            _mockGateway.Verify(g => g.AddUser("nov0123", "student", "vsb", 1), Times.Once);
+            _mockGateway.Verify(g => g.AddUser("nov0124", "student", "vsb", 1), Times.Once);
+            _mockGateway.Verify(g => g.AddUser(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()), Times.Never);
+        }
+
+        [Fact]
+        public void ExtractUserEntriesFromStream_CsvWithPasswordHeader_UsesPasswordColumn()
+        {
+            string content = "Login;Jméno;Heslo\nuser01;Jan Novák;Tajne1\nuser02;Petr Svoboda;Tajne2";
+            using var stream = CreateStream(content);
+
+            var result = _importService.ExtractUserEntriesFromStream(stream, "users.csv");
+
+            Assert.Equal(2, result.Count);
+            Assert.Equal(new UserImportEntry("user01", "Tajne1"), result[0]);
+            Assert.Equal(new UserImportEntry("user02", "Tajne2"), result[1]);
+        }
+
+        [Fact]
+        public void ExtractUserEntriesFromStream_CsvWithoutHeader_PasswordInSecondColumn()
+        {
+            string content = "user01,Heslo1\nuser02,\nuser03";
+            using var stream = CreateStream(content);
+
+            var result = _importService.ExtractUserEntriesFromStream(stream, "users.csv");
+
+            Assert.Equal(3, result.Count);
+            Assert.Equal("Heslo1", result[0].Password);
+            Assert.Null(result[1].Password);
+            Assert.Null(result[2].Password);
+        }
+
+        [Theory]
+        [InlineData("Heslo1", true)]
+        [InlineData("", false)]
+        [InlineData("   ", false)]
+        [InlineData(null, false)]
+        public void IsValidPassword_ValidatesCorrectly(string? password, bool expected)
+        {
+            Assert.Equal(expected, UserImportService.IsValidPassword(password));
         }
 
         [Fact]
