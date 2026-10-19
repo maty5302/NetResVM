@@ -142,7 +142,7 @@ namespace NetResVM.Web.Controllers
                         int currentUserId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
                         availableLabs = availableLabs.Where(lab =>
                         {
-                            var ownership = _userLabOwnershipService.IsLabAlreadyOwned(currentUserId, lab.Id);
+                            var ownership = _userLabOwnershipService.IsLabAlreadyOwned(currentUserId, selectedServer.Value, lab.Id);
                             // Cannot reserve labs owned by someone else
                             return !ownership.owned || ownership.userOwns;
                         }).ToList();
@@ -306,7 +306,7 @@ namespace NetResVM.Web.Controllers
             }
             if (!User.IsInRole("Admin"))
             {
-                var ownership = _userLabOwnershipService.IsLabAlreadyOwned(userId, reserve.LabId);
+                var ownership = _userLabOwnershipService.IsLabAlreadyOwned(userId, reserve.ServerId, reserve.LabId);
                 if (ownership.owned && !ownership.userOwns)
                 {
                     TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You cannot reserve a lab owned by another user.";

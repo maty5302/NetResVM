@@ -125,7 +125,7 @@ namespace NetResVM.Web.Controllers
             }
             var currentUserId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
             // SECURITY: a lab that already has an owner can only be joined via AddCollaborator (main owner/admin)
-            var ownership = _userLabOwnershipService.IsLabAlreadyOwned(currentUserId, labID);
+            var ownership = _userLabOwnershipService.IsLabAlreadyOwned(currentUserId, serverID, labID);
             if (ownership.owned)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
@@ -198,7 +198,7 @@ namespace NetResVM.Web.Controllers
             // SECURITY: only admin, the main owner, or the user himself can remove an ownership
             bool allowed = User.IsInRole("Admin")
                            || (userId > 0 && userId == currentUserId)
-                           || _userLabOwnershipService.IsMainOwner(currentUserId, labId);
+                           || _userLabOwnershipService.IsMainOwner(currentUserId, serverId, labId);
             if (userId <= 0 || !allowed)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;

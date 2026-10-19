@@ -172,11 +172,11 @@ namespace NetResVM.Web.Controllers
                     return RedirectToAction("LabList", "Platform", new { serverId = serverId });
                 }
                 int currentUserId = _userService.GetUserId(User.Identity.Name);
-                var owned = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
+                var owned = _userLabOwnership.IsLabAlreadyOwned(currentUserId, serverId, labId);
 
                 bool mainOwner = false;
                 List<string> owners = new List<string>();
-                var ownersList = _userLabOwnership.GetAllUserLabsByLabId(labId);
+                var ownersList = _userLabOwnership.GetAllUserLabsByServerAndLabId(serverId, labId);
 
                 if (ownersList != null && ownersList.Count > 0)
                 {
@@ -224,7 +224,7 @@ namespace NetResVM.Web.Controllers
 
             // SECURITY: only admin or the main owner of the lab can add collaborators
             int currentUserId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
-            if (!User.IsInRole("Admin") && !_userLabOwnership.IsMainOwner(currentUserId, labId))
+            if (!User.IsInRole("Admin") && !_userLabOwnership.IsMainOwner(currentUserId, serverId, labId))
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
                 return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
@@ -424,7 +424,7 @@ namespace NetResVM.Web.Controllers
 
             // SECURITY CHECK: Ownership
             int currentUserId = _userService.GetUserId(User.Identity.Name);
-            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
+            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, serverId, labId);
             if (ownership.owned && !ownership.userOwns)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";
@@ -480,7 +480,7 @@ namespace NetResVM.Web.Controllers
 
             // SECURITY CHECK: Ownership
             int currentUserId = _userService.GetUserId(User.Identity.Name);
-            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
+            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, serverId, labId);
             if (!User.IsInRole("Admin") && !ownership.userOwns && !HasActiveReservationForLab(serverId, labId, currentUserId))
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";
@@ -558,7 +558,7 @@ namespace NetResVM.Web.Controllers
 
             // SECURITY CHECK: Ownership
             int currentUserId = _userService.GetUserId(User.Identity.Name);
-            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
+            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, serverId, labId);
             if (!User.IsInRole("Admin") && !ownership.userOwns && !HasActiveReservationForLab(serverId, labId, currentUserId))
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";

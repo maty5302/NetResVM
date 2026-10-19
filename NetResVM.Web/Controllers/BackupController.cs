@@ -38,7 +38,7 @@ public class BackupController : Controller
         if (!User.IsInRole("Admin"))
         {
             var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
-            allBackups = allBackups.Where(b => _labOwnershipService.IsLabAlreadyOwned(userId, b.LabId).userOwns).ToList();
+            allBackups = allBackups.Where(b => _labOwnershipService.IsLabAlreadyOwned(userId, b.ServerId, b.LabId).userOwns).ToList();
         }
         
         ViewBag.Backups = allBackups;
@@ -60,7 +60,7 @@ public class BackupController : Controller
             return RedirectToAction("Index", "Login");
 
         var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
-        var owned = _labOwnershipService.IsLabAlreadyOwned(userId, labId);
+        var owned = _labOwnershipService.IsLabAlreadyOwned(userId, serverId, labId);
         if (!User.IsInRole("Admin") && !owned.userOwns)
         {
             TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
@@ -99,7 +99,7 @@ public class BackupController : Controller
             return RedirectToAction("Index", "Login");
 
         var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
-        var owned = _labOwnershipService.IsLabAlreadyOwned(userId, labId);
+        var owned = _labOwnershipService.IsLabAlreadyOwned(userId, serverId, labId);
         if (!User.IsInRole("Admin") && !owned.userOwns)
         {
             TempData["ErrorMessage"] = _localizer["BackupRestoreFailNotOwned"].Value;
@@ -123,15 +123,16 @@ public class BackupController : Controller
     /// <param name="filename"> Name of the file to delete </param>
     /// <param name="labId"> ID of lab to delete backup for</param>
     /// <param name="platform"> Type of the server </param>
+    /// <param name="serverId"> ID of the server (optional) </param>
     /// <returns>  An <see cref="IActionResult"/> that renders main backup page and message about success or failure of operation</returns>
     [HttpPost]
-    public IActionResult DeleteBackup(string filename, string labId, PlatformType platform)
+    public IActionResult DeleteBackup(string filename, string labId, PlatformType platform, int serverId = 0)
     {
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
 
         var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
-        var owned = _labOwnershipService.IsLabAlreadyOwned(userId, labId);
+        var owned = serverId > 0 ? _labOwnershipService.IsLabAlreadyOwned(userId, serverId, labId) : _labOwnershipService.IsLabAlreadyOwned(userId, labId);
         if (!User.IsInRole("Admin") && !owned.userOwns)
         {
             TempData["ErrorMessage"] = _localizer["BackupDeleteFailNotOwned"].Value;
@@ -155,14 +156,15 @@ public class BackupController : Controller
     /// <param name="filename"> Name of the file to download </param>
     /// <param name="labId"> ID of lab to download backup for</param>
     /// <param name="platform"> Type of the server </param>
+    /// <param name="serverId"> ID of the server (optional) </param>
     /// <returns>  An <see cref="IActionResult"/> that renders main backup page and message about success or failure of operation</returns>
-    public async Task<IActionResult> DownloadBackup(string filename, string labId, PlatformType platform)
+    public async Task<IActionResult> DownloadBackup(string filename, string labId, PlatformType platform, int serverId = 0)
     {
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
 
         var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
-        var owned = _labOwnershipService.IsLabAlreadyOwned(userId, labId);
+        var owned = serverId > 0 ? _labOwnershipService.IsLabAlreadyOwned(userId, serverId, labId) : _labOwnershipService.IsLabAlreadyOwned(userId, labId);
         if (!User.IsInRole("Admin") && !owned.userOwns)
         {
             TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
