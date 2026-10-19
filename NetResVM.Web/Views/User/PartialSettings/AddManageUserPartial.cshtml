@@ -41,8 +41,7 @@
 					<label for="Role" class="form-label">@Localizer["Role"]</label>
 					<select class="form-control" id="Role" asp-for="Role">
 						<option value="student" selected>@Localizer["RoleStudent"]</option>
-						<option value="teacher">@Localizer["RoleTeacher"]</option>
-						<option value="admin">@Localizer["RoleAdmin"]</option>
+						<option value="Admin">@Localizer["RoleAdmin"]</option>
 					</select>
 				</div>
 			</div>
@@ -91,14 +90,17 @@
 					<label for="importRole" class="form-label">@Localizer["Role"]</label>
 					<select class="form-control" id="importRole" name="role" required>
 						<option value="student" selected>@Localizer["RoleStudent"]</option>
-						<option value="teacher">@Localizer["RoleTeacher"]</option>
-						<option value="admin">@Localizer["RoleAdmin"]</option>
+						<option value="Admin">@Localizer["RoleAdmin"]</option>
 					</select>
 				</div>
 			</div>
 
-			<div class="alert alert-info py-2 small mb-3">
+			<div class="alert alert-info py-2 small mb-3" id="importLdapNote">
 				<i class="bi bi-info-circle me-1"></i> @Localizer["ImportLdapNote"]
+			</div>
+
+			<div class="alert alert-info py-2 small mb-3" id="importPasswordHelp" style="display: none;">
+				<i class="bi bi-info-circle me-1"></i> @Localizer["ImportPasswordHelp"]
 			</div>
 
 			<button type="submit" class="btn btn-success">
@@ -134,6 +136,22 @@
 		if (authTypeSelect) {
 			authTypeSelect.addEventListener('change', updatePasswordVisibility);
 			updatePasswordVisibility();
+		}
+
+		// Import: password format hint for localhost accounts, LDAP note for VŠB accounts
+		const importAuthSelect = document.getElementById('importAuthType');
+		const importPasswordHelp = document.getElementById('importPasswordHelp');
+		const importLdapNote = document.getElementById('importLdapNote');
+
+		function updateImportHelp() {
+			const isLocal = importAuthSelect && importAuthSelect.value === 'localhost';
+			if (importPasswordHelp) importPasswordHelp.style.display = isLocal ? 'block' : 'none';
+			if (importLdapNote) importLdapNote.style.display = isLocal ? 'none' : 'block';
+		}
+
+		if (importAuthSelect) {
+			importAuthSelect.addEventListener('change', updateImportHelp);
+			updateImportHelp();
 		}
 	});
 </script>
