@@ -23,12 +23,29 @@ services:
 
     restart: unless-stopped
 
+  # One-shot helper: the app runs as non-root user 'app' (UID 1654), but Docker creates
+  # bind-mounted folders (./backups, ./logs) as root and an older dp-keys volume may be root-owned.
+  # This fixes ownership before the app starts, so backups, logs and Data Protection keys can be written.
+  init-permissions:
+    image: busybox:1.36
+    container_name: netresvm-init-permissions
+    user: "0:0"
+    command: ["sh", "-c", "chown -R 1654:1654 /app/keys /app/backups /app/logs || echo 'WARNING: chown failed, check folder permissions'"]
+    volumes:
+      - dp-keys:/app/keys
+      - ./backups:/app/backups
+      - ./logs:/app/logs
+    restart: "no"
+
   netresvm:
     image: ghcr.io/maty5302/netresvm:latest # Use the latest image from GitHub Container Registry or dev branch for testing
     container_name: netresvm-app
 
     depends_on:
-      - mssql
+      mssql:
+        condition: service_started
+      init-permissions:
+        condition: service_completed_successfully
 
     ports:
       - "8080:8080"
