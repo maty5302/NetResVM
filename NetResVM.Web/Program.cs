@@ -57,12 +57,27 @@ namespace NetResVM.Web
                 .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
                 .SetApplicationName("NetResVM");
 
-            // Configure Forwarded Headers for reverse proxy (HTTPS and Client IP detection)
+            // Configure Forwarded Headers for reverse proxy (HTTPS and Client IP detection).
+            // X-Forwarded-* headers are trusted ONLY from known proxies. By default that is just localhost,
+            // so without a reverse proxy the headers sent by clients are ignored and the real connection IP is used
+            // (otherwise anyone could fake their IP and bypass the login rate limit).
+            // When a reverse proxy is added, configure it e.g. via environment variables:
+            //   ReverseProxy__KnownProxies__0=172.20.0.5   or   ReverseProxy__KnownNetworks__0=172.20.0.0/16
+            var reverseProxySection = builder.Configuration.GetSection("ReverseProxy");
+            var knownProxies = reverseProxySection.GetSection("KnownProxies").Get<string[]>() ?? Array.Empty<string>();
+            var knownNetworks = reverseProxySection.GetSection("KnownNetworks").Get<string[]>() ?? Array.Empty<string>();
             builder.Services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-                options.KnownIPNetworks.Clear();
-                options.KnownProxies.Clear();
+                options.ForwardLimit = 1;
+                foreach (var proxy in knownProxies)
+                {
+                    options.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
+                }
+                foreach (var network in knownNetworks)
+                {
+                    options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+                }
             });
 
             // Dependency Injection for services
@@ -74,6 +89,8 @@ namespace NetResVM.Web
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<UserLabOwnershipService>();
             builder.Services.AddScoped<UserImportService>();
+            // Failed login attempts per username + IP (in-memory, shared across requests)
+            builder.Services.AddSingleton(new LoginAttemptTracker());
 
 
             builder.Services.AddScoped<IPlatformManager, PlatformManager>();
@@ -124,7 +141,7 @@ namespace NetResVM.Web
                         partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                         factory: partition => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = 5,
+                            PermitLimit = 30,
                             Window = TimeSpan.FromMinutes(1),
                             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                             QueueLimit = 0

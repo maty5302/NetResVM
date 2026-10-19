@@ -171,7 +171,8 @@ namespace NetResVM.Web.Controllers
                     TempData["ErrorMessage"] = $"{_localizer["LabWithIDNotFound"].Value} (ID: {labId})";
                     return RedirectToAction("LabList", "Platform", new { serverId = serverId });
                 }
-                var owned = _userLabOwnership.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
+                int currentUserId = _userService.GetUserId(User.Identity.Name);
+                var owned = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
 
                 bool mainOwner = false;
                 List<string> owners = new List<string>();
@@ -179,10 +180,12 @@ namespace NetResVM.Web.Controllers
 
                 if (ownersList != null && ownersList.Count > 0)
                 {
-                    mainOwner = ownersList.First().UserId == _userService.GetUserId(User.Identity.Name);
+                    mainOwner = ownersList.First().UserId == currentUserId;
                     owners = (from item in ownersList
                         select _userService.GetUsername(item.UserId)).ToList();
                 }
+
+                bool hasActiveReservation = HasActiveReservationForLab(serverId, labId, currentUserId);
 
                 ViewBag.MainOwner = mainOwner;
                 ViewBag.Owners = owners;
@@ -191,6 +194,7 @@ namespace NetResVM.Web.Controllers
                 ViewBag.PlatformName = adapter.PlatformName.ToString();
                 ViewBag.Owned = owned.owned;
                 ViewBag.UserOwn = owned.userOwns;
+                ViewBag.HasActiveReservation = hasActiveReservation;
                 return View(labInfoResult.Lab);
             }
             catch (Exception ex)

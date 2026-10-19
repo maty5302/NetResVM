@@ -19,15 +19,17 @@ namespace NetResVM.Web.Controllers
         private readonly ServerService _serverService;
         private readonly UserService _userService;
         private readonly ReservationService _reservationService;
+        private readonly UserLabOwnershipService _userLabOwnershipService;
         private readonly IPlatformManager _platformManager;
         private readonly SimpleLogger.ILogger _logger = FileLogger.Instance;
         private readonly IStringLocalizer<SharedResource> _localizer;
-        public ReservationController(IPlatformManager platformManager, ServerService serverService, UserService userService, ReservationService reservationService, IStringLocalizer<SharedResource> localizer)
+        public ReservationController(IPlatformManager platformManager, ServerService serverService, UserService userService, ReservationService reservationService, UserLabOwnershipService userLabOwnershipService, IStringLocalizer<SharedResource> localizer)
         {
             _platformManager = platformManager;
             _serverService = serverService;
             _userService = userService;
             _reservationService = reservationService;
+            _userLabOwnershipService = userLabOwnershipService;
             _localizer = localizer;
         }
 
@@ -134,7 +136,18 @@ namespace NetResVM.Web.Controllers
                 var res = await adapter.GetLabsAsync(selectedServer.Value);
                 if (res.Labs != null && res.Labs.Count > 0)
                 {
-                    ViewBag.Labs3 = new List<LabDTO>(res.Labs);
+                    var availableLabs = res.Labs;
+                    if (!User.IsInRole("Admin"))
+                    {
+                        int currentUserId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
+                        availableLabs = availableLabs.Where(lab =>
+                        {
+                            var ownership = _userLabOwnershipService.IsLabAlreadyOwned(currentUserId, lab.Id);
+                            // Cannot reserve labs owned by someone else
+                            return !ownership.owned || ownership.userOwns;
+                        }).ToList();
+                    }
+                    ViewBag.Labs3 = new List<LabDTO>(availableLabs);
                 }
                 else
                 {
@@ -290,6 +303,16 @@ namespace NetResVM.Web.Controllers
                 TempData["ErrorMessage"] = _localizer["UserNotSelected"].Value;
                 _logger.LogWarning("User not selected, while creating reservation");
                 return RedirectToAction("Create");
+            }
+            if (!User.IsInRole("Admin"))
+            {
+                var ownership = _userLabOwnershipService.IsLabAlreadyOwned(userId, reserve.LabId);
+                if (ownership.owned && !ownership.userOwns)
+                {
+                    TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You cannot reserve a lab owned by another user.";
+                    _logger.LogWarning($"User {userId} attempted to reserve lab {reserve.LabId} owned by another user.");
+                    return RedirectToAction("Create", new { selectedServer });
+                }
             }
             var reservation = new ReservationModel
             {
