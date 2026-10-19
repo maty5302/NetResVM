@@ -639,4 +639,16 @@
     <data name="Back" xml:space="preserve">
         <value>Back</value>
     </data>
+    <data name="RestoreBackup" xml:space="preserve">
+        <value>Restore backup</value>
+    </data>
+    <data name="DownloadBackup" xml:space="preserve">
+        <value>Download backup</value>
+    </data>
+    <data name="DeleteBackup" xml:space="preserve">
+        <value>Delete backup</value>
+    </data>
+    <data name="ConfirmRemoveOwnership" xml:space="preserve">
+        <value>Are you sure you want to remove ownership of this laboratory?</value>
+    </data>
 </root>

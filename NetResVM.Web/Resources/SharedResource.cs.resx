@@ -639,4 +639,16 @@
     <data name="Back" xml:space="preserve">
         <value>Zpět</value>
     </data>
+    <data name="RestoreBackup" xml:space="preserve">
+        <value>Obnovit zálohu</value>
+    </data>
+    <data name="DownloadBackup" xml:space="preserve">
+        <value>Stáhnout zálohu</value>
+    </data>
+    <data name="DeleteBackup" xml:space="preserve">
+        <value>Smazat zálohu</value>
+    </data>
+    <data name="ConfirmRemoveOwnership" xml:space="preserve">
+        <value>Opravdu si přejete odebrat vlastnictví této laboratoře?</value>
+    </data>
 </root>
