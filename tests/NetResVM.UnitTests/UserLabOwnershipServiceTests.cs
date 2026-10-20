@@ -415,4 +415,32 @@ public class UserLabOwnershipServiceTests
         _mockDataGateway.Verify(d => d.DeleteUserLabOwnership(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>()), Times.Never);
     }
     #endregion
+
+    #region DeleteAllOwnershipsForLab Tests
+
+    [Fact]
+    public void DeleteAllOwnershipsForLab_ShouldCallGateway_AndReturnTrue()
+    {
+        // Act
+        var result = _labOwnershipService.DeleteAllOwnershipsForLab(101, "LabA");
+
+        // Assert
+        Assert.True(result);
+        _mockDataGateway.Verify(d => d.DeleteAllOwnershipsForLab(101, "LabA"), Times.Once);
+    }
+
+    [Fact]
+    public void DeleteAllOwnershipsForLab_WhenGatewayThrows_ShouldReturnFalse()
+    {
+        // Arrange
+        _mockDataGateway.Setup(d => d.DeleteAllOwnershipsForLab(101, "LabA"))
+            .Throws(new Exception("Database error"));
+
+        // Act
+        var result = _labOwnershipService.DeleteAllOwnershipsForLab(101, "LabA");
+
+        // Assert
+        Assert.False(result);
+    }
+    #endregion
 }
