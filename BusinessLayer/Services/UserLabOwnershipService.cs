@@ -270,5 +270,26 @@ namespace BusinessLayer.Services
                 return false;
             }
         }
+
+        /// <summary>
+        /// Removes all ownership records associated with a lab on a specific server.
+        /// </summary>
+        /// <param name="serverId">The ID of the server.</param>
+        /// <param name="labId">The ID of the lab.</param>
+        /// <returns><c>true</c> if successfully deleted; otherwise, <c>false</c>.</returns>
+        public bool DeleteAllOwnershipsForLab(int serverId, string labId)
+        {
+            try
+            {
+                _gateway.DeleteAllOwnershipsForLab(serverId, labId);
+                _logger.Log($"All ownership records for lab {labId} on server {serverId} have been removed.");
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"DeleteAllOwnershipsForLab failed for server {serverId}, lab {labId}: {e.Message}");
+                return false;
+            }
+        }
     }
 }

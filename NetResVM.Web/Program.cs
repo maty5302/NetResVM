@@ -244,6 +244,8 @@ namespace NetResVM.Web
             //create missing directories
             Directory.CreateDirectory("logs");
             Directory.CreateDirectory("backups");
+            //idempotent DB schema migrations
+            DatabaseMigrations.Apply();
             //background checking of reservations
             var backgroundTask = app.Services.GetRequiredService<BackgroundTask>();
             backgroundTask.Start();
