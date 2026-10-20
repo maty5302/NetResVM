@@ -70,9 +70,17 @@ BEGIN
         LabID VARCHAR(255) NOT NULL,
         ServerID INT NOT NULL,
         UserID INT NOT NULL,
+        OwnershipID INT IDENTITY(1,1) NOT NULL,
         CONSTRAINT PK_OwnedLab PRIMARY KEY (LabID, ServerID, UserID),
         CONSTRAINT FK_OwnedLab_Server FOREIGN KEY (ServerID) REFERENCES Server(ServerID),
         CONSTRAINT FK_OwnedLab_User FOREIGN KEY (UserID) REFERENCES [User](UserID)
     );
+END
+GO
+
+-- Migrace: OwnershipID určuje pořadí přidání vlastníků (první = hlavní vlastník)
+IF COL_LENGTH('dbo.UserLabOwnership', 'OwnershipID') IS NULL
+BEGIN
+    ALTER TABLE dbo.UserLabOwnership ADD OwnershipID INT IDENTITY(1,1) NOT NULL;
 END
 GO

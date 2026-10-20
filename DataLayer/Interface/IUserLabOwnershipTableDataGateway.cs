@@ -22,7 +22,7 @@ public interface IUserLabOwnershipTableDataGateway
     /// Retrieves a data table containing all user lab records associated with the specified lab identifier.
     /// </summary>
     /// <param name="labId">The unique identifier of the lab for which to retrieve user lab records. Cannot be null or empty.</param>
-    /// <returns>A DataTable containing user lab records for the specified lab. The table will be empty if no records are found.</returns>
+    /// <returns>A DataTable containing user lab records for the specified lab. Rows are ordered by assignment time (first row = main owner). The table will be empty if no records are found.</returns>
     DataTable GetAllUserLabsByLabId(string labId);
 
     /// <summary>
@@ -30,7 +30,7 @@ public interface IUserLabOwnershipTableDataGateway
     /// </summary>
     /// <param name="serverId">The unique identifier of the server hosting the lab.</param>
     /// <param name="labId">The unique identifier of the lab. Cannot be null or empty.</param>
-    /// <returns>A DataTable containing user lab records for the specified server and lab. The table will be empty if no records are found.</returns>
+    /// <returns>A DataTable containing user lab records for the specified server and lab. Rows are ordered by assignment time (first row = main owner). The table will be empty if no records are found.</returns>
     DataTable GetAllUserLabsByServerAndLabId(int serverId, string labId);
 
     /// <summary>
@@ -48,4 +48,11 @@ public interface IUserLabOwnershipTableDataGateway
     /// <param name="labId">The unique identifier of the laboratory from which the user's ownership will be deleted.</param>
     /// <param name="serverId">The unique identifier of the server hosting the laboratory.</param>
     void DeleteUserLabOwnership(int userId, string labId, int serverId);
+
+    /// <summary>
+    /// Removes all ownership records associated with a specific lab on a server.
+    /// </summary>
+    /// <param name="serverId">The unique identifier of the server hosting the laboratory.</param>
+    /// <param name="labId">The unique identifier of the laboratory.</param>
+    void DeleteAllOwnershipsForLab(int serverId, string labId);
 }
