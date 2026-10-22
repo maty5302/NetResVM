@@ -426,6 +426,69 @@ public class ReservationServiceTests
         _mockDataGateway.Verify(m => m.InsertReservation(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>()), Times.Never);
     }
 
+    [Fact]
+    public void MakeReservation_ShouldReturnFalse_WhenStartDateEqualsEndDate()
+    {
+        var now = DateTime.Now;
+        var reservation = new ReservationModel
+        {
+            ServerId = 1,
+            UserId = 1,
+            LabId = "1",
+            ReservationStart = now,
+            ReservationEnd = now
+        };
+        
+        var result = _reservationService.MakeReservation(reservation);
+        
+        Assert.False(result);
+        _mockDataGateway.Verify(m => m.InsertReservation(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void ReservationModel_Validate_ShouldReturnError_WhenStartDateGreaterThanOrEqualToEndDate()
+    {
+        var now = DateTime.Now;
+        var invalidStartAfterEnd = new ReservationModel
+        {
+            ServerId = 1,
+            UserId = 1,
+            LabId = "lab1",
+            ReservationStart = now.AddHours(2),
+            ReservationEnd = now.AddHours(1)
+        };
+        var invalidStartEqualsEnd = new ReservationModel
+        {
+            ServerId = 1,
+            UserId = 1,
+            LabId = "lab1",
+            ReservationStart = now,
+            ReservationEnd = now
+        };
+        var valid = new ReservationModel
+        {
+            ServerId = 1,
+            UserId = 1,
+            LabId = "lab1",
+            ReservationStart = now,
+            ReservationEnd = now.AddHours(1)
+        };
+
+        var resultsAfter = invalidStartAfterEnd.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(invalidStartAfterEnd)).ToList();
+        var resultsEquals = invalidStartEqualsEnd.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(invalidStartEqualsEnd)).ToList();
+        var resultsValid = valid.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(valid)).ToList();
+
+        Assert.Single(resultsAfter);
+        Assert.Contains("ReservationStart", resultsAfter[0].MemberNames);
+        Assert.Contains("ReservationEnd", resultsAfter[0].MemberNames);
+
+        Assert.Single(resultsEquals);
+        Assert.Contains("ReservationStart", resultsEquals[0].MemberNames);
+        Assert.Contains("ReservationEnd", resultsEquals[0].MemberNames);
+
+        Assert.Empty(resultsValid);
+    }
+
     #endregion
 
 

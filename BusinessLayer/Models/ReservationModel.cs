@@ -1,11 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace BusinessLayer.Models
 {
     /// <summary>
     /// Represents a reservation for using a specific lab on a server by a user.
     /// </summary>
-    public class ReservationModel
+    public class ReservationModel : IValidatableObject
     {
         /// <summary>
         /// Gets or sets the unique identifier of the reservation.
@@ -38,6 +38,19 @@ namespace BusinessLayer.Models
         /// </summary>
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
         public required DateTime ReservationEnd { get; set; }
+
+        /// <summary>
+        /// Validates the reservation model, ensuring that the start time is before the end time.
+        /// </summary>
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (ReservationStart >= ReservationEnd)
+            {
+                yield return new ValidationResult(
+                    "Reservation start time must be before end time.",
+                    [nameof(ReservationStart), nameof(ReservationEnd)]);
+            }
+        }
     }
 
 }

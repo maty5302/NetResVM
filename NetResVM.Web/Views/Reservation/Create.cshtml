@@ -89,6 +89,7 @@
 
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
+		const form = document.getElementById('createReservationForm');
 		const fromInput = document.getElementById('dateFrom');
 		const toInput = document.getElementById('timeTo');
 
@@ -103,19 +104,54 @@
 				return `${year}-${month}-${day}T${hours}:${minutes}`;
 			}
 
-			function updateToTime() {
+			function updateToMin() {
 				if (!fromInput.value) return;
 				const fromDate = new Date(fromInput.value);
 				if (isNaN(fromDate.getTime())) return;
 
-				const toDate = new Date(fromDate.getTime() + 60 * 60 * 1000);
-				const formattedTo = formatDateTimeLocal(toDate);
+				const minToDate = new Date(fromDate.getTime() + 60 * 60 * 1000);
+				const formattedMin = formatDateTimeLocal(minToDate);
+				toInput.min = formattedMin;
 
-				toInput.value = formattedTo;
-				toInput.min = formattedTo;
+				if (!toInput.value || new Date(toInput.value) <= fromDate) {
+					toInput.value = formattedMin;
+				}
+				validateRange();
 			}
 
-			fromInput.addEventListener('change', updateToTime);
+			function validateRange() {
+				if (!fromInput.value || !toInput.value) return;
+				const fromDate = new Date(fromInput.value);
+				const toDate = new Date(toInput.value);
+
+				if (fromDate >= toDate) {
+					toInput.setCustomValidity('@Localizer["InvalidTime"]');
+				} else {
+					toInput.setCustomValidity('');
+				}
+			}
+
+			fromInput.addEventListener('change', updateToMin);
+			fromInput.addEventListener('input', validateRange);
+			toInput.addEventListener('change', validateRange);
+			toInput.addEventListener('input', validateRange);
+
+			// Initial check
+			validateRange();
+
+			if (form) {
+				form.addEventListener('submit', function (e) {
+					if (fromInput.value && toInput.value) {
+						const fromDate = new Date(fromInput.value);
+						const toDate = new Date(toInput.value);
+						if (fromDate >= toDate) {
+							e.preventDefault();
+							toInput.setCustomValidity('@Localizer["InvalidTime"]');
+							toInput.reportValidity();
+						}
+					}
+				});
+			}
 		}
 	});
 </script>

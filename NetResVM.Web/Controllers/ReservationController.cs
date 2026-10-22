@@ -110,11 +110,16 @@ namespace NetResVM.Web.Controllers
         /// <param name="model"> Model of reservation where information about it are stored </param>
         /// <param name="selectedServer"> indicate if server is selected and ID if it do </param>
         /// <param name="labId"> ID of a lab </param>
-        /// <returns> An <see cref="Task{IActionResult}"/> that renders main create reservation page </returns>
         public async Task<IActionResult> Create(ReservationModel model, int? selectedServer, string? labId)
         {
-            model.ReservationStart = DateTime.Now.AddMinutes(2);
-            model.ReservationEnd = DateTime.Now.AddMinutes(62);
+            if (model.ReservationStart == default)
+            {
+                model.ReservationStart = DateTime.Now.AddMinutes(2);
+            }
+            if (model.ReservationEnd == default || model.ReservationEnd <= model.ReservationStart)
+            {
+                model.ReservationEnd = model.ReservationStart.AddMinutes(60);
+            }
             
             if (User.Identity != null && !User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Login");
@@ -279,7 +284,7 @@ namespace NetResVM.Web.Controllers
                 _logger.LogWarning("Lab not selected, while creating reservation");
                 return RedirectToAction("Create", new { reserve, selectedServer });
             }
-            if (reserve.ReservationStart >= reserve.ReservationEnd || reserve.ReservationStart < DateTime.Now)
+            if (reserve.ReservationStart >= reserve.ReservationEnd || reserve.ReservationEnd <= DateTime.Now || reserve.ReservationStart < DateTime.Now)
             {
                 TempData["ErrorMessage"] = _localizer["InvalidTime"].Value;
                 _logger.LogWarning("Invalid reservation time, while creating reservation");
