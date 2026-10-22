@@ -58,7 +58,8 @@ BEGIN
         EndDate DATETIME NOT NULL,
         LabID VARCHAR(255) NOT NULL,
         CONSTRAINT FK_Reservation_User FOREIGN KEY (UserID) REFERENCES [User](UserID),
-        CONSTRAINT FK_Reservation_Server FOREIGN KEY (ServerID) REFERENCES Server(ServerID)
+        CONSTRAINT FK_Reservation_Server FOREIGN KEY (ServerID) REFERENCES Server(ServerID),
+        CONSTRAINT CK_Reservation_Dates CHECK (StartDate < EndDate)
     );
 END
 GO
@@ -82,5 +83,12 @@ GO
 IF COL_LENGTH('dbo.UserLabOwnership', 'OwnershipID') IS NULL
 BEGIN
     ALTER TABLE dbo.UserLabOwnership ADD OwnershipID INT IDENTITY(1,1) NOT NULL;
+END
+GO
+
+-- Migrace: Kontrola, že StartDate je menší než EndDate
+IF NOT EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CK_Reservation_Dates')
+BEGIN
+    ALTER TABLE dbo.Reservation ADD CONSTRAINT CK_Reservation_Dates CHECK (StartDate < EndDate);
 END
 GO
