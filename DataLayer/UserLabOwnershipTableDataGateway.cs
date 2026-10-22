@@ -1,4 +1,4 @@
-﻿
+
 using System.Data;
 using DataLayer.Interface;
 
@@ -16,7 +16,7 @@ namespace DataLayer
         /// <returns></returns>
         public DataTable GetAllUserLabsByUserId(int userId)
         {
-            string query = "SELECT * FROM UserLabOwnership WHERE UserID = @UserID";
+            string query = "SELECT * FROM UserLabOwnership WHERE UserID = @UserID ORDER BY OwnershipID";
             var result = new DataTable();
             using (var connection = DBConnector.GetConnection())
             {
@@ -41,7 +41,7 @@ namespace DataLayer
         /// <returns></returns>
         public DataTable GetAllUserLabsByLabId(string labId)
         {
-            string query = "SELECT * FROM UserLabOwnership WHERE LabID = @LabID";
+            string query = "SELECT * FROM UserLabOwnership WHERE LabID = @LabID ORDER BY OwnershipID";
             var result = new DataTable();
             using (var connection = DBConnector.GetConnection())
             {
@@ -50,6 +50,33 @@ namespace DataLayer
                 {
                     command.CommandText = query;
                     command.Parameters.AddWithValue("@LabID", labId);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        result.Load(reader);
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Retrieves all user lab ownership records from the UserLabOwnership table by ServerID and LabID.
+        /// </summary>
+        /// <param name="serverId"> ID of a server </param>
+        /// <param name="labId"> ID of a lab </param>
+        /// <returns></returns>
+        public DataTable GetAllUserLabsByServerAndLabId(int serverId, string labId)
+        {
+            string query = "SELECT * FROM UserLabOwnership WHERE LabID = @LabID AND ServerID = @ServerID ORDER BY OwnershipID";
+            var result = new DataTable();
+            using (var connection = DBConnector.GetConnection())
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = query;
+                    command.Parameters.AddWithValue("@LabID", labId);
+                    command.Parameters.AddWithValue("@ServerID", serverId);
                     using (var reader = command.ExecuteReader())
                     {
                         result.Load(reader);
@@ -106,5 +133,25 @@ namespace DataLayer
             }
         }
 
+        /// <summary>
+        /// Deletes all ownership records for the specified lab on the given server.
+        /// </summary>
+        /// <param name="serverId">ID of the server</param>
+        /// <param name="labId">ID of the lab</param>
+        public void DeleteAllOwnershipsForLab(int serverId, string labId)
+        {
+            string query = "DELETE FROM UserLabOwnership WHERE LabID = @LabID AND ServerID = @ServerID";
+            using (var connection = DBConnector.GetConnection())
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = query;
+                    command.Parameters.AddWithValue("@LabID", labId);
+                    command.Parameters.AddWithValue("@ServerID", serverId);
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
     }
 }

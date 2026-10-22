@@ -125,7 +125,7 @@ namespace NetResVM.Web.Controllers
             }
             var currentUserId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
             // SECURITY: a lab that already has an owner can only be joined via AddCollaborator (main owner/admin)
-            var ownership = _userLabOwnershipService.IsLabAlreadyOwned(currentUserId, labID);
+            var ownership = _userLabOwnershipService.IsLabAlreadyOwned(currentUserId, serverID, labID);
             if (ownership.owned)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
@@ -198,7 +198,7 @@ namespace NetResVM.Web.Controllers
             // SECURITY: only admin, the main owner, or the user himself can remove an ownership
             bool allowed = User.IsInRole("Admin")
                            || (userId > 0 && userId == currentUserId)
-                           || _userLabOwnershipService.IsMainOwner(currentUserId, labId);
+                           || _userLabOwnershipService.IsMainOwner(currentUserId, serverId, labId);
             if (userId <= 0 || !allowed)
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
@@ -316,18 +316,38 @@ namespace NetResVM.Web.Controllers
                 return RedirectToAction("Settings", "User");
             }
 
+            if (authType != "vsb" && authType != "localhost")
+            {
+                TempData["ErrorMessage"] = _localizer["ImportInvalidAuthType"].Value;
+                return RedirectToAction("Settings", "User");
+            }
+
             try
             {
                 using var stream = file.OpenReadStream();
                 var result = _userImportService.ImportUsersFromStream(stream, file.FileName, role, authType, active: true);
 
-                if (result.TotalFound == 0)
+                if (result.MissingPasswordUsernames.Count > 0)
+                {
+                    // localhost import: nothing was imported because some users have no password
+                    string preview = string.Join(", ", result.MissingPasswordUsernames.Take(5));
+                    if (result.MissingPasswordUsernames.Count > 5)
+                    {
+                        preview += ", ...";
+                    }
+                    TempData["ErrorMessage"] = string.Format(_localizer["ImportMissingPasswords"].Value, result.MissingPasswordUsernames.Count, preview);
+                }
+                else if (result.TotalFound == 0)
                 {
                     TempData["ErrorMessage"] = _localizer["ImportNoUsersFound"].Value;
                 }
-                else if (result.AddedCount == 0 && result.SkippedCount > 0)
+                else if (result.AddedCount == 0 && result.InvalidCount == 0 && result.SkippedCount > 0)
                 {
                     TempData["ErrorMessage"] = string.Format(_localizer["ImportAllSkippedMessage"].Value, result.SkippedCount);
+                }
+                else if (result.AddedCount == 0)
+                {
+                    TempData["ErrorMessage"] = string.Format(_localizer["ImportFailedMessage"].Value, result.InvalidCount);
                 }
                 else
                 {

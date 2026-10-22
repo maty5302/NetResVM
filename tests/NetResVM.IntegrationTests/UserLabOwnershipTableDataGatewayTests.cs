@@ -100,6 +100,31 @@ public class UserLabOwnershipTableDataGatewayTests
     }
 
     [Fact]
+    public void DeleteAllOwnershipsForLab_WhenMultipleOwnersExist_ShouldRemoveAllOwnersForThatLab()
+    {
+        // Arrange
+        int user1 = CreateUserForTest();
+        int user2 = CreateUserForTest();
+        int serverId = CreateServerForTest();
+        string labToDelete = CreateUniqueLabId("del-all-target");
+        string labToKeep = CreateUniqueLabId("del-all-keep");
+
+        _gateway.InsertUserLabOwnership(user1, labToDelete, serverId);
+        _gateway.InsertUserLabOwnership(user2, labToDelete, serverId);
+        _gateway.InsertUserLabOwnership(user1, labToKeep, serverId);
+
+        // Act
+        _gateway.DeleteAllOwnershipsForLab(serverId, labToDelete);
+
+        // Assert
+        DataTable targetOwners = _gateway.GetAllUserLabsByServerAndLabId(serverId, labToDelete);
+        DataTable keepOwners = _gateway.GetAllUserLabsByServerAndLabId(serverId, labToKeep);
+
+        Assert.Equal(0, targetOwners.Rows.Count);
+        Assert.Equal(1, keepOwners.Rows.Count);
+    }
+
+    [Fact]
     public void InsertUserLabOwnership_WithDuplicateCompositeKey_ShouldThrow()
     {
         // Arrange
@@ -110,6 +135,29 @@ public class UserLabOwnershipTableDataGatewayTests
 
         // Act & Assert
         Assert.ThrowsAny<Exception>(() => _gateway.InsertUserLabOwnership(userId, labId, serverId));
+    }
+
+    [Fact]
+    public void GetAllUserLabsByServerAndLabId_ShouldReturnOwnersInAssignmentOrder()
+    {
+        // Arrange - the main owner has a higher UserID than the collaborator
+        int collaboratorId = CreateUserForTest();
+        int mainOwnerId = CreateUserForTest();
+        int serverId = CreateServerForTest();
+        string labId = CreateUniqueLabId("order");
+
+        _gateway.InsertUserLabOwnership(mainOwnerId, labId, serverId);
+        _gateway.InsertUserLabOwnership(collaboratorId, labId, serverId);
+
+        // Act
+        DataTable byServerAndLab = _gateway.GetAllUserLabsByServerAndLabId(serverId, labId);
+        DataTable byLab = _gateway.GetAllUserLabsByLabId(labId);
+
+        // Assert
+        Assert.Equal(2, byServerAndLab.Rows.Count);
+        Assert.Equal(mainOwnerId, Convert.ToInt32(byServerAndLab.Rows[0]["UserID"]));
+        Assert.Equal(collaboratorId, Convert.ToInt32(byServerAndLab.Rows[1]["UserID"]));
+        Assert.Equal(mainOwnerId, Convert.ToInt32(byLab.Rows[0]["UserID"]));
     }
 
     [Fact]

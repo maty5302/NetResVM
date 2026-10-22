@@ -7,8 +7,24 @@ namespace BusinessLayer.Services
     /// <summary>
     /// Service responsible for parsing and bulk importing users from CSV and TXT files.
     /// </summary>
+    /// <remarks>
+    /// Supported formats:
+    /// <list type="bullet">
+    /// <item>TXT – one user per line: <c>login</c>, or <c>login password</c> (separated by space, tab, ';' or ',').</item>
+    /// <item>CSV – login column detected from the header (or the first column without header);
+    /// password column detected from the header (heslo/password) or the column right after the login column.</item>
+    /// </list>
+    /// Passwords are required only for the <c>localhost</c> authentication type.
+    /// </remarks>
     public class UserImportService
     {
+        /// <summary>
+        /// Maximum password length allowed by the database column ([User].[Password] VARCHAR(50)).
+        /// </summary>
+        public const int MaxPasswordLength = 50;
+
+        private static readonly char[] TxtSeparators = { ' ', '\t', ';', ',' };
+
         private readonly UserService _userService;
         private readonly ILogger _logger;
 
@@ -44,6 +60,16 @@ namespace BusinessLayer.Services
         }
 
         /// <summary>
+        /// Validates a password for a local (localhost) account.
+        /// </summary>
+        /// <param name="password">The password to validate.</param>
+        /// <returns><c>true</c> if the password is non-empty and fits into the database column; otherwise <c>false</c>.</returns>
+        public static bool IsValidPassword(string? password)
+        {
+            return !string.IsNullOrWhiteSpace(password) && password.Length <= MaxPasswordLength;
+        }
+
+        /// <summary>
         /// Extracts a list of usernames from a CSV or TXT stream.
         /// </summary>
         /// <param name="stream">The file data stream.</param>
@@ -51,17 +77,38 @@ namespace BusinessLayer.Services
         /// <returns>A list of unique usernames found in the file.</returns>
         public List<string> ExtractUsernamesFromStream(Stream stream, string fileName)
         {
-            var usernames = new List<string>();
+            return ExtractUserEntriesFromStream(stream, fileName).Select(e => e.Username).ToList();
+        }
+
+        /// <summary>
+        /// Extracts users (username + optional password) from a CSV or TXT stream.
+        /// </summary>
+        /// <param name="stream">The file data stream.</param>
+        /// <param name="fileName">The original file name to detect format extension.</param>
+        /// <returns>A list of unique entries (first occurrence of a username wins).</returns>
+        public List<UserImportEntry> ExtractUserEntriesFromStream(Stream stream, string fileName)
+        {
+            var entries = new List<UserImportEntry>();
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             string extension = Path.GetExtension(fileName).ToLowerInvariant();
             if (extension != ".csv" && extension != ".txt")
             {
                 _logger.LogWarning($"Unsupported file extension for user import: {extension}");
-                return usernames;
+                return entries;
             }
 
             using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
+
+            void AddEntry(string rawUsername, string? rawPassword)
+            {
+                string candidate = StripEmailDomain(rawUsername);
+                if (IsValidUsername(candidate) && seen.Add(candidate))
+                {
+                    string? password = string.IsNullOrEmpty(rawPassword) ? null : rawPassword;
+                    entries.Add(new UserImportEntry(candidate, password));
+                }
+            }
 
             if (extension == ".txt")
             {
@@ -74,14 +121,16 @@ namespace BusinessLayer.Services
                         continue;
                     }
 
-                    if (candidate.Contains('@'))
+                    // "login" or "login<separator>password" – everything after the first separator is the password
+                    int sep = candidate.IndexOfAny(TxtSeparators);
+                    if (sep < 0)
                     {
-                        candidate = candidate.Substring(0, candidate.IndexOf('@')).Trim();
+                        AddEntry(candidate, null);
                     }
-
-                    if (IsValidUsername(candidate) && seen.Add(candidate))
+                    else
                     {
-                        usernames.Add(candidate);
+                        string password = candidate.Substring(sep + 1).TrimStart(TxtSeparators).TrimEnd();
+                        AddEntry(candidate.Substring(0, sep), password);
                     }
                 }
             }
@@ -90,7 +139,7 @@ namespace BusinessLayer.Services
                 string? firstLine = reader.ReadLine();
                 if (firstLine == null)
                 {
-                    return usernames;
+                    return entries;
                 }
 
                 // Detect delimiter
@@ -106,14 +155,16 @@ namespace BusinessLayer.Services
 
                 string[] firstRowParts = firstLine.Split(delimiter);
                 int targetColumnIndex = -1;
+                int passwordColumnIndex = -1;
 
                 string[] primaryKeywords = { "login", "username", "osobní číslo", "osobni cislo", "osobní č.", "osobni c.", "uživatelské jméno", "uzivatelske jmeno", "přihlašovací jméno", "prihlasovaci jmeno", "student" };
                 string[] fallbackKeywords = { "user", "id" };
+                string[] passwordKeywords = { "heslo", "password", "passwd", "pass" };
 
                 // First pass: look for specific login/username keywords
                 for (int i = 0; i < firstRowParts.Length; i++)
                 {
-                    string headerClean = firstRowParts[i].Trim().Trim('"').Trim().ToLowerInvariant();
+                    string headerClean = CleanCell(firstRowParts[i]).ToLowerInvariant();
                     if (primaryKeywords.Any(k => headerClean.Contains(k)))
                     {
                         targetColumnIndex = i;
@@ -126,7 +177,7 @@ namespace BusinessLayer.Services
                 {
                     for (int i = 0; i < firstRowParts.Length; i++)
                     {
-                        string headerClean = firstRowParts[i].Trim().Trim('"').Trim().ToLowerInvariant();
+                        string headerClean = CleanCell(firstRowParts[i]).ToLowerInvariant();
                         if (fallbackKeywords.Contains(headerClean))
                         {
                             targetColumnIndex = i;
@@ -136,19 +187,29 @@ namespace BusinessLayer.Services
                 }
 
                 bool isHeader = targetColumnIndex != -1;
-                if (!isHeader)
+                if (isHeader)
                 {
-                    targetColumnIndex = 0; // default to first column
-                    // Process first line as data row
-                    string candidate = firstRowParts[targetColumnIndex].Trim().Trim('"').Trim();
-                    if (candidate.Contains('@'))
+                    // Password column by header name (heslo/password), otherwise the column right after the login
+                    for (int i = 0; i < firstRowParts.Length; i++)
                     {
-                        candidate = candidate.Substring(0, candidate.IndexOf('@')).Trim();
+                        string headerClean = CleanCell(firstRowParts[i]).ToLowerInvariant();
+                        if (i != targetColumnIndex && passwordKeywords.Any(k => headerClean.Contains(k)))
+                        {
+                            passwordColumnIndex = i;
+                            break;
+                        }
                     }
-                    if (IsValidUsername(candidate) && seen.Add(candidate))
+                    if (passwordColumnIndex == -1)
                     {
-                        usernames.Add(candidate);
+                        passwordColumnIndex = targetColumnIndex + 1;
                     }
+                }
+                else
+                {
+                    // No header: login in the first column, password in the second
+                    targetColumnIndex = 0;
+                    passwordColumnIndex = 1;
+                    AddEntry(CleanCell(firstRowParts[targetColumnIndex]), GetCell(firstRowParts, passwordColumnIndex));
                 }
 
                 string? line;
@@ -162,24 +223,18 @@ namespace BusinessLayer.Services
                     string[] parts = line.Split(delimiter);
                     if (targetColumnIndex < parts.Length)
                     {
-                        string candidate = parts[targetColumnIndex].Trim().Trim('"').Trim();
-                        if (candidate.Contains('@'))
-                        {
-                            candidate = candidate.Substring(0, candidate.IndexOf('@')).Trim();
-                        }
-                        if (IsValidUsername(candidate) && seen.Add(candidate))
-                        {
-                            usernames.Add(candidate);
-                        }
+                        AddEntry(CleanCell(parts[targetColumnIndex]), GetCell(parts, passwordColumnIndex));
                     }
                 }
             }
 
-            return usernames;
+            return entries;
         }
 
         /// <summary>
-        /// Reads a CSV or TXT stream, parses usernames, and imports them into the system.
+        /// Reads a CSV or TXT stream, parses users, and imports them into the system.
+        /// For the <c>localhost</c> authentication type every user must have a valid password,
+        /// otherwise nothing is imported and <see cref="UserImportResult.MissingPasswordUsernames"/> is filled.
         /// </summary>
         /// <param name="stream">The file stream containing user data.</param>
         /// <param name="fileName">The file name with extension.</param>
@@ -190,11 +245,24 @@ namespace BusinessLayer.Services
         public UserImportResult ImportUsersFromStream(Stream stream, string fileName, string role = "student", string authType = "vsb", bool active = true)
         {
             var result = new UserImportResult();
-            var usernames = ExtractUsernamesFromStream(stream, fileName);
+            var entries = ExtractUserEntriesFromStream(stream, fileName);
+            result.TotalFound = entries.Count;
 
-            foreach (var username in usernames)
+            bool isLocal = authType == "localhost";
+            if (isLocal)
             {
-                result.TotalFound++;
+                // All-or-nothing: a local account without a password could never log in
+                result.MissingPasswordUsernames = entries.Where(e => !IsValidPassword(e.Password)).Select(e => e.Username).ToList();
+                if (result.MissingPasswordUsernames.Count > 0)
+                {
+                    _logger.LogWarning($"User import (localhost) aborted: {result.MissingPasswordUsernames.Count} users without a valid password.");
+                    return result;
+                }
+            }
+
+            foreach (var entry in entries)
+            {
+                string username = entry.Username;
 
                 if (_userService.UserExists(username))
                 {
@@ -204,7 +272,8 @@ namespace BusinessLayer.Services
                     continue;
                 }
 
-                bool added = _userService.AddUser(username, null, role, authType, active);
+                // Password is used only for local accounts; VŠB accounts authenticate via LDAP
+                bool added = _userService.AddUser(username, isLocal ? entry.Password : null, role, authType, active);
                 if (added)
                 {
                     result.AddedCount++;
@@ -220,6 +289,23 @@ namespace BusinessLayer.Services
             }
 
             return result;
+        }
+
+        private static string CleanCell(string value)
+        {
+            return value.Trim().Trim('"').Trim();
+        }
+
+        private static string? GetCell(string[] parts, int index)
+        {
+            return index >= 0 && index < parts.Length ? CleanCell(parts[index]) : null;
+        }
+
+        private static string StripEmailDomain(string value)
+        {
+            string candidate = value.Trim();
+            int at = candidate.IndexOf('@');
+            return at >= 0 ? candidate.Substring(0, at).Trim() : candidate;
         }
     }
 }

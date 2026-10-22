@@ -201,6 +201,57 @@ public class UserLabOwnershipServiceTests
         Assert.False(result.owned); 
         Assert.False(result.userOwns);
     }
+
+    [Fact]
+    public void IsLabAlreadyOwned_WithServerId_UserOwnsOnServer1_ShouldBeFalseOnServer2()
+    {
+        var datatableServer1 = new DataTable();
+        datatableServer1.Columns.Add("UserID", typeof(int));
+        datatableServer1.Columns.Add("LabID", typeof(string));
+        datatableServer1.Columns.Add("ServerID", typeof(int));
+        datatableServer1.Rows.Add(1, "LabA", 101);
+
+        var datatableServer2 = new DataTable();
+        datatableServer2.Columns.Add("UserID", typeof(int));
+        datatableServer2.Columns.Add("LabID", typeof(string));
+        datatableServer2.Columns.Add("ServerID", typeof(int));
+        // Server 2 has no owners for LabA
+
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByServerAndLabId(101, "LabA")).Returns(datatableServer1);
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByServerAndLabId(102, "LabA")).Returns(datatableServer2);
+
+        var resultServer1 = _labOwnershipService.IsLabAlreadyOwned(1, 101, "LabA");
+        var resultServer2 = _labOwnershipService.IsLabAlreadyOwned(1, 102, "LabA");
+
+        // On Server 1: user 1 owns it
+        Assert.True(resultServer1.owned);
+        Assert.True(resultServer1.userOwns);
+
+        // On Server 2: nobody owns it, completely independent!
+        Assert.False(resultServer2.owned);
+        Assert.False(resultServer2.userOwns);
+    }
+
+    [Fact]
+    public void IsMainOwner_WithServerId_OwnerOnServer1_ShouldBeFalseOnServer2()
+    {
+        var datatableServer1 = new DataTable();
+        datatableServer1.Columns.Add("UserID", typeof(int));
+        datatableServer1.Columns.Add("LabID", typeof(string));
+        datatableServer1.Columns.Add("ServerID", typeof(int));
+        datatableServer1.Rows.Add(1, "LabA", 101);
+
+        var datatableServer2 = new DataTable();
+        datatableServer2.Columns.Add("UserID", typeof(int));
+        datatableServer2.Columns.Add("LabID", typeof(string));
+        datatableServer2.Columns.Add("ServerID", typeof(int));
+
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByServerAndLabId(101, "LabA")).Returns(datatableServer1);
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByServerAndLabId(102, "LabA")).Returns(datatableServer2);
+
+        Assert.True(_labOwnershipService.IsMainOwner(1, 101, "LabA"));
+        Assert.False(_labOwnershipService.IsMainOwner(1, 102, "LabA"));
+    }
     #endregion
 
     #region InsertUserLabOwnership Tests
@@ -280,6 +331,32 @@ public class UserLabOwnershipServiceTests
         
         _mockDataGateway.Verify(d => d.InsertUserLabOwnership(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>()), Times.Never);
     }
+
+    [Fact]
+    public void InsertUserLabOwnership_SameLabIdOnDifferentServer_ShouldSucceed()
+    {
+        var validUserTable = new DataTable();
+        validUserTable.Columns.Add("Id", typeof(int));
+        validUserTable.Rows.Add(1);
+        _mockUserGateway.Setup(u => u.GetUserById(1)).Returns(validUserTable);
+        
+        var datatable = new DataTable();
+        datatable.Columns.Add("UserID", typeof(int));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Rows.Add(1, "LabA", 101); // User already owns LabA on Server 101
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByUserId(1)).Returns(datatable);
+        
+        var result = _labOwnershipService.InsertUserLabOwnership(new UserLabOwnershipModel
+        {
+            UserId = 1,
+            LabId = "LabA",
+            ServerId = 102 // User wants to own LabA on Server 102
+        });
+        
+        Assert.True(result.Item1);
+        _mockDataGateway.Verify(d => d.InsertUserLabOwnership(1, "LabA", 102), Times.Once);
+    }
     
     #endregion
 
@@ -336,6 +413,34 @@ public class UserLabOwnershipServiceTests
         
         Assert.False(result);
         _mockDataGateway.Verify(d => d.DeleteUserLabOwnership(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>()), Times.Never);
+    }
+    #endregion
+
+    #region DeleteAllOwnershipsForLab Tests
+
+    [Fact]
+    public void DeleteAllOwnershipsForLab_ShouldCallGateway_AndReturnTrue()
+    {
+        // Act
+        var result = _labOwnershipService.DeleteAllOwnershipsForLab(101, "LabA");
+
+        // Assert
+        Assert.True(result);
+        _mockDataGateway.Verify(d => d.DeleteAllOwnershipsForLab(101, "LabA"), Times.Once);
+    }
+
+    [Fact]
+    public void DeleteAllOwnershipsForLab_WhenGatewayThrows_ShouldReturnFalse()
+    {
+        // Arrange
+        _mockDataGateway.Setup(d => d.DeleteAllOwnershipsForLab(101, "LabA"))
+            .Throws(new Exception("Database error"));
+
+        // Act
+        var result = _labOwnershipService.DeleteAllOwnershipsForLab(101, "LabA");
+
+        // Assert
+        Assert.False(result);
     }
     #endregion
 }

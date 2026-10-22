@@ -651,4 +651,19 @@
     <data name="ConfirmRemoveOwnership" xml:space="preserve">
         <value>Are you sure you want to remove ownership of this laboratory?</value>
     </data>
+    <data name="ImportMissingPasswords" xml:space="preserve">
+        <value>Import zrušen – u lokálních účtů (localhost) musí mít každý uživatel heslo (max. 50 znaků). Chybí nebo je neplatné u {0} uživatelů: {1}</value>
+    </data>
+    <data name="ImportPasswordHelp" xml:space="preserve">
+        <value>Lokální účty potřebují heslo: v CSV ve sloupci hned za loginem (bez hlavičky tedy ve 2. sloupci, např. nov0123;Heslo1) nebo ve sloupci s hlavičkou „Heslo“; v TXT na stejném řádku za loginem, oddělené mezerou, středníkem nebo čárkou (např. nov0123 Heslo1).</value>
+    </data>
+    <data name="ImportFailedMessage" xml:space="preserve">
+        <value>Žádný uživatel nebyl přidán – {0} uživatelů se nepodařilo uložit.</value>
+    </data>
+    <data name="ImportInvalidAuthType" xml:space="preserve">
+        <value>Neplatný typ ověření.</value>
+    </data>
+    <data name="TooManyLoginAttempts" xml:space="preserve">
+        <value>Příliš mnoho neúspěšných pokusů o přihlášení. Zkuste to prosím znovu za 5 minut.</value>
+    </data>
 </root>

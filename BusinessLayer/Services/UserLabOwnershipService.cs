@@ -1,4 +1,4 @@
-﻿using BusinessLayer.MapperDT;
+using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
 using DataLayer;
 using SimpleLogger;
@@ -77,8 +77,46 @@ namespace BusinessLayer.Services
         }
 
         /// <summary>
-        /// Determines whether the specified user is the main (first) owner of the lab.
+        /// Retrieves all user lab ownership records associated with the specified server and lab identifier.
+        /// </summary>
+        /// <param name="serverId">The unique identifier of the server.</param>
+        /// <param name="labId">The unique identifier of the lab. Cannot be null or empty.</param>
+        /// <returns>A list of user lab ownership models for the specified server and lab. Returns null if an error occurs.</returns>
+        public List<UserLabOwnershipModel>? GetAllUserLabsByServerAndLabId(int serverId, string labId)
+        {
+            try
+            {
+                var all = new List<UserLabOwnershipModel>();
+                var table = _gateway.GetAllUserLabsByServerAndLabId(serverId, labId);
+                foreach (System.Data.DataRow row in table.Rows)
+                {
+                    all.Add(UserLabOwnershipMapper.Map(row));
+                }
+                return all;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the specified user is the main (first) owner of the lab on a given server.
         /// The main owner is the one allowed to manage collaborators.
+        /// </summary>
+        /// <param name="userId">The ID of the user to check.</param>
+        /// <param name="serverId">The ID of the server.</param>
+        /// <param name="labId">The unique identifier of the lab.</param>
+        /// <returns><c>true</c> if the user is the main owner; otherwise, <c>false</c>.</returns>
+        public bool IsMainOwner(int userId, int serverId, string labId)
+        {
+            var owners = GetAllUserLabsByServerAndLabId(serverId, labId);
+            return owners != null && owners.Count > 0 && owners[0].UserId == userId;
+        }
+
+        /// <summary>
+        /// Determines whether the specified user is the main (first) owner of the lab (legacy overload).
         /// </summary>
         /// <param name="userId">The ID of the user to check.</param>
         /// <param name="labId">The unique identifier of the lab.</param>
@@ -90,7 +128,43 @@ namespace BusinessLayer.Services
         }
 
         /// <summary>
-        /// Checks whether a lab is already owned and whether it is owned by a specific user.
+        /// Checks whether a lab on a specified server is already owned and whether it is owned by a specific user.
+        /// </summary>
+        /// <param name="userId">The ID of the user to check ownership for.</param>
+        /// <param name="serverId">The ID of the server.</param>
+        /// <param name="labId">The unique identifier of the lab.</param>
+        /// <returns>
+        /// A tuple containing two boolean values:
+        /// <c>owned</c> – <c>true</c> if the lab is already owned by any user on this server;
+        /// <c>userOwns</c> – <c>true</c> if the lab is owned by the specified user on this server.
+        /// </returns>
+        public (bool owned, bool userOwns) IsLabAlreadyOwned(int userId, int serverId, string labId)
+        {
+            try
+            {
+                var all = _gateway.GetAllUserLabsByServerAndLabId(serverId, labId);
+                if (all.Rows.Count > 0)
+                {
+                    foreach (System.Data.DataRow row in all.Rows)
+                    {
+                        if ((int)row["UserID"] == userId)
+                        {
+                            return (true, true);
+                        }
+                    }
+                    return (true, false);
+                }
+                return (false, false);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return (false, false);
+            }
+        }
+
+        /// <summary>
+        /// Checks whether a lab is already owned and whether it is owned by a specific user (legacy overload).
         /// </summary>
         /// <param name="userId">The ID of the user to check ownership for.</param>
         /// <param name="labId">The unique identifier of the lab.</param>
@@ -151,15 +225,15 @@ namespace BusinessLayer.Services
                 }
                 foreach (var item in allUserLabs)
                 {
-                    if (item.LabId == userLabOwnership.LabId)
+                    if (item.LabId == userLabOwnership.LabId && item.ServerId == userLabOwnership.ServerId)
                     { 
-                        var message = $"User with ID {userLabOwnership.UserId} already owns lab with ID {userLabOwnership.LabId}.";
+                        var message = $"User with ID {userLabOwnership.UserId} already owns lab with ID {userLabOwnership.LabId} on server {userLabOwnership.ServerId}.";
                         _logger.LogWarning(message);
                         return (false,"You already own this lab.");
                     }
                 }
                 _gateway.InsertUserLabOwnership(userLabOwnership.UserId,userLabOwnership.LabId, userLabOwnership.ServerId);
-                _logger.Log($"User with ID {userLabOwnership.UserId} has been assigned ownership of lab with ID {userLabOwnership.LabId}.");
+                _logger.Log($"User with ID {userLabOwnership.UserId} has been assigned ownership of lab with ID {userLabOwnership.LabId} on server {userLabOwnership.ServerId}.");
                 return (true,"");
             }
             catch (Exception e)
@@ -193,6 +267,27 @@ namespace BusinessLayer.Services
             catch (Exception e)
             {
                 _logger.LogError(e.Message);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Removes all ownership records associated with a lab on a specific server.
+        /// </summary>
+        /// <param name="serverId">The ID of the server.</param>
+        /// <param name="labId">The ID of the lab.</param>
+        /// <returns><c>true</c> if successfully deleted; otherwise, <c>false</c>.</returns>
+        public bool DeleteAllOwnershipsForLab(int serverId, string labId)
+        {
+            try
+            {
+                _gateway.DeleteAllOwnershipsForLab(serverId, labId);
+                _logger.Log($"All ownership records for lab {labId} on server {serverId} have been removed.");
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"DeleteAllOwnershipsForLab failed for server {serverId}, lab {labId}: {e.Message}");
                 return false;
             }
         }

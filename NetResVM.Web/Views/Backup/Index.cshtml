@@ -82,7 +82,7 @@ else
                                     <button type="submit"
                                             class="btn btn-sm btn-outline-success"
                                             title="@Localizer["DownloadBackup"]"
-                                            formaction="@Url.Action("DownloadBackup", "Backup", new { labId = backup.LabId, platform = backup.Platform, filename = backup.FileName })">
+                                            formaction="@Url.Action("DownloadBackup", "Backup", new { serverId = backup.ServerId, labId = backup.LabId, platform = backup.Platform, filename = backup.FileName })">
                                         <i class="bi bi-download"></i>
                                     </button>
 
@@ -91,7 +91,7 @@ else
                                             title="@Localizer["DeleteBackup"]"
                                             data-confirm="@Localizer["MessageWarningDeleteBackup"]"
                                             onclick="return confirm(this.getAttribute('data-confirm'));"
-                                            formaction="@Url.Action("DeleteBackup", "Backup", new { filename = backup.FileName, labId = backup.LabId, platform = backup.Platform })">
+                                            formaction="@Url.Action("DeleteBackup", "Backup", new { serverId = backup.ServerId, filename = backup.FileName, labId = backup.LabId, platform = backup.Platform })">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>

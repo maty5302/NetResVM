@@ -171,18 +171,21 @@ namespace NetResVM.Web.Controllers
                     TempData["ErrorMessage"] = $"{_localizer["LabWithIDNotFound"].Value} (ID: {labId})";
                     return RedirectToAction("LabList", "Platform", new { serverId = serverId });
                 }
-                var owned = _userLabOwnership.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
+                int currentUserId = _userService.GetUserId(User.Identity.Name);
+                var owned = _userLabOwnership.IsLabAlreadyOwned(currentUserId, serverId, labId);
 
                 bool mainOwner = false;
                 List<string> owners = new List<string>();
-                var ownersList = _userLabOwnership.GetAllUserLabsByLabId(labId);
+                var ownersList = _userLabOwnership.GetAllUserLabsByServerAndLabId(serverId, labId);
 
                 if (ownersList != null && ownersList.Count > 0)
                 {
-                    mainOwner = ownersList.First().UserId == _userService.GetUserId(User.Identity.Name);
+                    mainOwner = ownersList.First().UserId == currentUserId;
                     owners = (from item in ownersList
                         select _userService.GetUsername(item.UserId)).ToList();
                 }
+
+                bool hasActiveReservation = HasActiveReservationForLab(serverId, labId, currentUserId);
 
                 ViewBag.MainOwner = mainOwner;
                 ViewBag.Owners = owners;
@@ -191,6 +194,7 @@ namespace NetResVM.Web.Controllers
                 ViewBag.PlatformName = adapter.PlatformName.ToString();
                 ViewBag.Owned = owned.owned;
                 ViewBag.UserOwn = owned.userOwns;
+                ViewBag.HasActiveReservation = hasActiveReservation;
                 return View(labInfoResult.Lab);
             }
             catch (Exception ex)
@@ -220,7 +224,7 @@ namespace NetResVM.Web.Controllers
 
             // SECURITY: only admin or the main owner of the lab can add collaborators
             int currentUserId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
-            if (!User.IsInRole("Admin") && !_userLabOwnership.IsMainOwner(currentUserId, labId))
+            if (!User.IsInRole("Admin") && !_userLabOwnership.IsMainOwner(currentUserId, serverId, labId))
             {
                 TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
                 return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
@@ -418,19 +422,20 @@ namespace NetResVM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // SECURITY CHECK: Ownership
-            int currentUserId = _userService.GetUserId(User.Identity.Name);
-            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
-            if (ownership.owned && !ownership.userOwns)
-            {
-                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";
-                return RedirectToAction("LabList", "Platform", new { serverId = serverId });
-            }
-
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
             var result = await adapter.DeleteLab(serverId, labId);
             if (result.value)
             {
+                // Clean up ownership records and reservations for the deleted lab
+                _userLabOwnership.DeleteAllOwnershipsForLab(serverId, labId);
+                var reservations = _reservationService.GetReservationsByServerId(serverId);
+                if (reservations != null)
+                {
+                    foreach (var res in reservations.Where(r => r.LabId == labId))
+                    {
+                        _reservationService.DeleteReservation(res.Id);
+                    }
+                }
                 TempData["SuccessMessage"] = _localizer["LabDeleteSuccess"].Value;
             }
             else
@@ -474,35 +479,42 @@ namespace NetResVM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // SECURITY CHECK: Ownership
-            int currentUserId = _userService.GetUserId(User.Identity.Name);
-            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
-            if (!User.IsInRole("Admin") && !ownership.userOwns && !HasActiveReservationForLab(serverId, labId, currentUserId))
-            {
-                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";
-                return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
-            }
+            bool isAdmin = User.IsInRole("Admin");
 
-            // SECURITY CHECK: Active Reservation
-            var reservations = _reservationService.GetReservationsByServerId(serverId);
-            if (reservations != null)
+            // For non-admin users, enforce ownership and active reservation requirements.
+            // Admin can start any lab at any time, even without an active reservation and regardless of owners.
+            if (!isAdmin)
             {
-                var now = DateTime.Now;
-                var activeReservation = reservations.FirstOrDefault(r => r.ReservationStart <= now && r.ReservationEnd >= now);
-                
-                if (activeReservation != null)
+                // SECURITY CHECK: Ownership
+                int currentUserId = _userService.GetUserId(User.Identity.Name);
+                var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, serverId, labId);
+                if (!ownership.userOwns && !HasActiveReservationForLab(serverId, labId, currentUserId))
                 {
-                    if (activeReservation.LabId != labId || (!ownership.userOwns && activeReservation.UserId != currentUserId))
+                    TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";
+                    return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+                }
+
+                // SECURITY CHECK: Active Reservation
+                var reservations = _reservationService.GetReservationsByServerId(serverId);
+                if (reservations != null)
+                {
+                    var now = DateTime.Now;
+                    var activeReservation = reservations.FirstOrDefault(r => r.ReservationStart <= now && r.ReservationEnd >= now);
+                    
+                    if (activeReservation != null)
                     {
-                        TempData["ErrorMessage"] = _localizer["ServerReservedByAnother"].Value ?? "The server is currently reserved for another lab or by another user.";
+                        if (activeReservation.LabId != labId || (!ownership.userOwns && activeReservation.UserId != currentUserId))
+                        {
+                            TempData["ErrorMessage"] = _localizer["ServerReservedByAnother"].Value ?? "The server is currently reserved for another lab or by another user.";
+                            return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+                        }
+                    }
+                    else
+                    {
+                        // Strict reservation policy: Cannot start without an active reservation right now.
+                        TempData["ErrorMessage"] = _localizer["NoActiveReservation"].Value ?? "You must have an active reservation to start a lab.";
                         return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
                     }
-                }
-                else
-                {
-                    // Strict reservation policy: Cannot start without an active reservation right now.
-                    TempData["ErrorMessage"] = _localizer["NoActiveReservation"].Value ?? "You must have an active reservation to start a lab.";
-                    return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
                 }
             }
 
@@ -552,13 +564,16 @@ namespace NetResVM.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // SECURITY CHECK: Ownership
-            int currentUserId = _userService.GetUserId(User.Identity.Name);
-            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, labId);
-            if (!User.IsInRole("Admin") && !ownership.userOwns && !HasActiveReservationForLab(serverId, labId, currentUserId))
+            // SECURITY CHECK: Ownership & Active reservation (Admin can stop any lab at any time)
+            if (!User.IsInRole("Admin"))
             {
-                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";
-                return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+                int currentUserId = _userService.GetUserId(User.Identity.Name);
+                var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, serverId, labId);
+                if (!ownership.userOwns && !HasActiveReservationForLab(serverId, labId, currentUserId))
+                {
+                    TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied: You are not authorized for this lab.";
+                    return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+                }
             }
 
             IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);

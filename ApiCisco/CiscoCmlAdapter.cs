@@ -24,6 +24,15 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
 {
     private readonly ApiCiscoAuthentication _authentication;
     private ApiCiscoHttpClient? _httpClient;
+
+    /// <summary>
+    /// ID of the server the current <c>_httpClient</c> is authenticated to (null = not authenticated).
+    /// One adapter instance can be used for several servers within one scope (e.g. BackgroundTask, My labs),
+    /// so every call must make sure the client belongs to the requested server.
+    /// </summary>
+    private int? _authenticatedServerId;
+
+    private bool IsAuthenticatedFor(int serverId) => _httpClient != null && _authenticatedServerId == serverId;
     private readonly ApiCiscoLab _ciscoLab;
     private readonly ApiCiscoNode _node;
 
@@ -97,6 +106,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     {
         try
         {
+            _authenticatedServerId = null;
             var credentials = new ServerService().GetServerCredentials(id);
             if (credentials == null)
             {
@@ -123,7 +133,10 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
                 return (false, "Request Timeout");
             }
             else if (response.StatusCode == HttpStatusCode.OK)
+            {
+                _authenticatedServerId = id;
                 return (true, "");
+            }
             else
             {
                 _logger.LogError("CiscoCmlAdapter - Unknown error");
@@ -148,7 +161,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     /// </returns>
     public async Task<(LabDTO? Lab, string Message)> GetLabInfoAsync(int serverId, string labId)
     {
-        if (_httpClient == null)
+        if (!IsAuthenticatedFor(serverId))
         {
             var authResult = await AuthenticateAsync(serverId);
             if (!authResult.Valid || _httpClient==null)
@@ -223,7 +236,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     /// </returns>
     public async Task<(List<LabDTO>? Labs, string Message)> GetLabsAsync(int serverId)
     {
-        if (_httpClient == null)
+        if (!IsAuthenticatedFor(serverId))
         {
             var authResult = await AuthenticateAsync(serverId);
             if (!authResult.Valid || _httpClient==null)
@@ -276,7 +289,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     {
         try
         {
-            if (_httpClient == null)
+            if (!IsAuthenticatedFor(serverId))
             {
                 var authResult = await AuthenticateAsync(serverId);
                 if(!authResult.Valid || _httpClient==null)
@@ -310,7 +323,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     {
         try
         {
-            if (_httpClient == null)
+            if (!IsAuthenticatedFor(serverId))
             {
                 var authResult = await AuthenticateAsync(serverId);
                 if(!authResult.Valid || _httpClient==null)
@@ -346,7 +359,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     {
         try
         {
-            if (_httpClient == null)
+            if (!IsAuthenticatedFor(serverId))
             {
                 var authResult = await AuthenticateAsync(serverId);
                 if (!authResult.Valid || _httpClient== null)
@@ -388,7 +401,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     {
         try
         {
-            if (_httpClient == null)
+            if (!IsAuthenticatedFor(serverId))
             {
                 var authResult = await AuthenticateAsync(serverId);
                 if (!authResult.Valid || _httpClient==null)
@@ -424,7 +437,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     {
         try
         {
-            if (_httpClient == null)
+            if (!IsAuthenticatedFor(serverId))
             {
                 var authResult = await AuthenticateAsync(serverId);
                 if (!authResult.Valid || _httpClient==null)
@@ -463,7 +476,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     {
         try
         {
-            if (_httpClient == null)
+            if (!IsAuthenticatedFor(serverId))
             {
                 var authResult = await AuthenticateAsync(serverId);
                 if (!authResult.Valid || _httpClient==null)
@@ -493,7 +506,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     /// message describing the result or any error encountered.</returns>
     public async Task<(List<NodeDTO>? Nodes, string Message)> GetAllNodes(int serverId, string labId)
     {
-        if (_httpClient == null)
+        if (!IsAuthenticatedFor(serverId))
         {
             var authResult = await AuthenticateAsync(serverId);
             if (!authResult.Valid || _httpClient==null)
@@ -538,7 +551,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     /// found; otherwise, null.</returns>
     public async Task<NodeDTO?> GetNodeInfo(int serverId, string labId, string nodeId)
     {
-        if (_httpClient == null)
+        if (!IsAuthenticatedFor(serverId))
         {
             var authResult = await AuthenticateAsync(serverId);
             if (!authResult.Valid || _httpClient==null)
@@ -585,7 +598,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     {
         try
         {
-            if (_httpClient == null)
+            if (!IsAuthenticatedFor(serverId))
             {
                 var authResult = await AuthenticateAsync(serverId);
                 if (!authResult.Valid || _httpClient==null)

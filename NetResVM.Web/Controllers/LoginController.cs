@@ -19,12 +19,14 @@ namespace NetResVM.Web.Controllers
         private UserService _userService;
         private readonly ILogger<LoginController> _logger;
         private readonly IStringLocalizer<SharedResource> _localizer;
+        private readonly LoginAttemptTracker _loginAttemptTracker;
 
-        public LoginController(UserService userService, ILogger<LoginController> logger, IStringLocalizer<SharedResource> localizer)
+        public LoginController(UserService userService, ILogger<LoginController> logger, IStringLocalizer<SharedResource> localizer, LoginAttemptTracker loginAttemptTracker)
         {
             _userService = userService;
             _logger = logger;
             _localizer = localizer;
+            _loginAttemptTracker = loginAttemptTracker;
         }
 
         /// <summary>
@@ -52,9 +54,20 @@ namespace NetResVM.Web.Controllers
         {
             if (ModelState.IsValid && !User.Identity.IsAuthenticated)
             {
+                var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+                // Too many failed attempts for this account from this IP -> do not even check the password
+                if (_loginAttemptTracker.IsLocked(user.Username, clientIp))
+                {
+                    TempData["ErrorMessage"] = _localizer["TooManyLoginAttempts"].Value;
+                    return View("Index");
+                }
+
                 // Check if the user is already authenticated
                 if (_userService.ValidateCredentials(user.Username,user.Password))
                 {
+                    _loginAttemptTracker.Reset(user.Username, clientIp);
+
                     // Create the claims for the user
                     var claims = new List<Claim>
                     {
@@ -68,6 +81,8 @@ namespace NetResVM.Web.Controllers
 
                     return RedirectToAction("Index", "Home");
                 }
+
+                _loginAttemptTracker.RegisterFailure(user.Username, clientIp);
             }
             TempData["ErrorMessage"] = _localizer["InvalidCredentials"].Value;
             return View("Index");
