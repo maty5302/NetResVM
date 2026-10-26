@@ -21,7 +21,7 @@ services:
         wait
       "
 
-    restart: unless-stopped
+    restart: always
 
   # One-shot helper: the app runs as non-root user 'app' (UID 1654), but Docker creates
   # bind-mounted folders (./backups, ./logs) as root and an older dp-keys volume may be root-owned.
@@ -59,7 +59,7 @@ services:
       - ./backups:/app/backups
       - ./logs:/app/logs
 
-    restart: unless-stopped
+    restart: always
 
 volumes:
   mssql_data:
