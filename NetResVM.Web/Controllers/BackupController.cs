@@ -132,7 +132,7 @@ public class BackupController : Controller
             return RedirectToAction("Index", "Login");
 
         var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
-        var owned = serverId > 0 ? _labOwnershipService.IsLabAlreadyOwned(userId, serverId, labId) : _labOwnershipService.IsLabAlreadyOwned(userId, labId);
+        var owned = _labOwnershipService.IsLabAlreadyOwned(userId, serverId, labId);
         if (!User.IsInRole("Admin") && !owned.userOwns)
         {
             TempData["ErrorMessage"] = _localizer["BackupDeleteFailNotOwned"].Value;
