@@ -29,7 +29,8 @@ public class LocalBackupStorage : ILocalBackupStorage
         string cleanLabId = Path.GetFileName(labId.Trim());
         string cleanFileName = Path.GetFileName(fileName.Trim());
 
-        if (string.IsNullOrEmpty(cleanServerType) || string.IsNullOrEmpty(cleanLabId) || string.IsNullOrEmpty(cleanFileName))
+        if (string.IsNullOrEmpty(cleanServerType) || string.IsNullOrEmpty(cleanLabId) || string.IsNullOrEmpty(cleanFileName)
+            || cleanServerType is "." or ".." || cleanLabId is "." or ".." || cleanFileName is "." or "..")
         {
             return null;
         }
