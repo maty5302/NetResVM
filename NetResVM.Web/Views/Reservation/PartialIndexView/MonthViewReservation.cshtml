@@ -75,7 +75,18 @@
 							string deleteUrl = canDelete ? Url.Action("DeleteReservation", "Reservation", new { reservationId = item.Id, returnUrl = Url.Action("Index", "Reservation", new { view = "month", month = currentMonth, year = currentYear }) }) ?? "" : "";
 							<div class="event" role="button" tabindex="0"
 								 style="cursor: pointer;"
-								 onclick="openReservationModal('@item.Id', '@item.ServerName', '@item.Platform', '@item.ServerId', '@item.LabId', '@item.UserName', '@item.ReservationStart.ToString("yyyy-MM-dd HH:mm")', '@item.ReservationEnd.ToString("yyyy-MM-dd HH:mm")', '@Url.Action("LabInfo", "Platform", new { serverId = item.ServerId, labId = item.LabId })', '@Url.Action("SaveEvent", "Reservation", new { reservationId = item.Id })', '@deleteUrl')">
+								 data-id="@item.Id"
+								 data-server-name="@item.ServerName"
+								 data-platform="@item.Platform"
+								 data-server-id="@item.ServerId"
+								 data-lab-id="@item.LabId"
+								 data-user-name="@item.UserName"
+								 data-start="@item.ReservationStart.ToString("yyyy-MM-dd HH:mm")"
+								 data-end="@item.ReservationEnd.ToString("yyyy-MM-dd HH:mm")"
+								 data-lab-url="@Url.Action("LabInfo", "Platform", new { serverId = item.ServerId, labId = item.LabId })"
+								 data-export-url="@Url.Action("SaveEvent", "Reservation", new { reservationId = item.Id })"
+								 data-delete-url="@deleteUrl"
+								 onclick="openReservationModal(this)">
 								<span>@item.ReservationStart.ToString("HH:mm")-@item.ReservationEnd.ToString("HH:mm")</span>
 								<span>@item.ServerName - @item.UserName</span>
 							</div>
@@ -133,7 +144,7 @@
 						@Html.AntiForgeryToken()
 						<input type="hidden" name="reservationId" id="modalDeleteReservationId" value="" />
 						<input type="hidden" name="returnUrl" id="modalDeleteReturnUrl" value="" />
-						<button type="submit" class="btn btn-danger" onclick="return confirm('@Localizer["ConfirmDeleteReservation"]');">
+						<button type="submit" class="btn btn-danger" data-confirm="@Localizer["ConfirmDeleteReservation"]" onclick="return confirm(this.getAttribute('data-confirm'));">
 							<i class="bi bi-trash"></i> @Localizer["DeleteButton"]
 						</button>
 					</form>
@@ -144,22 +155,23 @@
 	</div>
 
 	<script>
-		function openReservationModal(id, serverName, platform, serverId, labId, userName, start, end, labUrl, exportUrl, deleteUrl) {
-			document.getElementById('modalServer').innerText = serverName + " (" + platform + ")";
-			document.getElementById('modalLabId').innerText = labId;
-			document.getElementById('modalUser').innerText = userName;
-			document.getElementById('modalStart').innerText = start;
-			document.getElementById('modalEnd').innerText = end;
-			document.getElementById('modalGoToLabBtn').href = labUrl;
-			document.getElementById('modalExportIcsBtn').href = exportUrl;
+		function openReservationModal(element) {
+			const data = element.dataset;
+			document.getElementById('modalServer').innerText = (data.serverName || '') + " (" + (data.platform || '') + ")";
+			document.getElementById('modalLabId').innerText = data.labId || '';
+			document.getElementById('modalUser').innerText = data.userName || '';
+			document.getElementById('modalStart').innerText = data.start || '';
+			document.getElementById('modalEnd').innerText = data.end || '';
+			document.getElementById('modalGoToLabBtn').href = data.labUrl || '#';
+			document.getElementById('modalExportIcsBtn').href = data.exportUrl || '#';
 
 			const deleteForm = document.getElementById('modalDeleteForm');
 			const deleteResId = document.getElementById('modalDeleteReservationId');
 			const deleteReturnUrl = document.getElementById('modalDeleteReturnUrl');
 			if (deleteForm) {
-				if (deleteUrl) {
-					deleteForm.action = deleteUrl;
-					if (deleteResId) deleteResId.value = id;
+				if (data.deleteUrl) {
+					deleteForm.action = data.deleteUrl;
+					if (deleteResId) deleteResId.value = data.id || '';
 					if (deleteReturnUrl) deleteReturnUrl.value = '@Url.Action("Index", "Reservation", new { view = "month", month = currentMonth, year = currentYear })';
 					deleteForm.style.display = 'inline-block';
 				} else {

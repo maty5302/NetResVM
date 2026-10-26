@@ -159,7 +159,7 @@ namespace BusinessLayer.Services
             catch (Exception e)
             {
                 _logger.LogError(e.Message);
-                return (false, false);
+                return (true, false);
             }
         }
 
