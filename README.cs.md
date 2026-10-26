@@ -18,13 +18,13 @@ Tento projekt je dostupný pod licencí [GNU GPL v3](LICENSE).
 - .NET 10.0 Runtime
 - ASP.NET 10.0 Runtime
 - Microsoft SQL Server 2022
-- libldap-2.5-0 pro LDAP autentizaci (pouze Linux)
+- libldap - knihovnu pro LDAP autentizaci (pouze Linux)
 
 ## Instalace pomocí Dockeru (doporučeno)
 > Poznámka: Pro instalaci v Dockeru nepotřebujete výše uvedené požadavky kromě Dockeru.
 
 #### 1. Stáhněte a nainstalujte Docker
-#### 2. Stáhněte soubor [docker-compose.yml](docker/docker-compose.yml)  ze složky assets
+#### 2. Stáhněte soubor [docker-compose.yml](docker/docker-compose.yml) ze složky `docker` (případně z [GitHub Releases](https://github.com/maty5302/NetResVM/releases))
 #### 3. Vytvořte soubor [.env](docker/.env.example) s následujícím obsahem
 > Zvolte si vlastní silné heslo pro databázi
 
@@ -33,11 +33,14 @@ DB_USER=sa
 DB_PASSWORD=vase_silne_heslo
 ```
 
-#### 4. Spusťte docker-compose.yml a počkejte cca 1-2 minuty.
-Linux
+#### 4. Spusťte docker-compose.yml na pozadí a počkejte cca 1-2 minuty.
+```bash
+docker compose pull && docker compose up -d
 ```
-docker compose pull && docker compose up
-```
+> **Automatické spuštění po restartu PC:**
+> Kontejnery mají nastavenou politiku `restart: always`, takže se po restartu počítače automaticky znovu spustí na pozadí. Aby to fungovalo, ujistěte se, že samotná služba Dockeru je povolena pro start při bootu systému:
+> - **Linux:** `sudo systemctl enable --now docker` (a případně `sudo systemctl enable --now containerd`)
+> - **Windows:** V nastavení Docker Desktop (*Settings -> General*) zaškrtněte volbu *Start Docker Desktop when you sign in*.
 
 #### 5. Aplikace bude obvykle dostupná na adrese http://localhost:8080/ a můžete se přihlásit pomocí výchozího loginu admin a hesla Password123.
 
@@ -52,9 +55,15 @@ docker compose pull && docker compose up
 > ```
 > **Varování:** Vystavení portu `1433` do veřejné sítě nebo na serveru bez dodatečné ochrany firewallem představuje bezpečnostní riziko. Vždy se ujistěte, že používáte dostatečně silné heslo (`DB_PASSWORD`).
 
+> [!NOTE]
+> **Provoz v Dockeru a Reverzní Proxy:**
+> - **Oprávnění a bezpečnost:** Aplikace v kontejneru běží pod neprivilegovaným uživatelem `app` (UID 1654). Pomocná služba `init-permissions` automaticky nastavuje správná oprávnění pro složky záloh (`./backups`), logů (`./logs`) a šifrovací klíče relací (`dp-keys`).
+> - **Telnet:** Port `2323` je z bezpečnostních důvodů dostupný pouze z lokálního hostitele (`127.0.0.1:2323`).
+> - **Reverzní proxy (HTTPS):** Pokud provozujete aplikaci za reverzní proxy (např. Nginx, Caddy, Traefik, Cloudflare), nakonfigurujte v sekci `environment` u služby `netresvm` IP adresu nebo podsíť proxy, např. `- ReverseProxy__KnownNetworks__0=172.16.0.0/12`. Bez této konfigurace jsou hlavičky `X-Forwarded-For` ignorovány a ochrana proti brute-force útokům či rate limiting by zablokovaly IP adresu proxy serveru.
+
 ## Instalace bez Dockeru 
 
-#### 1. Stáhněte a rozbalte archiv pro váš operační systém
+#### 1. Stáhněte a rozbalte archiv pro váš operační systém z [GitHub Releases](https://github.com/maty5302/NetResVM/releases)
 
 #### 2. Před pokračováním je potřeba nainstalovat všechny systémové požadavky pomocí správce balíčků.
 ```
@@ -67,7 +76,7 @@ dotnet-runtime-10.0
 libldap 2.5-0 nebo openldap 2.5-0 (linux-only)
 ```
 #### 3. Vytvoření tabulek databáze 
-Po instalaci všech balíčků se ujistěte, že běží MS SQL Server a že máte nainstalované mssql-tools. Poté spusťte následující příkaz pro vytvoření tabulek v databázi:
+Po instalaci všech balíčků se ujistěte, že běží MS SQL Server a že máte nainstalované mssql-tools. Poté spusťte následující příkaz pro vytvoření tabulek v databázi (aplikace při spuštění také automaticky provádí kontrolu a aplikaci případných chybějících migrací):
 ```
 sqlcmd -S IPaddress -U Username -P "YourPassword" -i SQLCreateTablesBc.sql
 ```
@@ -121,9 +130,9 @@ Uživatelé mohou vytvářet snapshoty (zálohy) svých aktivních laboratorníc
 ### Přiřazení laboratoře
 
 1. Vyberte server a následně laboratoř, kterou si chcete přiřadit
-2. Klikněte na vlastnit laboratož
+2. Klikněte na vlastnit laboratoř
 
-Poté ji uvidíte na stránce moje laboratoře, kde je můžete také spouštět a vypínat.
+Poté ji uvidíte na stránce Moje laboratoře, kde ji můžete také spouštět a vypínat.
 
 ### Přidávání a odebírání připojení k CML a EVE-NG serverům
 
@@ -172,3 +181,14 @@ Uživatelé, kteří vlastní laboratoř, mohou pozvat další registrované už
 > Ve výchozím nastavení může spolupracovníky přidávat nebo odebírat uživatel, který laboratoř vlastní jako první.
 
 ![Menu Správa spolupracovníků](assets/readme/manage-collaborators-cs.png)
+
+## Bezpečnost a správa relací
+
+Aplikace implementuje několik vrstev ochrany a mechanismů pro zajištění bezpečnosti a spolehlivosti:
+
+* **Ochrana proti útokům hrubou silou (Brute-Force & Lockout):** Sledování neúspěšných pokusů o přihlášení (`LoginAttemptTracker`). Po 5 neúspěšných pokusech pro dané uživatelské jméno a IP adresu je účet dočasně uzamčen na 5 minut.
+* **Omezení počtu požadavků (Rate Limiting):** Přihlašovací endpoint je chráněn pevným oknem s limitem 30 požadavků za minutu na IP adresu (při překročení vrací stavový kód HTTP 429 Too Many Requests).
+* **Zabezpečení relací (Cookies & Session):** Autentizační a relační cookies jsou zabezpečeny příznaky `HttpOnly` a `SameSite=Lax` s expirací při nečinnosti nastavenou na 30 minut. Při deaktivaci uživatele administrátorem dojde k okamžitému zneplatnění relace při jeho nejbližším požadavku (`OnValidatePrincipal`).
+* **Bezpečnostní hlavičky HTTP:** Každá odpověď obsahuje hlavičky `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN` a `Referrer-Policy: strict-origin-when-cross-origin`.
+* **Podpora více serverů stejného typu:** Cisco CML i EVE-NG adaptéry izolují klientské relace a autentizační tokeny podle ID serveru. Vlastnictví laboratoří v databázi používá složený klíč `(LabID, ServerID, UserID)`, což eliminuje konflikty při provozu více instancí se stejnými ID topologií.
+* **Automatické databázové migrace:** Aplikace při startu automaticky ověřuje a aplikuje případné chybějící úpravy schématu (např. doplnění sloupce `OwnershipID`), aniž by bylo nutné manuálně zasahovat do běžící databáze.

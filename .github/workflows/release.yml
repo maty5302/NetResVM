@@ -68,7 +68,7 @@ jobs:
 
           # Ověřit přítomnost konfigurace
           if [ ! -f ./publish/linux-x64/sqlconnection.json ]; then
-            cp NetResVM.Web/sqlconnection.json ./publish/linux-x64/
+            cp NetResVM.Web/sqlconnection.example.json ./publish/linux-x64/
           fi
 
           # Zabalit do ZIP
@@ -101,7 +101,7 @@ jobs:
 
           # Ověřit přítomnost konfigurace
           if [ ! -f ./publish/win-x64/sqlconnection.json ]; then
-            cp NetResVM.Web/sqlconnection.json ./publish/win-x64/
+            cp NetResVM.Web/sqlconnection.example.json ./publish/win-x64/
           fi
 
           # Zabalit do ZIP
