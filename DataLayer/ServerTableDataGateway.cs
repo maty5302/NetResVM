@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Microsoft.Data.SqlClient;
 using DataLayer.Interface;
 
@@ -114,12 +114,19 @@ namespace DataLayer
         }
 
         /// <summary>
-        /// Removes an existing server from the Server table.
+        /// Removes an existing server from the Server table and cleans up any related reservations and lab ownerships in a transaction.
         /// </summary>
         /// <param name="id"> ID of the server to be removed </param>
         public void RemoveServer(int id)
         {
-            string query = "DELETE FROM Server WHERE ServerID = @Id";
+            // XACT_ABORT ON: any error rolls back the whole transaction (otherwise COMMIT would save a partial delete)
+            string query = @"
+                SET XACT_ABORT ON;
+                BEGIN TRANSACTION;
+                DELETE FROM Reservation WHERE ServerID = @Id;
+                DELETE FROM UserLabOwnership WHERE ServerID = @Id;
+                DELETE FROM Server WHERE ServerID = @Id;
+                COMMIT;";
             using (var connection = DBConnector.GetConnection())
             {
                 connection.Open();

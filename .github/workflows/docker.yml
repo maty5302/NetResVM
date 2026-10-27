@@ -5,55 +5,51 @@ on:
     branches:
       - main
       - dev
-
-env:
-  IMAGE_NAME: netresvm
+    tags:
+      - 'v*.*.*'
 
 jobs:
   docker:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to GHCR
+      - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata
+      - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/netresvm
+          tags: |
+            # 1. Větve: push do 'dev' vytvoří jen ':dev', push do 'main' vytvoří ':main'
+            type=ref,event=branch
 
-      - name: Build and Push (main)
-        if: github.ref == 'refs/heads/main'
+            # 2. Release / Git tagy (např. v1.1.1): vytvoří ':v1.1.1' i ':1.1.1'
+            type=semver,pattern={{raw}}
+            type=semver,pattern={{version}}
+
+            # 3. ':latest' se nastaví při pushi do main nebo při ostrém release tagu (ne u pre-release s pomlčkou)
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || (startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')) }}
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker/Dockerfile
           push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/netresvm:latest
-            ghcr.io/${{ github.repository_owner }}/netresvm:main
-
-      - name: Build and Push (dev)
-        if: github.ref == 'refs/heads/dev'
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./docker/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/netresvm:dev
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

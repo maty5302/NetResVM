@@ -1,4 +1,4 @@
-﻿@model BusinessLayer.DTOs.LabDTO
+@model BusinessLayer.DTOs.LabDTO
 @{
     // Název stránky dynamicky podle modelu
     ViewData["Title"] = (Model?.Name ?? "Unknown");
@@ -109,12 +109,13 @@ else
                         formaction="@Url.Action("DownloadLab", "Platform", new { serverId = ViewBag.ServerId, labId = Model.Id })">
                     <i class="bi bi-download"></i> @Localizer["DownloadLab"]
                 </button>
+                }
+                @if (ViewBag.UserOwn == true || User.IsInRole("Admin") || ViewBag.Owned == false)
+                {
                 <button type="submit" class="btn btn-primary"
                         formaction="@Url.Action("Create", "Reservation", new { selectedServer = ViewBag.ServerId, labId = Model.Id })">
                     <i class="bi bi-calendar-check"></i> @Localizer["ReserveLab"]
                 </button>
-                
-                    
                 }
                 
                 @if (ViewBag.MainOwner == true || User.IsInRole("Admin"))
@@ -135,8 +136,8 @@ else
             </div>
         </div>
 
-        @* Pokud uživatel laboratoř vlastní, nebo je admin, může s ní manipulovat *@
-        @if (ViewBag.UserOwn == true || User.IsInRole("Admin"))
+        @* Pokud uživatel laboratoř vlastní, je admin, nebo má na ni aktivní rezervaci, může s ní manipulovat *@
+        @if (ViewBag.UserOwn == true || User.IsInRole("Admin") || ViewBag.HasActiveReservation == true)
         {
             <div class="mb-3">
                 <div class="btn-group mb-2" role="group">

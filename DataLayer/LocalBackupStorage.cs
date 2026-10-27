@@ -14,19 +14,60 @@ public class LocalBackupStorage : ILocalBackupStorage
     }
 
     /// <summary>
+    /// Validates and constructs a safe, canonical file path strictly within the backup root directory.
+    /// Returns null if any path traversal or invalid input is detected.
+    /// </summary>
+    private string? GetSafeFilePath(string serverType, string labId, string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(serverType) || string.IsNullOrWhiteSpace(labId) || string.IsNullOrWhiteSpace(fileName))
+        {
+            return null;
+        }
+
+        // Strip directory separators and traversal characters from user inputs
+        string cleanServerType = Path.GetFileName(serverType.Trim());
+        string cleanLabId = Path.GetFileName(labId.Trim());
+        string cleanFileName = Path.GetFileName(fileName.Trim());
+
+        if (string.IsNullOrEmpty(cleanServerType) || string.IsNullOrEmpty(cleanLabId) || string.IsNullOrEmpty(cleanFileName)
+            || cleanServerType is "." or ".." || cleanLabId is "." or ".." || cleanFileName is "." or "..")
+        {
+            return null;
+        }
+
+        string fullBackupRoot = Path.GetFullPath(_backupPath);
+        string fullPath = Path.GetFullPath(Path.Combine(fullBackupRoot, cleanServerType, cleanLabId, cleanFileName));
+
+        // Ensure resulting canonical path is strictly inside the backup root directory
+        if (!fullPath.StartsWith(fullBackupRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return fullPath;
+    }
+
+    /// <summary>
     /// Saves a backup to the local storage.
     /// </summary>
     /// <param name="serverType"> Type of the server, which is used for path </param>
     /// <param name="labId"> ID of a lab </param>
     /// <param name="fileContent"> File that needs to be saved </param>
     /// <param name="fileExtension"> File extension for the backup file </param>
-    public async void SaveBackup(string serverType, string labId, byte[] fileContent, string fileExtension)
+    public async Task SaveBackup(string serverType, string labId, byte[] fileContent, string fileExtension)
     {
+        string cleanServerType = Path.GetFileName(serverType.Trim());
+        string cleanLabId = Path.GetFileName(labId.Trim());
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-        string fileName = $"{serverType}-{labId}-{timestamp}{fileExtension}";
-        string filePath = Path.Combine(_backupPath, serverType, labId, fileName);
+        string fileName = $"{cleanServerType}-{cleanLabId}-{timestamp}{fileExtension}";
 
-        Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? "");
+        string? filePath = GetSafeFilePath(cleanServerType, cleanLabId, fileName);
+        if (filePath == null)
+        {
+            throw new ArgumentException("Invalid path parameters for backup.");
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? _backupPath);
         await File.WriteAllBytesAsync(filePath, fileContent);
     }
 
@@ -39,8 +80,8 @@ public class LocalBackupStorage : ILocalBackupStorage
     /// <returns></returns>
     public async Task<byte[]?> GetBackup(string serverType, string labId, string fileName)
     {
-        string filePath = Path.Combine(_backupPath, serverType, labId, fileName);
-        if (File.Exists(filePath))
+        string? filePath = GetSafeFilePath(serverType, labId, fileName);
+        if (filePath != null && File.Exists(filePath))
         {
             return await File.ReadAllBytesAsync(filePath);
         }
@@ -56,8 +97,8 @@ public class LocalBackupStorage : ILocalBackupStorage
     /// <returns></returns>
     public bool DeleteBackup(string serverType, string labId, string fileName)
     {
-        string filePath = Path.Combine(_backupPath, serverType, labId, fileName);
-        if (File.Exists(filePath))
+        string? filePath = GetSafeFilePath(serverType, labId, fileName);
+        if (filePath != null && File.Exists(filePath))
         {
             File.Delete(filePath);
             return true;
@@ -73,6 +114,12 @@ public class LocalBackupStorage : ILocalBackupStorage
     public List<BackupRecord> GetBackupRecords()
     {
         var records = new List<BackupRecord>();
+        if (!Directory.Exists(_backupPath))
+        {
+            Directory.CreateDirectory(_backupPath);
+            return records;
+        }
+
         // Loop through all directories and files in the backup path
         foreach (var serverType in Directory.GetDirectories(_backupPath))
         {

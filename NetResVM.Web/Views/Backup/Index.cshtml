@@ -1,68 +1,105 @@
-﻿@using BusinessLayer.Enum
+@using BusinessLayer.Enum
 @{
-    ViewData["Title"] = @Localizer["ManageBackup"];
-    var backups= ViewBag.Backups as List<BusinessLayer.DTOs.BackupDTO>;
+    ViewData["Title"] = Localizer["ManageBackup"];
+    var backups = ViewBag.Backups as List<BusinessLayer.DTOs.BackupDTO>;
 }
-<h1>@ViewData["Title"]</h1>
-<br/>
-<div>
-    @if(backups == null || backups.Count==0)
-    {
-        <div class="col-12 text-center mt-4">
-            <div class="alert alert-info" role="alert">
-                @Localizer["NoBackups"]
-            </div>
-            </div> 
-    }
-    else
-    {
-        
-        <table class="table">
-            <thead>
-            <tr>
-                <th>@Localizer["ServerName"]</th>
-                <th>@Localizer["ServerType"]</th>
-                <th>@Localizer["Lab"]</th>
-                <th>@Localizer["CreatedAt"]</th>
-                <th>@Localizer["Actions"]</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var backup in backups)
-            {
-                <tr>
-                    <td>@backup.ServerName</td>
-                    <td>@backup.Platform.ToString()</td>
-                    <td>@backup.LabId</td>
-                    <td>@backup.CreatedAt</td>
-                    <td>
-                        <form method="post">
-                            @if (backup.ServerId == -1 || backup.Platform == PlatformType.EVE)
-                            {
-                                <button class="btn btn-primary" disabled><i class="bi bi-arrow-clockwise"></i></button>
-                            }
-                            else
-                            {
-                                <button type="submit"
-                                        data-confirm="@Localizer["MessageWarningRestoreBackup"]"
-                                        onclick="return confirm(this.getAttribute('data-confirm'));"
-                                        formaction="@Url.Action("RestoreBackup", "Backup", new { serverId = @backup.ServerId, labId = @backup.LabId, platform = @backup.Platform, filename = @backup.FileName })"
-                                        class="btn btn-primary">
-                                    <i class="bi bi-arrow-clockwise"></i>
-                                </button>
-                            }
-                            <button type="submit" formaction="@Url.Action("DownloadBackup", "Backup", new { labId = @backup.LabId, platform = @backup.Platform, filename = @backup.FileName })" class="btn btn-primary"><i class="bi bi-download"></i></button>
-                            <button type="submit"
-                                    data-confirm="@Localizer["MessageWarningDeleteBackup"]"
-                                    onclick="return confirm(this.getAttribute('data-confirm'));"
-                                    formaction="@Url.Action("DeleteBackup", "Backup", new { filename = @backup.FileName, labId = @backup.LabId, platform = @backup.Platform })"
-                                    class="btn btn-danger"> <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    }
-</div>
+
+<h1 class="mb-0">@ViewData["Title"]</h1>
+<hr class="mt-2 mb-4" />
+
+@if (backups == null || backups.Count == 0)
+{
+    <div class="card shadow-sm">
+        <div class="p-5 text-center text-muted">
+            <i class="bi bi-database-x fs-1 d-block mb-3 text-secondary"></i>
+            <h5 class="fw-normal">@Localizer["NoBackups"]</h5>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">@Localizer["ServerName"]</th>
+                        <th scope="col">@Localizer["ServerType"]</th>
+                        <th scope="col">@Localizer["Lab"]</th>
+                        <th scope="col">@Localizer["CreatedAt"]</th>
+                        <th scope="col" class="text-end pe-4">@Localizer["Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var backup in backups)
+                    {
+                        <tr>
+                            <td>
+                                @if (string.IsNullOrEmpty(backup.ServerName) || backup.ServerName.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <span class="text-body-secondary fst-italic">@(backup.ServerName ?? "Unknown")</span>
+                                }
+                                else
+                                {
+                                    <span class="fw-semibold text-body">@backup.ServerName</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle font-monospace" style="font-size: 0.75rem;">
+                                    @backup.Platform
+                                </span>
+                            </td>
+                            <td>
+                                <span class="font-monospace small">
+                                    <i class="bi bi-hdd-network text-primary me-1"></i>@backup.LabId
+                                </span>
+                            </td>
+                            <td class="text-nowrap">
+                                <i class="bi bi-calendar3 text-muted me-1"></i>@backup.CreatedAt.ToString("dd.MM.yyyy")
+                                <span class="text-muted ms-1"><i class="bi bi-clock me-1"></i>@backup.CreatedAt.ToString("HH:mm:ss")</span>
+                            </td>
+                            <td class="text-end pe-4 text-nowrap">
+                                <form method="post" class="d-inline-flex gap-1 m-0">
+                                    @Html.AntiForgeryToken()
+                                    @if (backup.ServerId == -1 || backup.Platform == PlatformType.EVE)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="@Localizer["RestoreBackup"]">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-primary"
+                                                title="@Localizer["RestoreBackup"]"
+                                                data-confirm="@Localizer["MessageWarningRestoreBackup"]"
+                                                onclick="return confirm(this.getAttribute('data-confirm'));"
+                                                formaction="@Url.Action("RestoreBackup", "Backup", new { serverId = backup.ServerId, labId = backup.LabId, platform = backup.Platform, filename = backup.FileName })">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                    }
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-success"
+                                            title="@Localizer["DownloadBackup"]"
+                                            formaction="@Url.Action("DownloadBackup", "Backup", new { serverId = backup.ServerId, labId = backup.LabId, platform = backup.Platform, filename = backup.FileName })">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="@Localizer["DeleteBackup"]"
+                                            data-confirm="@Localizer["MessageWarningDeleteBackup"]"
+                                            onclick="return confirm(this.getAttribute('data-confirm'));"
+                                            formaction="@Url.Action("DeleteBackup", "Backup", new { serverId = backup.ServerId, filename = backup.FileName, labId = backup.LabId, platform = backup.Platform })">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

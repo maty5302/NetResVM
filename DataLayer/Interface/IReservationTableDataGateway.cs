@@ -42,13 +42,15 @@ public interface IReservationTableDataGateway
 
     /// <summary>
     /// Adds a new server reservation for the specified user within the specified time range and for the specified lab.
+    /// Checks atomically for overlaps on the target server.
     /// </summary>
     /// <param name="serverId">The identifier of the server to be reserved.</param>
     /// <param name="userId">The identifier of the user for whom the reservation is intended.</param>
     /// <param name="startDate">The date and time the reservation begins.</param>
     /// <param name="endDate">The end date and time of the reservation. Must be later than <paramref name="startDate"/>.</param>
     /// <param name="labId">The identifier of the lab in which the server is reserved. Cannot be null or an empty string.</param>
-    void InsertReservation(int serverId, int userId, DateTime startDate, DateTime endDate, string labId);
+    /// <returns><c>true</c> if the reservation was successfully inserted; otherwise, <c>false</c> if a conflicting reservation exists.</returns>
+    bool InsertReservation(int serverId, int userId, DateTime startDate, DateTime endDate, string labId);
     
     /// <summary>
     /// Removes the reservation with the specified identifier.

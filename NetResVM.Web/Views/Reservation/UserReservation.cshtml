@@ -1,88 +1,176 @@
-﻿@using NetResVM.Web.Models
+@using NetResVM.Web.Models
 
 @{
-	ViewData["Title"] = @Localizer["MyReservations"];
+	ViewData["Title"] = Localizer["MyReservations"];
 
-	var reservations = ((List<ReservationInformationModel>)ViewBag.PlannedReservations);
-	var expired = ((List<ReservationInformationModel>)ViewBag.ExpiredReservations);
+	var reservations = ViewBag.PlannedReservations as List<ReservationInformationModel> ?? new List<ReservationInformationModel>();
+	var expired = ViewBag.ExpiredReservations as List<ReservationInformationModel> ?? new List<ReservationInformationModel>();
 }
-<h1>@ViewData["Title"]</h1>
-<hr />
-<div>
-	<h3>@Localizer["PlannedReservations"]</h3>
-	@if (reservations != null && reservations.Count > 0)
-	{
-		<table class="table">
-			<thead>
-			<tr>
-				<th>@Localizer["Server"]</th>
-				<th>@Localizer["Lab"]</th>
-				<th>@Localizer["FromTime"]</th>
-				<th>@Localizer["ToTime"]</th>
-				<th></th>
-			</tr>
-			</thead>
-			<tbody>
 
-			@for (int i = 0; i < reservations.Count; i++)
-			{
-				<tr>
-					<td>@reservations[i].ServerName - @reservations[i].Platform </td>
-					<td>@reservations[i].LabId</td>
-					<td>@reservations[i].ReservationStart</td>
-					<td>@reservations[i].ReservationEnd</td>
-					<td>
-						<form method="post"><button class="btn btn-danger" onclick="return confirm('Are you sure you want to delete a reservation? This operation is pernament!')" formaction="@Url.Action("DeleteReservation", "Reservation", new { reservationId = @ViewBag.PlannedReservations[i].Id })"> <i class="bi bi-trash"></i> </button></form></td>
-				</tr>
-			}
-			</tbody>
-		</table>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+	<div class="d-flex align-items-center gap-2">
+		
+		<h1>
+			@ViewData["Title"]
+		</h1>
+	</div>
+	<div>
+		<a href="@Url.Action("Index", "Reservation")" class="btn btn-outline-secondary" title="@Localizer["Back"]">
+			<i class="bi bi-arrow-left"></i> @Localizer["Back"]
+		</a>
+		<a href="@Url.Action("Create", "Reservation")" class="btn btn-primary shadow-sm">
+			<i class="bi bi-calendar-plus me-1"></i> @Localizer["NewReservation"]
+		</a>
+	</div>
+</div>
+
+<!-- Planned Reservations -->
+<div class="card shadow-sm border-0 mb-4">
+	<div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center py-3">
+		<div class="d-flex align-items-center gap-2">
+			<h5 class="mb-0 fw-semibold text-body">
+				<i class="bi bi-clock-history text-primary me-2"></i>@Localizer["PlannedReservations"]
+			</h5>
+			<span class="badge bg-primary rounded-pill">@reservations.Count</span>
+		</div>
+	</div>
+
+	@if (reservations.Count > 0)
+	{
+		<div class="table-responsive">
+			<table class="table table-hover align-middle mb-0">
+				<thead class="table-light">
+					<tr>
+						<th scope="col">@Localizer["Server"]</th>
+						<th scope="col">@Localizer["Lab"]</th>
+						<th scope="col">@Localizer["FromTime"]</th>
+						<th scope="col">@Localizer["ToTime"]</th>
+						<th scope="col" class="text-end pe-4">@Localizer["Actions"]</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var res in reservations)
+					{
+						<tr>
+							<td>
+								<div class="fw-semibold text-body">@res.ServerName</div>
+								<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle font-monospace" style="font-size: 0.75rem;">
+									@res.Platform
+								</span>
+							</td>
+							<td>
+								<a href="@Url.Action("LabInfo", "Platform", new { serverId = res.ServerId, labId = res.LabId })" class="text-decoration-none fw-medium" title="@Localizer["LabInfo"]">
+									<i class="bi bi-hdd-network text-primary me-1"></i>@res.LabId
+								</a>
+							</td>
+							<td class="text-nowrap">
+								<i class="bi bi-calendar3 text-muted me-1"></i>@res.ReservationStart.ToString("dd.MM.yyyy")
+								<span class="text-muted ms-1"><i class="bi bi-clock me-1"></i>@res.ReservationStart.ToString("HH:mm")</span>
+							</td>
+							<td class="text-nowrap">
+								<i class="bi bi-calendar3 text-muted me-1"></i>@res.ReservationEnd.ToString("dd.MM.yyyy")
+								<span class="text-muted ms-1"><i class="bi bi-clock me-1"></i>@res.ReservationEnd.ToString("HH:mm")</span>
+							</td>
+							<td class="text-end pe-4 text-nowrap">
+								<div class="d-inline-flex gap-1">
+									<a href="@Url.Action("SaveEvent", "Reservation", new { reservationId = res.Id })" class="btn btn-sm btn-outline-primary" title="@Localizer["ExportToCalendar"]">
+										<i class="bi bi-calendar-event"></i>
+									</a>
+									<form method="post" action="@Url.Action("DeleteReservation", "Reservation")" class="d-inline m-0">
+										@Html.AntiForgeryToken()
+										<input type="hidden" name="reservationId" value="@res.Id" />
+										<input type="hidden" name="returnUrl" value="@Url.Action("UserReservation", "Reservation")" />
+										<button type="submit" class="btn btn-sm btn-outline-danger" title="@Localizer["DeleteButton"]" onclick="return confirm('@Localizer["ConfirmDeleteReservation"]');">
+											<i class="bi bi-trash"></i>
+										</button>
+									</form>
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
 	}
 	else
 	{
-		<div class="col-12 text-center mt-4">
-			<div class="alert alert-info" role="alert">
-				@Localizer["NoReservation"]
-			</div>
-		</div> 
+		<div class="p-5 text-center text-muted">
+			<i class="bi bi-calendar-x fs-1 d-block mb-3 text-secondary"></i>
+			<h5 class="fw-normal">@Localizer["NoReservation"]</h5>
+		</div>
 	}
-	<h3>@Localizer["ExpiredReservations"]</h3>
-	<p>@Localizer["ExpiredResWarning"]</p>
-	@if (expired != null && expired.Count>0)
+</div>
+
+<!-- Expired Reservations -->
+<div class="card shadow-sm border-0">
+	<div class="card-header bg-body-tertiary d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+		<div class="d-flex align-items-center gap-2">
+			<h5 class="mb-0 fw-semibold text-secondary">
+				<i class="bi bi-calendar-check text-secondary me-2"></i>@Localizer["ExpiredReservations"]
+			</h5>
+			<span class="badge bg-secondary rounded-pill">@expired.Count</span>
+		</div>
+		<small class="text-muted">
+			<i class="bi bi-info-circle me-1"></i>@Localizer["ExpiredResWarning"]
+		</small>
+	</div>
+
+	@if (expired.Count > 0)
 	{
-		<table class="table">
-	
-			<thead>
-			<tr>
-				<th>@Localizer["Server"]</th>
-				<th>@Localizer["Lab"]</th>
-				<th>@Localizer["FromTime"]</th>
-				<th>@Localizer["ToTime"]</th>
-				<th></th>
-			</tr>
-			</thead>
-			<tbody>
-			@for (int i = 0; i < expired.Count; i++)
-			{
-				<tr>
-					<td>@expired[i].ServerName - @expired[i].Platform </td>
-					<td>@expired[i].LabId</td>
-					<td>@expired[i].ReservationStart</td>
-					<td>@expired[i].ReservationEnd</td>
-					<td>
-						<form method="post"><button class="btn btn-danger" formaction="@Url.Action("DeleteReservation", "Reservation", new { reservationId = @ViewBag.ExpiredReservations[i].Id })"> <i class="bi bi-trash"></i> </button></form></td>
-				</tr>
-			}
-			
-			</tbody>
-		</table>
+		<div class="table-responsive">
+			<table class="table table-hover align-middle mb-0 text-muted">
+				<thead class="table-light">
+					<tr>
+						<th scope="col">@Localizer["Server"]</th>
+						<th scope="col">@Localizer["Lab"]</th>
+						<th scope="col">@Localizer["FromTime"]</th>
+						<th scope="col">@Localizer["ToTime"]</th>
+						<th scope="col" class="text-end pe-4">@Localizer["Actions"]</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var res in expired)
+					{
+						<tr>
+							<td>
+								<div class="fw-semibold text-body">@res.ServerName</div>
+								<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle font-monospace" style="font-size: 0.75rem;">
+									@res.Platform
+								</span>
+							</td>
+							<td>
+								<a href="@Url.Action("LabInfo", "Platform", new { serverId = res.ServerId, labId = res.LabId })" class="text-decoration-none fw-medium text-secondary" title="@Localizer["LabInfo"]">
+									<i class="bi bi-hdd-network me-1"></i>@res.LabId
+								</a>
+							</td>
+							<td class="text-nowrap">
+								<i class="bi bi-calendar3 me-1"></i>@res.ReservationStart.ToString("dd.MM.yyyy")
+								<span class="ms-1"><i class="bi bi-clock me-1"></i>@res.ReservationStart.ToString("HH:mm")</span>
+							</td>
+							<td class="text-nowrap">
+								<i class="bi bi-calendar3 me-1"></i>@res.ReservationEnd.ToString("dd.MM.yyyy")
+								<span class="ms-1"><i class="bi bi-clock me-1"></i>@res.ReservationEnd.ToString("HH:mm")</span>
+							</td>
+							<td class="text-end pe-4 text-nowrap">
+								<form method="post" action="@Url.Action("DeleteReservation", "Reservation")" class="d-inline m-0">
+									@Html.AntiForgeryToken()
+									<input type="hidden" name="reservationId" value="@res.Id" />
+									<input type="hidden" name="returnUrl" value="@Url.Action("UserReservation", "Reservation")" />
+									<button type="submit" class="btn btn-sm btn-outline-danger" title="@Localizer["DeleteButton"]" onclick="return confirm('@Localizer["ConfirmDeleteReservation"]');">
+										<i class="bi bi-trash"></i>
+									</button>
+								</form>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
 	}
 	else
 	{
-		<div class="col-12 text-center mt-4">
-			<div class="alert alert-info" role="alert">
-				@Localizer["NoExpired"]
-			</div>
+		<div class="p-4 text-center text-muted">
+			<p class="mb-0">@Localizer["NoExpired"]</p>
 		</div>
 	}
 </div>

@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Microsoft.Data.SqlClient;
 using DataLayer.Interface;
 
@@ -108,15 +108,45 @@ namespace DataLayer
 
         /// <summary>
         /// Inserts a new reservation into the Reservation table.
+        /// Checks atomically for overlaps on the target server.
         /// </summary>
         /// <param name="serverId"> ID of the server </param>
         /// <param name="userId"> ID of the user </param>
         /// <param name="startDate"> Date and time of starting reservation </param>
         /// <param name="endDate"> Date and time of stopping reservation </param>
         /// <param name="labId"> ID of the lab</param>
-        public void InsertReservation(int serverId, int userId, DateTime startDate, DateTime endDate, string labId)
+        /// <returns><c>true</c> if inserted successfully; <c>false</c> if a conflicting reservation exists.</returns>
+        public bool InsertReservation(int serverId, int userId, DateTime startDate, DateTime endDate, string labId)
         {
-            string query = "INSERT INTO Reservation (ServerID, UserID, StartDate, EndDate, LabID) VALUES (@ServerID, @UserID, @StartDate, @EndDate, @LabID)";
+            if (startDate >= endDate)
+            {
+                return false;
+            }
+
+            // Explicit transaction is required: without it the UPDLOCK/HOLDLOCK range lock is released
+            // right after the SELECT (autocommit), so two concurrent requests could both insert.
+            string query = @"
+                SET NOCOUNT ON;
+                SET XACT_ABORT ON;
+                BEGIN TRANSACTION;
+                IF @StartDate < @EndDate AND NOT EXISTS (
+                    SELECT 1 FROM Reservation WITH (UPDLOCK, HOLDLOCK)
+                    WHERE ServerID = @ServerID 
+                      AND StartDate < @EndDate 
+                      AND EndDate > @StartDate
+                )
+                BEGIN
+                    INSERT INTO Reservation (ServerID, UserID, StartDate, EndDate, LabID) 
+                    VALUES (@ServerID, @UserID, @StartDate, @EndDate, @LabID);
+                    COMMIT TRANSACTION;
+                    SELECT 1;
+                END
+                ELSE
+                BEGIN
+                    COMMIT TRANSACTION;
+                    SELECT 0;
+                END";
+
             using (var connection = DBConnector.GetConnection())
             {
                 connection.Open();
@@ -127,7 +157,8 @@ namespace DataLayer
                     command.Parameters.AddWithValue("@StartDate", startDate);
                     command.Parameters.AddWithValue("@EndDate", endDate);
                     command.Parameters.AddWithValue("@LabID", labId);
-                    command.ExecuteNonQuery();
+                    var result = command.ExecuteScalar();
+                    return Convert.ToInt32(result) == 1;
                 }
             }
         }

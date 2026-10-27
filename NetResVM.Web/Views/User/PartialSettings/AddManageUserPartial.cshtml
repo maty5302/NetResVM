@@ -1,60 +1,157 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
-
 @model BusinessLayer.Models.UserModel
-<h3>@Localizer["ManageUsers"]</h3>
-<form method="post" class="p-3 border rounded mb-4">
-	<button class="btn btn-primary" formaction="@Url.Action("ManageUser", "User")">@Localizer["ManageUsers"]</button>
-</form>
-<h3>@Localizer["AddUser"]</h3>
-<form method="post" class="p-3 border rounded">
-	<div class="form-group">
-		<label for="Username">@Localizer["Username"]</label>
-		<input type="text" class="form-control" id="Username" asp-for="Username" required>
-	</div>
-	<div class="form-group">
-		<label id="PasswordLabel" for="Password">@Localizer["Password"]</label>
-		<input type="password" class="form-control" id="Password" asp-for="Password">
-	</div>
-	<div class="row">
-		<div class="form-group col-md-10">
-			<label for="AuthorizationType">@Localizer["AuthType"]</label>
-			<select class="form-control" id="AuthorizationType" asp-for="AuthorizationType" required>
-				<option value="localhost">@Localizer["localhost"]</option>
-				<option value="vsb">VŠB server</option>
-			</select>
-		</div>
-		<div class="form-check col-md-2 d-md-flex align-items-center justify-content-center">
-			<div class="text-center justify-content-center">
-				<input type="checkbox" class="form-check-input" id="Active" asp-for="Active">
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+	<h3 class="mb-0">@Localizer["ManageUsers"]</h3>
+	<a href="@Url.Action("ManageUser", "User")" class="btn btn-primary">
+		<i class="bi bi-people-fill me-1"></i> @Localizer["ManageUsers"]
+	</a>
+</div>
+
+<ul class="nav nav-tabs mb-0" id="adminUserTabs" role="tablist">
+	<li class="nav-item" role="presentation">
+		<button class="nav-link active" id="add-user-tab" data-bs-toggle="tab" data-bs-target="#add-user-pane" type="button" role="tab" aria-controls="add-user-pane" aria-selected="true">
+			<i class="bi bi-person-plus me-1"></i> @Localizer["AddUser"]
+		</button>
+	</li>
+	<li class="nav-item" role="presentation">
+		<button class="nav-link" id="import-users-tab" data-bs-toggle="tab" data-bs-target="#import-users-pane" type="button" role="tab" aria-controls="import-users-pane" aria-selected="false">
+			<i class="bi bi-file-earmark-arrow-up me-1"></i> @Localizer["ImportUsersTitle"]
+		</button>
+	</li>
+</ul>
+
+<div class="tab-content border border-top-0 rounded-bottom p-3 mb-4" id="adminUserTabsContent">
+	<!-- Záložka 1: Přidat jednotlivého uživatele -->
+	<div class="tab-pane fade show active" id="add-user-pane" role="tabpanel" aria-labelledby="add-user-tab">
+		<form method="post" asp-controller="User" asp-action="AddUser">
+			<div class="form-group mb-3">
+				<label for="Username" class="form-label">@Localizer["Username"]</label>
+				<input type="text" class="form-control" id="Username" asp-for="Username" placeholder="např. nov0123" required />
+			</div>
+
+			<div class="row mb-3">
+				<div class="form-group col-md-6 mb-3 mb-md-0">
+					<label for="AuthorizationType" class="form-label">@Localizer["AuthType"]</label>
+					<select class="form-control" id="AuthorizationType" asp-for="AuthorizationType" required>
+						<option value="vsb" selected>VŠB server</option>
+						<option value="localhost">@Localizer["localhost"]</option>
+					</select>
+				</div>
+				<div class="form-group col-md-6">
+					<label for="Role" class="form-label">@Localizer["Role"]</label>
+					<select class="form-control" id="Role" asp-for="Role">
+						<option value="student" selected>@Localizer["RoleStudent"]</option>
+						<option value="Admin">@Localizer["RoleAdmin"]</option>
+					</select>
+				</div>
+			</div>
+
+			<div id="ldapHelpText" class="alert alert-info py-2 small mb-3">
+				<i class="bi bi-info-circle me-1"></i> @Localizer["LdapAddUserHelp"]
+			</div>
+
+			<div class="form-group mb-3" id="passwordGroup" style="display: none;">
+				<label id="PasswordLabel" for="Password" class="form-label">@Localizer["Password"]</label>
+				<input type="password" class="form-control" id="Password" asp-for="Password" />
+				<small class="form-text text-muted">@Localizer["LocalPasswordHelp"]</small>
+			</div>
+
+			<div class="form-check mb-3">
+				<input type="checkbox" class="form-check-input" id="Active" asp-for="Active" checked />
 				<label for="Active" class="form-check-label">
 					@Localizer["Active"]
 				</label>
 			</div>
-		</div>
+
+			<button type="submit" class="btn btn-primary">
+				<i class="bi bi-person-check me-1"></i> @Localizer["AddUser"]
+			</button>
+		</form>
 	</div>
-	<button type="submit" formaction="@Url.Action("AddUser","User")" class="btn btn-primary mt-3">@Localizer["AddUser"]</button>
-</form>
+
+	<!-- Záložka 2: Hromadný import uživatelů -->
+	<div class="tab-pane fade" id="import-users-pane" role="tabpanel" aria-labelledby="import-users-tab">
+		<form method="post" enctype="multipart/form-data" asp-controller="User" asp-action="ImportUsers">
+			<div class="form-group mb-3">
+				<label for="importFile" class="form-label">@Localizer["SelectFilePrompt"]</label>
+				<input type="file" class="form-control" id="importFile" name="file" accept=".csv,.txt" required />
+				<small class="form-text text-muted">@Localizer["ImportFileHelp"]</small>
+			</div>
+
+			<div class="row mb-3">
+				<div class="form-group col-md-6 mb-3 mb-md-0">
+					<label for="importAuthType" class="form-label">@Localizer["AuthType"]</label>
+					<select class="form-control" id="importAuthType" name="authType" required>
+						<option value="vsb" selected>VŠB server</option>
+						<option value="localhost">@Localizer["localhost"]</option>
+					</select>
+				</div>
+				<div class="form-group col-md-6">
+					<label for="importRole" class="form-label">@Localizer["Role"]</label>
+					<select class="form-control" id="importRole" name="role" required>
+						<option value="student" selected>@Localizer["RoleStudent"]</option>
+						<option value="Admin">@Localizer["RoleAdmin"]</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="alert alert-info py-2 small mb-3" id="importLdapNote">
+				<i class="bi bi-info-circle me-1"></i> @Localizer["ImportLdapNote"]
+			</div>
+
+			<div class="alert alert-info py-2 small mb-3" id="importPasswordHelp" style="display: none;">
+				<i class="bi bi-info-circle me-1"></i> @Localizer["ImportPasswordHelp"]
+			</div>
+
+			<button type="submit" class="btn btn-success">
+				<i class="bi bi-upload me-1"></i> @Localizer["ImportUsersButton"]
+			</button>
+		</form>
+	</div>
+</div>
 
 <script>
-	const AuthTypeSelect = document.getElementById('AuthorizationType');
-	const PasswordType = document.getElementById('Password');
-	const PasswordText = document.getElementById('PasswordLabel');
+	document.addEventListener("DOMContentLoaded", function () {
+		const authTypeSelect = document.getElementById('AuthorizationType');
+		const passwordGroup = document.getElementById('passwordGroup');
+		const passwordInput = document.getElementById('Password');
+		const ldapHelpText = document.getElementById('ldapHelpText');
 
-	AuthTypeSelect.addEventListener('change', function ()
-	{
-		if(this.value=='localhost'){
-			PasswordType.required = true;
-			PasswordType.hidden = false;
-			PasswordText.hidden = false;
+		function updatePasswordVisibility() {
+			if (!authTypeSelect) return;
+			if (authTypeSelect.value === 'localhost') {
+				if (passwordGroup) passwordGroup.style.display = 'block';
+				if (passwordInput) passwordInput.required = true;
+				if (ldapHelpText) ldapHelpText.style.display = 'none';
+			} else {
+				if (passwordGroup) passwordGroup.style.display = 'none';
+				if (passwordInput) {
+					passwordInput.required = false;
+					passwordInput.value = '';
+				}
+				if (ldapHelpText) ldapHelpText.style.display = 'block';
+			}
 		}
-		else{
-			PasswordType.required = false;
-			PasswordType.hidden = true;
-			PasswordText.hidden = true;
+
+		if (authTypeSelect) {
+			authTypeSelect.addEventListener('change', updatePasswordVisibility);
+			updatePasswordVisibility();
+		}
+
+		// Import: password format hint for localhost accounts, LDAP note for VŠB accounts
+		const importAuthSelect = document.getElementById('importAuthType');
+		const importPasswordHelp = document.getElementById('importPasswordHelp');
+		const importLdapNote = document.getElementById('importLdapNote');
+
+		function updateImportHelp() {
+			const isLocal = importAuthSelect && importAuthSelect.value === 'localhost';
+			if (importPasswordHelp) importPasswordHelp.style.display = isLocal ? 'block' : 'none';
+			if (importLdapNote) importLdapNote.style.display = isLocal ? 'none' : 'block';
+		}
+
+		if (importAuthSelect) {
+			importAuthSelect.addEventListener('change', updateImportHelp);
+			updateImportHelp();
 		}
 	});
 </script>

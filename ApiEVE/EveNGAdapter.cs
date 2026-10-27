@@ -29,6 +29,15 @@ public class EveNGAdapter : IVirtualizationAdapter
     private readonly ApiEVENode _apiLabNode;
     private ApiEVEHttpClient? _httpClient;
 
+    /// <summary>
+    /// ID of the server the current <c>_httpClient</c> is authenticated to (null = not authenticated).
+    /// One adapter instance can be used for several servers within one scope (e.g. BackgroundTask, My labs),
+    /// so every call must make sure the client belongs to the requested server.
+    /// </summary>
+    private int? _authenticatedServerId;
+
+    private bool IsAuthenticatedFor(int serverId) => _httpClient != null && _authenticatedServerId == serverId;
+
     private readonly ILogger _logger = FileLogger.Instance;
     public PlatformType PlatformName => PlatformType.EVE;
 
@@ -59,6 +68,7 @@ public class EveNGAdapter : IVirtualizationAdapter
     {
         try
         {
+            _authenticatedServerId = null;
             var server = new ServerService().GetServerCredentials(id);
             if (server == null)
             {
@@ -68,7 +78,10 @@ public class EveNGAdapter : IVirtualizationAdapter
             _httpClient = new ApiEVEHttpClient(server.Value.Url); // Create a new instance of ApiEVEHttpClient with the server's IP address
             var response = await _authentication.Authenticate(_httpClient, server.Value.Username, server.Value.Password); // Authenticate the user with the server's credentials
             if (response.IsSuccessStatusCode)
+            {
+                _authenticatedServerId = id;
                 return (true, "OK");
+            }
 
             _logger.LogWarning($"ApiEVEAuthService - Invalid credentials - {response.StatusCode.ToString()}");
             return (false, $"Invalid credentials. Response: {response.StatusCode.ToString()}");
@@ -101,7 +114,7 @@ public class EveNGAdapter : IVirtualizationAdapter
     /// otherwise, <see langword="false"/>. The accompanying string provides a message describing the result.</returns>
     public async Task<(bool value, string message)> DeleteLab(int serverId, string labId)
     {
-        if (_httpClient == null)
+        if (!IsAuthenticatedFor(serverId))
         {
             var authResult = await AuthenticateAsync(serverId);
             if (!authResult.Valid || _httpClient==null)
@@ -138,7 +151,7 @@ public class EveNGAdapter : IVirtualizationAdapter
     /// error.</returns>
     public async Task<(byte[]? FileContent, string ContentType, string FileName, string Message)> DownloadLab(int serverId, string? labId, LabDTO? lab = null)
     {
-        if (_httpClient == null)
+        if (!IsAuthenticatedFor(serverId))
         {
             var authResult = await AuthenticateAsync(serverId);
             if (!authResult.Valid || _httpClient==null)
@@ -200,7 +213,7 @@ public class EveNGAdapter : IVirtualizationAdapter
     /// also includes a message describing the result of the operation.</returns>
     public async Task<(List<NodeDTO>? Nodes, string Message)> GetAllNodes(int serverId, string labId)
     {
-        if (_httpClient == null)
+        if (!IsAuthenticatedFor(serverId))
         {
             var authResult = await AuthenticateAsync(serverId);
             if (!authResult.Valid || _httpClient==null)
@@ -259,7 +272,7 @@ public class EveNGAdapter : IVirtualizationAdapter
     {
         try
         {
-            if (_httpClient == null)
+            if (!IsAuthenticatedFor(serverId))
             {
                 var authResult = await AuthenticateAsync(serverId);
                 if (!authResult.Valid || _httpClient==null)
@@ -332,7 +345,7 @@ public class EveNGAdapter : IVirtualizationAdapter
     {
         try
         {
-            if (_httpClient == null)
+            if (!IsAuthenticatedFor(serverId))
             {
                 var authResult = await AuthenticateAsync(serverId);
                 if (!authResult.Valid || _httpClient==null) 
@@ -432,7 +445,7 @@ public class EveNGAdapter : IVirtualizationAdapter
     /// succeeds; otherwise, <see langword="false"/>.</returns>
     public async Task<bool> ImportLab(int serverId, byte[] fileContent, string? filename = null)
     {
-        if (_httpClient == null)
+        if (!IsAuthenticatedFor(serverId))
         {
             var authResult = await AuthenticateAsync(serverId);
             if (!authResult.Valid || _httpClient==null)
@@ -468,7 +481,7 @@ public class EveNGAdapter : IVirtualizationAdapter
     /// succeeds; otherwise, <see langword="false"/>.</returns>
     public async Task<bool> ImportLab(int serverId, IFormFile file)
     {
-        if (_httpClient == null)
+        if (!IsAuthenticatedFor(serverId))
         {
             var authResult = await AuthenticateAsync(serverId);
             if (!authResult.Valid || _httpClient==null)
@@ -496,7 +509,7 @@ public class EveNGAdapter : IVirtualizationAdapter
     /// describing the result.</returns>
     public async Task<(bool value, string message)> StartLabAsync(int serverId, string labId)
     {
-        if (_httpClient == null)
+        if (!IsAuthenticatedFor(serverId))
         {
             var authResult = await AuthenticateAsync(serverId);
             if (!authResult.Valid || _httpClient==null)
@@ -542,7 +555,7 @@ public class EveNGAdapter : IVirtualizationAdapter
     /// otherwise, <see langword="false"/>. The accompanying string provides a message describing the result.</returns>
     public async Task<(bool value, string message)> StopLabAsync(int serverId, string labId)
     {
-        if (_httpClient == null)
+        if (!IsAuthenticatedFor(serverId))
         {
             var authResult = await AuthenticateAsync(serverId);
             if (!authResult.Valid || _httpClient==null)
@@ -623,7 +636,7 @@ public class EveNGAdapter : IVirtualizationAdapter
     /// stopped, or null if the lab cannot be accessed or contains no nodes.</returns>
     public async Task<string?> StateOfLab(int serverId, string labId)
     {
-        if (_httpClient == null)
+        if (!IsAuthenticatedFor(serverId))
         {
             var authResult = await AuthenticateAsync(serverId);
             if (!authResult.Valid)

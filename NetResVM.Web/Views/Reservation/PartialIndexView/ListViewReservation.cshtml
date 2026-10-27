@@ -1,39 +1,143 @@
-﻿@using NetResVM.Web.Models
+@using NetResVM.Web.Models
 @{
-	var plannedReservations = (List<ReservationInformationModel>)ViewBag.PlannedReservations;
+	var plannedReservations = ViewBag.PlannedReservations as List<ReservationInformationModel> ?? new List<ReservationInformationModel>();
 }
-<div id="list-view">
-	<h3>@Localizer["PlannedReservations"]</h3>
-	<table class="table">
-		<thead>
-			<tr>
-				<th>@Localizer["Server"]</th>
-				<th>@Localizer["Lab"]</th>
-				<th>@Localizer["FromTime"]</th>
-				<th>@Localizer["ToTime"]</th>
-				<th>@Localizer["User"]</th>
-				<th>@Localizer["Export"]</th>
-			</tr>
-		</thead>
-		<tbody>
-			@if (plannedReservations != null)
+
+<div id="list-view" @(ViewBag.ActiveView == "month" ? "hidden" : "")>
+	<div class="card shadow-sm border-0">
+		<div class="card-header bg-body-tertiary d-flex flex-wrap justify-content-between align-items-center gap-3 py-3">
+			<div class="d-flex align-items-center gap-2">
+				<h5 class="mb-0 fw-semibold text-body">
+					<i class="bi bi-clock-history text-primary me-2"></i>@Localizer["PlannedReservations"]
+				</h5>
+				<span class="badge bg-primary rounded-pill" id="plannedReservationsCount">@plannedReservations.Count</span>
+			</div>
+			@if (plannedReservations.Count > 0)
 			{
-				@foreach (var reservation in plannedReservations)
-				{
-					<tr>
-						<td>@reservation.ServerName - @reservation.Platform </td>
-						<td>@reservation.LabId</td>
-						<td>@reservation.ReservationStart</td>
-						<td>@reservation.ReservationEnd</td>
-						<td>@reservation.UserName</td>
-						<td>
-							<form method="post" action="@Url.Action("SaveEvent", "Reservation", new { reservationId = reservation.Id })">
-								<button type="submit" class="btn btn-primary"><i class="bi bi-floppy"></i></button>
-							</form>
-						</td>
-					</tr>
-				}
+				<div class="input-group" style="max-width: 320px;">
+					<span class="input-group-text bg-body border-end-0 text-muted">
+						<i class="bi bi-search"></i>
+					</span>
+					<input type="text" id="reservationSearchInput" class="form-control border-start-0 ps-0" placeholder="@Localizer["SearchReservationsPlaceholder"]" aria-label="Search" />
+				</div>
 			}
-		</tbody>
-	</table>
+		</div>
+
+		@if (plannedReservations.Count > 0)
+		{
+			<div class="table-responsive">
+				<table class="table table-hover align-middle mb-0" id="plannedReservationsTable">
+					<thead class="table-light">
+						<tr>
+							<th scope="col">@Localizer["Server"]</th>
+							<th scope="col">@Localizer["Lab"]</th>
+							<th scope="col">@Localizer["FromTime"]</th>
+							<th scope="col">@Localizer["ToTime"]</th>
+							<th scope="col">@Localizer["User"]</th>
+							<th scope="col" class="text-end pe-4">@Localizer["Actions"]</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var reservation in plannedReservations)
+						{
+							bool canDelete = User.IsInRole("Admin") || (User.Identity != null && User.Identity.IsAuthenticated && reservation.UserName == User.Identity.Name);
+							bool isCurrentUser = User.Identity != null && User.Identity.IsAuthenticated && reservation.UserName == User.Identity.Name;
+
+							<tr class="reservation-row" data-server="@reservation.ServerName" data-lab="@reservation.LabId" data-user="@reservation.UserName">
+								<td>
+									<div class="fw-semibold text-body">@reservation.ServerName</div>
+									<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle font-monospace" style="font-size: 0.75rem;">
+										@reservation.Platform
+									</span>
+								</td>
+								<td>
+									<a href="@Url.Action("LabInfo", "Platform", new { serverId = reservation.ServerId, labId = reservation.LabId })" class="text-decoration-none fw-medium" title="@Localizer["LabInfo"]">
+										<i class="bi bi-hdd-network text-primary me-1"></i>@reservation.LabId
+									</a>
+								</td>
+								<td class="text-nowrap">
+									<i class="bi bi-calendar3 text-muted me-1"></i>@reservation.ReservationStart.ToString("dd.MM.yyyy")
+									<span class="text-muted ms-1"><i class="bi bi-clock me-1"></i>@reservation.ReservationStart.ToString("HH:mm")</span>
+								</td>
+								<td class="text-nowrap">
+									<i class="bi bi-calendar3 text-muted me-1"></i>@reservation.ReservationEnd.ToString("dd.MM.yyyy")
+									<span class="text-muted ms-1"><i class="bi bi-clock me-1"></i>@reservation.ReservationEnd.ToString("HH:mm")</span>
+								</td>
+								<td>
+									<div class="d-flex align-items-center gap-1">
+										<i class="bi bi-person text-muted"></i>
+										<span class="fw-medium">@reservation.UserName</span>
+										@if (isCurrentUser)
+										{
+											<span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1">@Localizer["CurrentUserBadge"]</span>
+										}
+									</div>
+								</td>
+								<td class="text-end pe-4 text-nowrap">
+									<div class="d-inline-flex gap-1">
+										<a href="@Url.Action("SaveEvent", "Reservation", new { reservationId = reservation.Id })" class="btn btn-sm btn-outline-primary" title="@Localizer["ExportToCalendar"]">
+											<i class="bi bi-calendar-event"></i>
+										</a>
+										@if (canDelete)
+										{
+											<form method="post" action="@Url.Action("DeleteReservation", "Reservation")" class="d-inline m-0">
+												@Html.AntiForgeryToken()
+												<input type="hidden" name="reservationId" value="@reservation.Id" />
+												<input type="hidden" name="returnUrl" value="@Url.Action("Index", "Reservation", new { view = "list" })" />
+												<button type="submit" class="btn btn-sm btn-outline-danger" title="@Localizer["DeleteButton"]" onclick="return confirm('@Localizer["ConfirmDeleteReservation"]');">
+													<i class="bi bi-trash"></i>
+												</button>
+											</form>
+										}
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			<div id="noSearchMatches" class="p-4 text-center text-muted d-none">
+				<i class="bi bi-search fs-3 d-block mb-2 text-secondary"></i>
+				<p class="mb-0">@Localizer["NoReservation"]</p>
+			</div>
+		}
+		else
+		{
+			<div class="p-5 text-center text-muted">
+				<i class="bi bi-calendar-x fs-1 d-block mb-3 text-secondary"></i>
+				<h5 class="fw-normal">@Localizer["NoReservation"]</h5>
+			</div>
+		}
+	</div>
 </div>
+
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		const searchInput = document.getElementById('reservationSearchInput');
+		if (searchInput) {
+			searchInput.addEventListener('input', function () {
+				const query = this.value.trim().toLowerCase();
+				const rows = document.querySelectorAll('#plannedReservationsTable .reservation-row');
+				const noMatches = document.getElementById('noSearchMatches');
+				let visibleCount = 0;
+
+				rows.forEach(function (row) {
+					const server = (row.getAttribute('data-server') || '').toLowerCase();
+					const lab = (row.getAttribute('data-lab') || '').toLowerCase();
+					const user = (row.getAttribute('data-user') || '').toLowerCase();
+
+					if (!query || server.includes(query) || lab.includes(query) || user.includes(query)) {
+						row.style.display = '';
+						visibleCount++;
+					} else {
+						row.style.display = 'none';
+					}
+				});
+
+				if (noMatches) {
+					noMatches.classList.toggle('d-none', visibleCount > 0 || rows.length === 0);
+				}
+			});
+		}
+	});
+</script>

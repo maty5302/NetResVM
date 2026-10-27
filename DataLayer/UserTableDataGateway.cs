@@ -1,4 +1,4 @@
-﻿using DataLayer.Interface;
+using DataLayer.Interface;
 using System.Data;
 using Microsoft.Data.SqlClient;
 
@@ -174,12 +174,19 @@ namespace DataLayer
         }
 
         /// <summary>
-        /// This method updates the role of a user in the database.
+        /// Removes an existing user from the database and cleans up any related reservations and lab ownerships in a transaction.
         /// </summary>
         /// <param name="id"> Id of user to be removed </param>
         public void RemoveUser(int id)
         {
-            string query = "DELETE FROM \"User\" WHERE UserID = @Id";
+            // XACT_ABORT ON: any error rolls back the whole transaction (otherwise COMMIT would save a partial delete)
+            string query = @"
+                SET XACT_ABORT ON;
+                BEGIN TRANSACTION;
+                DELETE FROM Reservation WHERE UserID = @Id;
+                DELETE FROM UserLabOwnership WHERE UserID = @Id;
+                DELETE FROM [User] WHERE UserID = @Id;
+                COMMIT;";
             using (var connection = DBConnector.GetConnection())
             {
                 connection.Open();

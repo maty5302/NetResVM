@@ -18,7 +18,7 @@ public interface ILocalBackupStorage
     /// <param name="fileContent">The binary content of the backup file to be saved. Cannot be null.</param>
     /// <param name="fileExtension">The file extension indicating the format of the backup file (for example, ".zip" or ".yml"). Cannot be null or
     /// empty.</param>
-    void SaveBackup(string serverType, string labId, byte[] fileContent, string fileExtension);
+    Task SaveBackup(string serverType, string labId, byte[] fileContent, string fileExtension);
 
     /// <summary>
     /// Asynchronously retrieves the backup file for the specified server type, lab, and file name.

@@ -1,4 +1,4 @@
-﻿using BusinessLayer.MapperDT;
+using BusinessLayer.MapperDT;
 using BusinessLayer.Models;
 using DataLayer;
 using SimpleLogger;
@@ -120,6 +120,18 @@ namespace BusinessLayer.Services
         /// </returns>
         public bool MakeReservation(ReservationModel reservation)
         {
+            if (reservation == null)
+            {
+                _logger.LogError("Reservation model is null.");
+                return false;
+            }
+
+            if (reservation.ReservationStart >= reservation.ReservationEnd)
+            {
+                _logger.LogWarning("Reservation start time must be before end time.");
+                return false;
+            }
+
             var reservations = GetAllReservations();
             if (reservations == null)
             {
@@ -133,7 +145,13 @@ namespace BusinessLayer.Services
             }
             try
             {
-                _reservationTableDataGateway.InsertReservation(reservation.ServerId, reservation.UserId, reservation.ReservationStart, reservation.ReservationEnd, reservation.LabId);
+                bool inserted = _reservationTableDataGateway.InsertReservation(reservation.ServerId, reservation.UserId, reservation.ReservationStart, reservation.ReservationEnd, reservation.LabId);
+                if (!inserted)
+                {
+                    _logger.LogWarning($"Reservation for server ID:{reservation.ServerId} already exists at the time (atomic DB check).");
+                    return false;
+                }
+
                 _logger.Log($"Reservation has been made. ServerID:{reservation.ServerId}, UserID:{reservation.UserId}, StartDate:{reservation.ReservationStart}, EndDate:{reservation.ReservationEnd}, LabID:{reservation.LabId}");
                 return true;
             }
@@ -145,7 +163,7 @@ namespace BusinessLayer.Services
         }
 
         /// <summary>
-        /// Deletes a reservation from the system by its unique identifier.
+        /// Deletes a reservation from the system by its unique identifier without ownership check (for system cleanup).
         /// </summary>
         /// <param name="id">The unique identifier (ID) of the reservation to delete.</param>
         /// <returns>
@@ -167,15 +185,56 @@ namespace BusinessLayer.Services
         }
 
         /// <summary>
+        /// Deletes a reservation from the system by its unique identifier, verifying user ownership or admin privileges.
+        /// </summary>
+        /// <param name="id">The unique identifier (ID) of the reservation to delete.</param>
+        /// <param name="userId">The ID of the user requesting deletion.</param>
+        /// <param name="isAdmin">Whether the requesting user has administrator privileges.</param>
+        /// <returns>
+        /// <c>true</c> if the reservation was successfully deleted; otherwise, <c>false</c>.
+        /// </returns>
+        public bool DeleteReservation(int id, int userId, bool isAdmin = false)
+        {
+            try
+            {
+                var reservation = _reservationTableDataGateway.GetReservationById(id);
+                if (reservation == null || reservation.Rows.Count == 0)
+                {
+                    _logger.LogWarning($"Reservation ID:{id} not found.");
+                    return false;
+                }
+
+                int ownerId = (int)reservation.Rows[0]["UserID"];
+                if (!isAdmin && ownerId != userId)
+                {
+                    _logger.LogWarning($"User ID:{userId} is not authorized to delete reservation ID:{id}.");
+                    return false;
+                }
+
+                return DeleteReservation(id);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Error deleting reservation ID:{id}: {e.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Saves the reservation details to the system by its unique identifier.
         /// </summary>
         /// <param name="reservationId">The unique identifier (ID) of the reservation to save.</param>
         /// <returns>
-        /// A <see cref="StringBuilder"/> object containing a message indicating the result of the save operation.
+        /// A <see cref="StringBuilder"/> object containing a message indicating the result of the save operation, or <c>null</c> if the reservation is not found.
         /// </returns>
-        public StringBuilder SaveReservation(int reservationId)
+        public StringBuilder? SaveReservation(int reservationId)
         {
             var reservation = _reservationTableDataGateway.GetReservationById(reservationId);
+            if (reservation.Rows.Count == 0)
+            {
+                _logger.LogError($"Reservation ID:{reservationId} not found.");
+                return null;
+            }
             var reservationModel = ReservationMapper.Map(reservation.Rows[0]);
             var sb = new StringBuilder();
             sb.AppendLine("BEGIN:VCALENDAR").AppendLine("VERSION:2.0").AppendLine("BEGIN:VEVENT").AppendLine($"SUMMARY:Reservation of lab")

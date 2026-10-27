@@ -1,55 +1,157 @@
-﻿@{
-	ViewBag.Title = @Localizer["NewReservation"];
+@{
+	ViewBag.Title = Localizer["NewReservation"];
 }
 @model BusinessLayer.Models.ReservationModel
 
-<div>
-	<h1>@ViewBag.Title</h1>
-	<hr />
-	<form method="post" class="p-3 border rounded" asp-action="Create">
-		<div class="mb-3">
-			<label class="form-label fw-bold">@Localizer["Server"]:</label>
-			<select id="server" name="selectedServer" asp-for="ServerId" class="form-select me-2" onchange="this.form.submit()">
-				<option value="">@Localizer["SelectServer"]</option>
-				@for (int i = 0; i < ((List<BusinessLayer.DTOs.ServerDTO>)ViewBag.Servers).Count; i++)
-				{
-					<option value="@ViewBag.Servers[i].Id">@ViewBag.Servers[i].Name - @ViewBag.Servers[i].Platform</option>
-				}
-				)
-			</select>
-		</div>
-		<div class="mb-3">
-			<label class="form-label fw-bold">@Localizer["Lab"]:</label>
-			<select id="lab" name="labId" asp-for="LabId" class="form-select me-2">
-				<option value="">@Localizer["SelectLab"]</option>
-				@if (ViewBag.Labs3 != null)
-				{
+<div class="d-flex justify-content-between align-items-center mb-3">
+	<h1 class="mb-0">@ViewBag.Title</h1>
+	<a href="@Url.Action("Index", "Reservation")" class="btn btn-outline-secondary">
+		<i class="bi bi-arrow-left me-1"></i> @Localizer["Back"]
+	</a>
+</div>
+<hr class="mt-2 mb-4" />
 
-					var labs = (List<BusinessLayer.DTOs.LabDTO>)ViewBag.Labs3;
-					foreach (var lab in labs)
+<div class="card shadow-sm">
+	<div class="card-body p-4">
+		<form method="post" asp-action="Create" id="createReservationForm">
+			<div class="mb-3">
+				<label class="form-label fw-bold" for="server">@Localizer["Server"]:</label>
+				<select id="server" name="selectedServer" asp-for="ServerId" class="form-select" onchange="this.form.submit()">
+					<option value="">@Localizer["SelectServer"]</option>
+					@if (ViewBag.Servers != null)
 					{
-						@if (Model.LabId == lab.Id)
+						var servers = (List<BusinessLayer.DTOs.ServerDTO>)ViewBag.Servers;
+						foreach (var server in servers)
 						{
-							<option value="@lab.Id" selected>@lab.Name + @lab.Id</option>
-						}
-						else
-						{
-							<option value="@lab.Id">@lab.Name + @lab.Id</option>
+							if (Model != null && Model.ServerId == server.Id)
+							{
+								<option value="@server.Id" selected>@server.Name - @server.Platform</option>
+							}
+							else
+							{
+								<option value="@server.Id">@server.Name - @server.Platform</option>
+							}
 						}
 					}
+				</select>
+			</div>
 
-				}
-			</select>
-		</div>
-		<div class="mb-3">
-			<label class="form-label fw-bold">@Localizer["FromTime"]:</label>
-			<input type="datetime-local" id="date" asp-for="ReservationStart" class="form-control" min="@DateTime.Now.AddMinutes(2).ToString("yyyy-MM-ddTHH:mm")"/>
-		</div>
-		<div class="mb-3">
-			<label class="form-label fw-bold">@Localizer["ToTime"]:</label>
-			<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" min="@DateTime.Now.AddMinutes(62).ToString("yyyy-MM-ddTHH:mm")"/>
-		</div>
-		<hr class="my-4"/>
-		<button class="btn btn-primary" formaction="@Url.Action("MakeReservation", "Reservation")"> <i class="bi bi-calendar-check"></i> @Localizer["NewReservation"]</button>
-	</form>
+			<div class="mb-3">
+				<label class="form-label fw-bold" for="lab">@Localizer["Lab"]:</label>
+				<select id="lab" name="labId" asp-for="LabId" class="form-select">
+					<option value="">@Localizer["SelectLab"]</option>
+					@if (ViewBag.Labs3 != null)
+					{
+						var labs = (List<BusinessLayer.DTOs.LabDTO>)ViewBag.Labs3;
+						foreach (var lab in labs)
+						{
+							if (Model != null && Model.LabId == lab.Id)
+							{
+								<option value="@lab.Id" selected>@lab.Name (@lab.Id)</option>
+							}
+							else
+							{
+								<option value="@lab.Id">@lab.Name (@lab.Id)</option>
+							}
+						}
+					}
+				</select>
+			</div>
+
+			<div class="row g-3 mb-3">
+				<div class="col-md-6">
+					<label class="form-label fw-bold" for="dateFrom">@Localizer["FromTime"]:</label>
+					<input type="datetime-local" id="dateFrom" asp-for="ReservationStart" class="form-control" min="@DateTime.Now.AddMinutes(2).ToString("yyyy-MM-ddTHH:mm")" required />
+				</div>
+				<div class="col-md-6">
+					<label class="form-label fw-bold" for="timeTo">@Localizer["ToTime"]:</label>
+					<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" min="@DateTime.Now.AddMinutes(62).ToString("yyyy-MM-ddTHH:mm")" required />
+				</div>
+			</div>
+
+			<div class="text-muted mb-3">
+				<small><i class="bi bi-info-circle me-1"></i>@Localizer["ResSameDay"], @Localizer["ResOneHour"]</small>
+			</div>
+
+			<hr class="my-4" />
+
+			<div class="d-flex justify-content-between align-items-center">
+				<a href="@Url.Action("Index", "Reservation")" class="btn btn-outline-secondary">
+					@Localizer["CancelB"]
+				</a>
+				<button type="submit" class="btn btn-primary shadow-sm" formaction="@Url.Action("MakeReservation", "Reservation")">
+					<i class="bi bi-calendar-check me-1"></i> @Localizer["NewReservation"]
+				</button>
+			</div>
+		</form>
+	</div>
 </div>
+
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		const form = document.getElementById('createReservationForm');
+		const fromInput = document.getElementById('dateFrom');
+		const toInput = document.getElementById('timeTo');
+
+		if (fromInput && toInput) {
+			function formatDateTimeLocal(date) {
+				const pad = (n) => String(n).padStart(2, '0');
+				const year = date.getFullYear();
+				const month = pad(date.getMonth() + 1);
+				const day = pad(date.getDate());
+				const hours = pad(date.getHours());
+				const minutes = pad(date.getMinutes());
+				return `${year}-${month}-${day}T${hours}:${minutes}`;
+			}
+
+			function updateToMin() {
+				if (!fromInput.value) return;
+				const fromDate = new Date(fromInput.value);
+				if (isNaN(fromDate.getTime())) return;
+
+				const minToDate = new Date(fromDate.getTime() + 60 * 60 * 1000);
+				const formattedMin = formatDateTimeLocal(minToDate);
+				toInput.min = formattedMin;
+
+				if (!toInput.value || new Date(toInput.value) <= fromDate) {
+					toInput.value = formattedMin;
+				}
+				validateRange();
+			}
+
+			function validateRange() {
+				if (!fromInput.value || !toInput.value) return;
+				const fromDate = new Date(fromInput.value);
+				const toDate = new Date(toInput.value);
+
+				if (fromDate >= toDate) {
+					toInput.setCustomValidity('@Localizer["InvalidTime"]');
+				} else {
+					toInput.setCustomValidity('');
+				}
+			}
+
+			fromInput.addEventListener('change', updateToMin);
+			fromInput.addEventListener('input', validateRange);
+			toInput.addEventListener('change', validateRange);
+			toInput.addEventListener('input', validateRange);
+
+			// Initial check
+			validateRange();
+
+			if (form) {
+				form.addEventListener('submit', function (e) {
+					if (fromInput.value && toInput.value) {
+						const fromDate = new Date(fromInput.value);
+						const toDate = new Date(toInput.value);
+						if (fromDate >= toDate) {
+							e.preventDefault();
+							toInput.setCustomValidity('@Localizer["InvalidTime"]');
+							toInput.reportValidity();
+						}
+					}
+				});
+			}
+		}
+	});
+</script>

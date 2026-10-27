@@ -1,50 +1,189 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+@using BusinessLayer.DTOs
 @{
-	ViewData["Title"] = @Localizer["ManageUsers"];
+	ViewData["Title"] = Localizer["ManageUsers"];
+	var users = ViewBag.Users as List<UserDTO> ?? new List<UserDTO>();
 }
-<h1>@ViewData["Title"]</h1>
 
-<div>
-	<table class="table">
-		<thead>
-			<tr>
-				<th>@Localizer["Username"]</th>
-				<th>@Localizer["Role"]</th>
-				<th>@Localizer["Active"]</th>
-				<th>@Localizer["AuthType"]</th>
-				<th></th>
-			</tr>
-		</thead>
-		<tbody>
-			@if (ViewBag.Users != null)
-			{
-				@foreach (var user in (List<BusinessLayer.DTOs.UserDTO>)ViewBag.Users)
+<div class="d-flex justify-content-between align-items-center mb-3">
+	<div>
+		<h1 class="mb-1">@ViewData["Title"]</h1>
+		<p class="text-body-secondary mb-0 small">@Localizer["ManageUsersDescription"]</p>
+	</div>
+	<a href="@Url.Action("Settings", "User")" class="btn btn-outline-secondary">
+		<i class="bi bi-arrow-left me-1"></i> @Localizer["BackToSettings"]
+	</a>
+</div>
+<hr class="mt-2 mb-4" />
+
+<!-- Vyhledávací lišta a souhrn -->
+<div class="card shadow-sm mb-4">
+	<div class="card-body p-3">
+		<div class="row g-2 align-items-center justify-content-between">
+			<div class="col-12 col-md-6 col-lg-5">
+				<div class="input-group">
+					<span class="input-group-text bg-body-tertiary border-end-0">
+						<i class="bi bi-search text-muted"></i>
+					</span>
+					<input type="text" id="userSearchInput" class="form-control border-start-0" placeholder="@Localizer["SearchUsersPlaceholder"]" />
+				</div>
+			</div>
+			<div class="col-12 col-md-6 text-md-end text-body-secondary small">
+				<span class="me-1">@Localizer["TotalUsers"]:</span>
+				<span class="badge bg-primary fs-6" id="userCountDisplay">@users.Count</span>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Tabulka uživatelů -->
+<div class="card shadow-sm">
+	<div class="table-responsive">
+		<table class="table table-hover align-middle mb-0" id="usersTable">
+			<thead class="table-light">
+				<tr>
+					<th scope="col" class="ps-3">@Localizer["Username"]</th>
+					<th scope="col">@Localizer["Role"]</th>
+					<th scope="col">@Localizer["Active"]</th>
+					<th scope="col">@Localizer["AuthType"]</th>
+					<th scope="col" class="text-end pe-3">@Localizer["Actions"]</th>
+				</tr>
+			</thead>
+			<tbody>
+				@if (users.Count > 0)
+				{
+					@foreach (var user in users)
+					{
+						bool isCurrentUser = user.Username.Equals(User.Identity?.Name, StringComparison.OrdinalIgnoreCase);
+						bool isAdminRole = user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+
+						<tr>
+							<td class="ps-3">
+								<div class="d-flex align-items-center">
+									<i class="bi bi-person-circle fs-5 me-2 text-muted"></i>
+									<div>
+										<strong class="user-username">@user.Username</strong>
+										@if (isCurrentUser)
+										{
+											<span class="badge bg-secondary ms-1 small">@Localizer["CurrentUserBadge"]</span>
+										}
+									</div>
+								</div>
+							</td>
+							<td>
+								@if (isAdminRole)
+								{
+									<span class="badge bg-danger">@Localizer["RoleAdmin"]</span>
+								}
+								else if (user.Role.Equals("Teacher", StringComparison.OrdinalIgnoreCase))
+								{
+									<span class="badge bg-info text-dark">@Localizer["RoleTeacher"]</span>
+								}
+								else
+								{
+									<span class="badge bg-secondary">@Localizer["RoleStudent"]</span>
+								}
+							</td>
+							<td>
+								@if (user.Active)
+								{
+									<span class="badge bg-success">
+										<i class="bi bi-check-circle me-1"></i> @Localizer["StatusActive"]
+									</span>
+								}
+								else
+								{
+									<span class="badge bg-secondary">
+										<i class="bi bi-x-circle me-1"></i> @Localizer["StatusInactive"]
+									</span>
+								}
+							</td>
+							<td>
+								@if (user.AuthorizationType.Equals("vsb", StringComparison.OrdinalIgnoreCase))
+								{
+									<span class="badge bg-primary">
+										<i class="bi bi-building me-1"></i> VŠB (LDAP)
+									</span>
+								}
+								else
+								{
+									<span class="badge bg-secondary">
+										<i class="bi bi-laptop me-1"></i> @Localizer["localhost"]
+									</span>
+								}
+							</td>
+							<td class="text-end pe-3">
+								@if (!isAdminRole && !isCurrentUser)
+								{
+									<form method="post" class="d-inline-flex gap-1 justify-content-end">
+										<input type="hidden" name="username" value="@user.Username" />
+										
+										@if (user.Active)
+										{
+											<button type="submit" formaction="@Url.Action("DeactivateUser","User", new {UserId=user.Id})" class="btn btn-sm btn-outline-warning" title="@Localizer["DeactivateButton"]">
+												<i class="bi bi-person-x-fill me-1"></i> @Localizer["DeactivateButton"]
+											</button>
+										}
+										else
+										{
+											<button type="submit" formaction="@Url.Action("ActivateUser","User",  new {UserId=user.Id})" class="btn btn-sm btn-outline-success" title="@Localizer["Activate"]">
+												<i class="bi bi-person-check-fill me-1"></i> @Localizer["Activate"]
+											</button>
+										}
+
+										<button type="submit" formaction="@Url.Action("RemoveUser","User", new {UserId=user.Id})" class="btn btn-sm btn-outline-danger" title="@Localizer["DeleteButton"]" onclick="return confirm('@Localizer["ConfirmDeleteUser"]');">
+											<i class="bi bi-trash-fill me-1"></i> @Localizer["DeleteButton"]
+										</button>
+									</form>
+								}
+								else
+								{
+									<span class="badge bg-secondary-subtle text-secondary small fst-italic">
+										<i class="bi bi-shield-lock me-1"></i> @Localizer["ProtectedAccount"]
+									</span>
+								}
+							</td>
+						</tr>
+					}
+				}
+				else
 				{
 					<tr>
-						<td>@user.Username</td>
-						<td>@user.Role</td>
-						<td>@user.Active</td>
-						<td>@user.AuthorizationType</td>
-						<td>
-							<form method="post">
-								@if (user.Role != "Admin")
-								{
-									<input type="hidden" name="username" value="@user.Username" />
-									<button type="submit" formaction="@Url.Action("RemoveUser","User", new {UserId=user.Id})" class="btn btn-danger"> <i class="bi bi-person-dash-fill"></i> @Localizer["DeleteButton"]</button>
-									@if (user.Active){
-										<button type="submit" formaction="@Url.Action("DeactivateUser","User", new {UserId=user.Id})" class="btn btn-primary"> <i class="bi bi-person-x-fill"></i> @Localizer["DeactivateButton"]</button>
-									}
-									else{
-										<button type="submit" formaction="@Url.Action("ActivateUser","User",  new {UserId=user.Id})" class="btn btn-primary"> <i class="bi bi-person-check-fill"></i> @Localizer["Activate"]</button>
-									}
-								}
-							</form>
+						<td colspan="5" class="text-center py-4 text-muted">
+							<i class="bi bi-people display-6"></i>
+							<p class="mt-2 mb-0">@Localizer["NoUsersFound"]</p>
 						</td>
 					</tr>
 				}
-			}
-		</tbody>
-	</table>
+			</tbody>
+		</table>
+	</div>
 </div>
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		const searchInput = document.getElementById("userSearchInput");
+		const table = document.getElementById("usersTable");
+		const countDisplay = document.getElementById("userCountDisplay");
+		if (!searchInput || !table) return;
+
+		searchInput.addEventListener("input", function () {
+			const query = this.value.toLowerCase().trim();
+			const rows = table.querySelectorAll("tbody tr");
+			let visibleCount = 0;
+
+			rows.forEach(row => {
+				const text = row.textContent.toLowerCase();
+				if (text.includes(query)) {
+					row.style.display = "";
+					visibleCount++;
+				} else {
+					row.style.display = "none";
+				}
+			});
+
+			if (countDisplay) {
+				countDisplay.textContent = visibleCount;
+			}
+		});
+	});
+</script>

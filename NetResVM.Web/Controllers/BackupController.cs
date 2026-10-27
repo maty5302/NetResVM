@@ -35,6 +35,11 @@ public class BackupController : Controller
             return RedirectToAction("Index", "Login");
         }
         var allBackups = await _backupService.GetBackups();
+        if (!User.IsInRole("Admin"))
+        {
+            var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
+            allBackups = allBackups.Where(b => _labOwnershipService.IsLabAlreadyOwned(userId, b.ServerId, b.LabId).userOwns).ToList();
+        }
         
         ViewBag.Backups = allBackups;
         return View();
@@ -48,11 +53,21 @@ public class BackupController : Controller
     /// <param name="serverType"> Type of the server </param>
     /// <param name="fromServer"> If it was made from LabInfo page or not </param>
     /// <returns>  An <see cref="IActionResult"/> that renders main backup page or labinfo page and message about success or failure of operation </returns>
+    [HttpPost]
     public async Task<IActionResult> MakeBackup(int serverId, string labId, string serverType, bool fromServer=false)
     {
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
 
+        var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
+        var owned = _labOwnershipService.IsLabAlreadyOwned(userId, serverId, labId);
+        if (!User.IsInRole("Admin") && !owned.userOwns)
+        {
+            TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
+            if (fromServer)
+                return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+            return RedirectToAction("Index", "Backup");
+        }
 
         var result = await _backupService.BackupLab(serverId, labId);
         if (result.backup)
@@ -77,12 +92,15 @@ public class BackupController : Controller
     /// <param name="platform"> Type of the server </param>
     /// <param name="filename"> Name of the file </param>
     /// <returns>  An <see cref="IActionResult"/> that renders main backup page and message about success or failure of operation</returns>
+    [HttpPost]
     public async Task<IActionResult> RestoreBackup(int serverId, string labId, PlatformType platform, string filename)
     {
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
-        var owned = _labOwnershipService.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
-        if(!owned.userOwns)
+
+        var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
+        var owned = _labOwnershipService.IsLabAlreadyOwned(userId, serverId, labId);
+        if (!User.IsInRole("Admin") && !owned.userOwns)
         {
             TempData["ErrorMessage"] = _localizer["BackupRestoreFailNotOwned"].Value;
             return RedirectToAction("Index", "Backup");
@@ -105,13 +123,17 @@ public class BackupController : Controller
     /// <param name="filename"> Name of the file to delete </param>
     /// <param name="labId"> ID of lab to delete backup for</param>
     /// <param name="platform"> Type of the server </param>
+    /// <param name="serverId"> ID of the server (optional) </param>
     /// <returns>  An <see cref="IActionResult"/> that renders main backup page and message about success or failure of operation</returns>
-    public IActionResult DeleteBackup(string filename, string labId, PlatformType platform)
+    [HttpPost]
+    public IActionResult DeleteBackup(string filename, string labId, PlatformType platform, int serverId = 0)
     {
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
-        var owned = _labOwnershipService.IsLabAlreadyOwned(_userService.GetUserId(User.Identity.Name), labId);
-        if(owned.owned && !owned.userOwns)
+
+        var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
+        var owned = _labOwnershipService.IsLabAlreadyOwned(userId, serverId, labId);
+        if (!User.IsInRole("Admin") && !owned.userOwns)
         {
             TempData["ErrorMessage"] = _localizer["BackupDeleteFailNotOwned"].Value;
             return RedirectToAction("Index", "Backup");
@@ -134,11 +156,21 @@ public class BackupController : Controller
     /// <param name="filename"> Name of the file to download </param>
     /// <param name="labId"> ID of lab to download backup for</param>
     /// <param name="platform"> Type of the server </param>
+    /// <param name="serverId"> ID of the server (optional) </param>
     /// <returns>  An <see cref="IActionResult"/> that renders main backup page and message about success or failure of operation</returns>
-    public async Task<IActionResult> DownloadBackup(string filename, string labId, PlatformType platform)
+    public async Task<IActionResult> DownloadBackup(string filename, string labId, PlatformType platform, int serverId = 0)
     {
         if (User.Identity != null && !User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Login");
+
+        var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
+        var owned = serverId > 0 ? _labOwnershipService.IsLabAlreadyOwned(userId, serverId, labId) : _labOwnershipService.IsLabAlreadyOwned(userId, labId);
+        if (!User.IsInRole("Admin") && !owned.userOwns)
+        {
+            TempData["ErrorMessage"] = _localizer["AccessDenied"].Value;
+            return RedirectToAction("Index", "Backup");
+        }
+
         var file = await _backupService.DownloadBackup(platform, labId, filename);
         if (file.Length > 0)
         {

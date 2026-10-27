@@ -18,31 +18,49 @@ This project is available under the [GNU GPL v3](LICENSE) license.
 - .NET 10.0 Runtime
 - ASP.NET 10.0 Runtime
 - Microsoft SQL Server 2022
-- libldap-2.5-0 for LDAP auth (Linux only)
+- libldap - library for LDAP auth (Linux only)
 
 ## Installation Docker (Recommended)
 > Note: for installation in docker you don't need requirements from above except from Docker.
 #### 1. Download and install Docker
-#### 2. Download [docker-compose.yml](docker/docker-compose.yml) from assets folder
+#### 2. Download [docker-compose.yml](docker/docker-compose.yml) from the `docker` folder (or from [GitHub Releases](https://github.com/maty5302/NetResVM/releases))
 #### 3. Create [.env](docker/.env.example) file with following
 > Choose your own strong password for database
 ```
 DB_USER=sa
 DB_PASSWORD=vase_silne_heslo
 ```
-#### 4. Run docker-compose.yml and wait for about 1-2 minutes.
-Linux CLI
+#### 4. Run docker-compose.yml in background and wait for about 1-2 minutes.
+```bash
+docker compose pull && docker compose up -d
 ```
-docker compose pull && docker compose up
-```
+> **Automatic Start on PC Reboot:**
+> The containers use the `restart: always` policy, so they will automatically restart in the background whenever your system boots up. For this to work, ensure the Docker daemon itself is configured to start on boot:
+> - **Linux:** `sudo systemctl enable --now docker` (and optionally `sudo systemctl enable --now containerd`)
+> - **Windows:** In Docker Desktop (*Settings -> General*), enable *Start Docker Desktop when you sign in*.
 
 
 #### 5. You can use the app usually hosted on http://localhost:8080/ and sign in with default login=admin and password=Password123.
 >Note after first login you should change the password for a stronger one!!!
 
+> [!WARNING]
+> **Database Access from Host:**
+> By default, the MS SQL database port (`1433`) is not exposed outside the Docker network as the application communicates with it internally. If you need direct database access from the host system (e.g. via SSMS or DBeaver), you can add the following under the `mssql` service in `docker-compose.yml`:
+> ```yaml
+> ports:
+>   - "1433:1433" # or for better security bind to localhost only: "127.0.0.1:1433:1433"
+> ```
+> **Warning:** Exposing port `1433` on a server or public network without firewall restrictions is a security risk. Ensure you use a strong `DB_PASSWORD`.
+
+> [!NOTE]
+> **Docker Operation and Reverse Proxy:**
+> - **Permissions and Security:** The application container runs as a non-root user `app` (UID 1654). The helper service `init-permissions` automatically sets proper ownership on `./backups`, `./logs`, and session data protection keys (`dp-keys`).
+> - **Telnet:** Port `2323` is restricted to localhost only (`127.0.0.1:2323`) for security reasons.
+> - **Reverse Proxy (HTTPS):** When deploying behind a reverse proxy (e.g. Nginx, Caddy, Traefik, Cloudflare), configure the trusted proxy IP or subnet in the `netresvm` service `environment` section, e.g. `- ReverseProxy__KnownNetworks__0=172.16.0.0/12`. Without this setting, `X-Forwarded-For` headers are ignored to prevent IP spoofing, which would cause rate limiting and lockout to block the reverse proxy's IP.
+
 
 ## Installation without Docker
-#### 1. Download and unzip archive for your operating system
+#### 1. Download and unzip the archive for your operating system from [GitHub Releases](https://github.com/maty5302/NetResVM/releases)
 
 #### 2. Install packages
 
@@ -58,7 +76,7 @@ dotnet-runtime-10.0
 libldap 2.5-0 or openldap 2.5-0
 ```
 #### 3. Create tables in database
- After installing all packages make sure your MS SQL Server is running and have installed mssql-tools. You need to run following command to insert tables to database. 
+ After installing all packages make sure your MS SQL Server is running and have installed mssql-tools. You need to run following command to insert tables to database (the application also performs automatic schema migrations on startup to apply any missing updates): 
 ```bash
 sqlcmd -S IPaddress -U Username -P "YourPassword" -i SQLCreateTablesBc.sql
 ```
@@ -125,7 +143,7 @@ Administrators can add new CML or EVE-NG servers into the system by providing co
 1. From main page there is a + button for adding new server
 2. Fill the form and click add server
 
-Deleting can be done from main page and for editing server there is a button that redirect to form with filled information about server. 
+Deleting can be done from the main page, and for editing a server there is a button that redirects to a form with pre-filled server information. 
 
 ![Add server connection page](assets/readme/create-server-connection.png)
 ### Managing users
@@ -159,6 +177,17 @@ Users who own a laboratory can invite other registered users to collaborate on t
 
 4. To revoke access once the joint work is finished, simply click the remove button next to an existing collaborator's name in the same menu.
 
-> By default user who owns lab first can add or remove collaborators.
+> By default, the primary owner (the user who claimed the lab first) can add or remove collaborators.
 
 ![Manage collaborators menu](assets/readme/manage-collaborators.png)
+
+## Security and Session Management
+
+The application implements multiple security layers and operational hardening:
+
+* **Brute-Force Protection & Account Lockout:** Failed login attempt tracking (`LoginAttemptTracker`). After 5 consecutive failed attempts for a specific username and IP address, the account is temporarily locked for 5 minutes.
+* **Rate Limiting:** The login endpoint is protected by a fixed-window rate limiter with a maximum of 30 requests per minute per client IP (returns HTTP 429 Too Many Requests when exceeded).
+* **Session and Cookie Hardening:** Authentication and session cookies are configured with `HttpOnly`, `SameSite=Lax`, and a 30-minute idle expiration. Deactivating a user immediately invalidates their active authentication cookie on the next request (`OnValidatePrincipal`).
+* **Security HTTP Headers:** Every HTTP response includes `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, and `Referrer-Policy: strict-origin-when-cross-origin`.
+* **Multi-Server Concurrency:** Cisco CML and EVE-NG adapters isolate authentication sessions and tokens per server ID. Laboratory ownership uses a composite key `(LabID, ServerID, UserID)`, eliminating collisions between multiple virtualization servers with identical lab IDs.
+* **Automatic Database Migrations:** The application automatically verifies schema integrity and applies missing idempotent migrations on startup (such as adding the `OwnershipID` column), eliminating manual schema maintenance on existing databases.
