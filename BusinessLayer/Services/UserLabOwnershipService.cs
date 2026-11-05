@@ -102,6 +102,30 @@ namespace BusinessLayer.Services
         }
 
         /// <summary>
+        /// Retrieves all user lab ownership records associated with the specified server identifier.
+        /// </summary>
+        /// <param name="serverId">The unique identifier of the server.</param>
+        /// <returns>A list of user lab ownership models for the specified server. Returns null if an error occurs.</returns>
+        public List<UserLabOwnershipModel>? GetAllUserLabsByServerId(int serverId)
+        {
+            try
+            {
+                var all = new List<UserLabOwnershipModel>();
+                var table = _gateway.GetAllUserLabsByServerId(serverId);
+                foreach (System.Data.DataRow row in table.Rows)
+                {
+                    all.Add(UserLabOwnershipMapper.Map(row));
+                }
+                return all;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Determines whether the specified user is the main (first) owner of the lab on a given server.
         /// The main owner is the one allowed to manage collaborators.
         /// </summary>
@@ -112,18 +136,6 @@ namespace BusinessLayer.Services
         public bool IsMainOwner(int userId, int serverId, string labId)
         {
             var owners = GetAllUserLabsByServerAndLabId(serverId, labId);
-            return owners != null && owners.Count > 0 && owners[0].UserId == userId;
-        }
-
-        /// <summary>
-        /// Determines whether the specified user is the main (first) owner of the lab (legacy overload).
-        /// </summary>
-        /// <param name="userId">The ID of the user to check.</param>
-        /// <param name="labId">The unique identifier of the lab.</param>
-        /// <returns><c>true</c> if the user is the main owner; otherwise, <c>false</c>.</returns>
-        public bool IsMainOwner(int userId, string labId)
-        {
-            var owners = GetAllUserLabsByLabId(labId);
             return owners != null && owners.Count > 0 && owners[0].UserId == userId;
         }
 
