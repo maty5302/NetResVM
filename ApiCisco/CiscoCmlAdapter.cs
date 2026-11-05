@@ -4,6 +4,7 @@ using ApiCisco.Model;
 using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
 using BusinessLayer.Interface;
+using BusinessLayer.Models;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Http;
 using SimpleLogger;
@@ -428,7 +429,8 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
         }
     }
     /// <summary>
-    /// Starts the specified lab if no other lab is currently running.
+    /// Starts the specified lab if the maximum number of simultaneously running labs on the server
+    /// (<see cref="LabSettings.MaxRunningLabsPerServer"/>) has not been reached yet.
     /// </summary>
     /// <param name="serverId">The ID of the server hosting the lab.</param>
     /// <param name="labId">The unique identifier of the lab to start.</param>
@@ -449,13 +451,17 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             var allLabs = await GetLabsAsync(serverId);
             if (allLabs.Labs != null)
             {
-                foreach (var lab in allLabs.Labs)
-                {
-                        if (lab.Id == labId && lab.Status.ToLower() == "started")
-                            return (true, "");
-                        else if (lab.Status.ToLower() == "started")
-                            return (false, "Another lab is already running..");
-                }
+                var runningLabs = allLabs.Labs
+                    .Where(lab => string.Equals(lab.Status, "started", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                // Requested lab is already running - nothing to do.
+                if (runningLabs.Any(lab => lab.Id == labId))
+                    return (true, "");
+
+                var maxRunningLabs = LabSettings.MaxRunningLabsPerServer;
+                if (runningLabs.Count >= maxRunningLabs)
+                    return (false, $"Maximum number of running labs on this server ({maxRunningLabs}) has been reached..");
             }
             var result = await _ciscoLab.StartStopLab(_httpClient, labId);
             return (result.result, result.message.ToString());

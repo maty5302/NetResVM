@@ -420,6 +420,9 @@
     <data name="ResOneHour" xml:space="preserve">
         <value>Reservation must be at least 1 hour.</value>
     </data>
+    <data name="ResMinDuration" xml:space="preserve">
+        <value>Reservation must last at least {0} min.</value>
+    </data>
     <data name="ResSameDay" xml:space="preserve">
         <value>Reservation start and end must be on the same day.</value>
     </data>

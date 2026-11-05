@@ -13,13 +13,22 @@ services:
       /bin/bash -c "
         /opt/mssql/bin/sqlservr &
         echo 'Waiting for SQL Server startup...' &&
-        sleep 30s &&
+        until /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '$${MSSQL_SA_PASSWORD}' -Q 'SELECT 1' -C >/dev/null 2>&1; do
+          sleep 2
+        done &&
         echo 'Downloading SQL script from GitHub...' &&
         wget -O /tmp/init.sql https://raw.githubusercontent.com/maty5302/NetResVM/dev/assets/SQLCreateTablesBc.sql &&
-        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD}' -i /tmp/init.sql -C &&
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '$${MSSQL_SA_PASSWORD}' -i /tmp/init.sql -C &&
         echo 'Database initialized.' &&
         wait
       "
+
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD}\" -d DB_NetResVM -Q \"SELECT 1 FROM dbo.[User]\" -C -b -o /dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
 
     restart: always
 
@@ -43,17 +52,22 @@ services:
 
     depends_on:
       mssql:
-        condition: service_started
+        condition: service_healthy
       init-permissions:
         condition: service_completed_successfully
 
     ports:
-      - "8080:8080"
+      - "80:8080"
+      - "443:8443"
       - "127.0.0.1:2323:2323"
 
     environment:
         - ConnectionStrings__DefaultConnection=Server=mssql;Database=DB_NetResVM;User Id=${DB_USER};Password=${DB_PASSWORD};Encrypt=False;TrustServerCertificate=True;
         - ASPNETCORE_ENVIRONMENT=Production
+        - LabSettings__MaxRunningLabsPerServer=${MAX_RUNNING_LABS_PER_SERVER:-2}
+        - ReservationSettings__MinReservationMinutes=${MIN_RESERVATION_MINUTES:-60}
+        - ASPNETCORE_URLS=https://+:8443;http://+:8080
+        - ASPNETCORE_HTTPS_PORT=443
     volumes:
       - dp-keys:/app/keys
       - ./backups:/app/backups

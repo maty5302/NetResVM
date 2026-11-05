@@ -34,6 +34,13 @@ public interface IUserLabOwnershipTableDataGateway
     DataTable GetAllUserLabsByServerAndLabId(int serverId, string labId);
 
     /// <summary>
+    /// Retrieves a data table containing all user lab records associated with the specified server identifier.
+    /// </summary>
+    /// <param name="serverId">The unique identifier of the server hosting the labs.</param>
+    /// <returns>A DataTable containing user lab records for the specified server. Rows are ordered by assignment time. The table will be empty if no records are found.</returns>
+    DataTable GetAllUserLabsByServerId(int serverId);
+
+    /// <summary>
     /// Assigns ownership of a laboratory to a user on a specified server.
     /// </summary>
     /// <param name="userId">The unique identifier of the user to whom the laboratory ownership will be assigned.</param>

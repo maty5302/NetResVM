@@ -86,6 +86,31 @@ namespace DataLayer
             return result;
         }
 
+        /// <summary>
+        /// Retrieves all user lab ownership records from the UserLabOwnership table by ServerID.
+        /// </summary>
+        /// <param name="serverId"> ID of a server </param>
+        /// <returns></returns>
+        public DataTable GetAllUserLabsByServerId(int serverId)
+        {
+            string query = "SELECT * FROM UserLabOwnership WHERE ServerID = @ServerID ORDER BY OwnershipID";
+            var result = new DataTable();
+            using (var connection = DBConnector.GetConnection())
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = query;
+                    command.Parameters.AddWithValue("@ServerID", serverId);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        result.Load(reader);
+                    }
+                }
+            }
+            return result;
+        }
+
 
         /// <summary>
         /// Inserts a new user lab ownership record into the UserLabOwnership table.

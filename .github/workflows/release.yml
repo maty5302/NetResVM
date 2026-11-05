@@ -109,22 +109,23 @@ jobs:
           zip -r ../../NetResVM-win-x64.zip .
           cd -
 
-      - name: Prepare docker-compose.yml and .env.example for release
+      - name: Prepare docker-compose files and .env.example for release
         run: |
           TAG="${{ github.ref_name }}"
           OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           REPO="${{ github.repository }}"
 
           cp docker/docker-compose.yml ./docker-compose.yml
+          cp docker/docker-compose.http.yml ./docker-compose.http.yml
           cp docker/.env.example ./.env.example
 
-          # Nastavit image tag na latest
-          sed -i -E "s|image: ghcr.io/[^/]+/netresvm:.*|image: ghcr.io/${OWNER_LC}/netresvm:latest|g" ./docker-compose.yml
+          # Nastavit image tag na latest a odkaz na SQL skript podle tagu releasu v obou compose souborech
+          for f in ./docker-compose.yml ./docker-compose.http.yml; do
+            sed -i -E "s|image: ghcr.io/[^/]+/netresvm:.*|image: ghcr.io/${OWNER_LC}/netresvm:latest|g" "$f"
+            sed -i -E "s|https://raw.githubusercontent.com/[^/]+/[^/]+/dev/assets/SQLCreateTablesBc.sql|https://raw.githubusercontent.com/${REPO}/${TAG}/assets/SQLCreateTablesBc.sql|g" "$f"
+          done
 
-          # Nahradit odkaz na SQL skript podle tagu releasu
-          sed -i -E "s|https://raw.githubusercontent.com/[^/]+/[^/]+/dev/assets/SQLCreateTablesBc.sql|https://raw.githubusercontent.com/${REPO}/${TAG}/assets/SQLCreateTablesBc.sql|g" ./docker-compose.yml
-
-          echo "Generated docker-compose.yml for release $TAG:"
+          echo "Generated docker-compose.yml (HTTPS) for release $TAG:"
           cat ./docker-compose.yml
 
       - name: Create or Update GitHub Release
@@ -134,5 +135,6 @@ jobs:
             NetResVM-linux-x64.zip
             NetResVM-win-x64.zip
             docker-compose.yml
+            docker-compose.http.yml
             .env.example
           generate_release_notes: true
