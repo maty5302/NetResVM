@@ -64,6 +64,8 @@ services:
     environment:
         - ConnectionStrings__DefaultConnection=Server=mssql;Database=DB_NetResVM;User Id=${DB_USER};Password=${DB_PASSWORD};Encrypt=False;TrustServerCertificate=True;
         - ASPNETCORE_ENVIRONMENT=Production
+        - LabSettings__MaxRunningLabsPerServer=${MAX_RUNNING_LABS_PER_SERVER:-2}
+        - ReservationSettings__MinReservationMinutes=${MIN_RESERVATION_MINUTES:-60}
         - ASPNETCORE_URLS=https://+:8443;http://+:8080
         - ASPNETCORE_HTTPS_PORT=443
     volumes:
