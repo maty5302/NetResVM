@@ -38,7 +38,10 @@ public class BackupController : Controller
         if (!User.IsInRole("Admin"))
         {
             var userId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
-            allBackups = allBackups.Where(b => _labOwnershipService.IsLabAlreadyOwned(userId, b.ServerId, b.LabId).userOwns).ToList();
+            var ownedLabs = (_labOwnershipService.GetAllUserLabsByUserID(userId) ?? new())
+                .Select(o => (o.ServerId, o.LabId))
+                .ToHashSet();
+            allBackups = allBackups.Where(b => ownedLabs.Contains((b.ServerId, b.LabId))).ToList();
         }
         
         ViewBag.Backups = allBackups;

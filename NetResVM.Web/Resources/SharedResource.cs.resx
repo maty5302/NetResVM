@@ -420,6 +420,9 @@
     <data name="ResOneHour" xml:space="preserve">
         <value>Rezervace musí být minimálně na 1 hodinu.</value>
     </data>
+    <data name="ResMinDuration" xml:space="preserve">
+        <value>Rezervace musí trvat minimálně {0} min.</value>
+    </data>
     <data name="ResSameDay" xml:space="preserve">
         <value>Začátek a konec rezervace musí být ve stejný den.</value>
     </data>

@@ -23,16 +23,18 @@ This project is available under the [GNU GPL v3](LICENSE) license.
 ## Installation Docker (Recommended)
 > Note: for installation in docker you don't need requirements from above except from Docker.
 #### 1. Download and install Docker
-#### 2. Download [docker-compose.yml](docker/docker-compose.yml) from the `docker` folder (or from [GitHub Releases](https://github.com/maty5302/NetResVM/releases))
+#### 2. Download [docker-compose.yml](docker/docker-compose.yml) (default with **HTTPS** on ports `443`/`80`) or [docker-compose.http.yml](docker/docker-compose.http.yml) (**HTTP-only** on port `8080`, e.g. for local testing or behind a reverse proxy) from the `docker` folder (or from [GitHub Releases](https://github.com/maty5302/NetResVM/releases))
 #### 3. Create [.env](docker/.env.example) file with following
 > Choose your own strong password for database
 ```
 DB_USER=sa
 DB_PASSWORD=vase_silne_heslo
 ```
-#### 4. Run docker-compose.yml in background and wait for about 1-2 minutes.
+#### 4. Run docker-compose.yml in background and wait for about 1 minute.
 ```bash
 docker compose pull && docker compose up -d
+# or for the HTTP-only variant:
+# docker compose -f docker-compose.http.yml pull && docker compose -f docker-compose.http.yml up -d
 ```
 > **Automatic Start on PC Reboot:**
 > The containers use the `restart: always` policy, so they will automatically restart in the background whenever your system boots up. For this to work, ensure the Docker daemon itself is configured to start on boot:
@@ -40,7 +42,7 @@ docker compose pull && docker compose up -d
 > - **Windows:** In Docker Desktop (*Settings -> General*), enable *Start Docker Desktop when you sign in*.
 
 
-#### 5. You can use the app usually hosted on http://localhost:8080/ and sign in with default login=admin and password=Password123.
+#### 5. You can use the app hosted on https://localhost/ (or http://localhost:8080/ with the HTTP-only variant) and sign in with default login=admin and password=Password123.
 >Note after first login you should change the password for a stronger one!!!
 
 > [!WARNING]
@@ -53,7 +55,8 @@ docker compose pull && docker compose up -d
 > **Warning:** Exposing port `1433` on a server or public network without firewall restrictions is a security risk. Ensure you use a strong `DB_PASSWORD`.
 
 > [!NOTE]
-> **Docker Operation and Reverse Proxy:**
+> **Docker Operation, HTTPS and Reverse Proxy:**
+> - **Automatic HTTPS Certificate:** If you do not provide a custom certificate (e.g. via `ASPNETCORE_Kestrel__Certificates__Default__Path`), the container automatically generates a self-signed certificate on first startup and persists it in the `dp-keys` volume (`/app/keys/aspnetapp.pfx`).
 > - **Permissions and Security:** The application container runs as a non-root user `app` (UID 1654). The helper service `init-permissions` automatically sets proper ownership on `./backups`, `./logs`, and session data protection keys (`dp-keys`).
 > - **Telnet:** Port `2323` is restricted to localhost only (`127.0.0.1:2323`) for security reasons.
 > - **Reverse Proxy (HTTPS):** When deploying behind a reverse proxy (e.g. Nginx, Caddy, Traefik, Cloudflare), configure the trusted proxy IP or subnet in the `netresvm` service `environment` section, e.g. `- ReverseProxy__KnownNetworks__0=172.16.0.0/12`. Without this setting, `X-Forwarded-For` headers are ignored to prevent IP spoofing, which would cause rate limiting and lockout to block the reverse proxy's IP.

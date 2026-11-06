@@ -65,12 +65,12 @@
 				</div>
 				<div class="col-md-6">
 					<label class="form-label fw-bold" for="timeTo">@Localizer["ToTime"]:</label>
-					<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" min="@DateTime.Now.AddMinutes(62).ToString("yyyy-MM-ddTHH:mm")" required />
+					<input type="datetime-local" id="timeTo" asp-for="ReservationEnd" class="form-control" min="@DateTime.Now.AddMinutes(2 + BusinessLayer.Models.ReservationSettings.MinReservationMinutes).ToString("yyyy-MM-ddTHH:mm")" required />
 				</div>
 			</div>
 
 			<div class="text-muted mb-3">
-				<small><i class="bi bi-info-circle me-1"></i>@Localizer["ResSameDay"], @Localizer["ResOneHour"]</small>
+				<small><i class="bi bi-info-circle me-1"></i>@Localizer["ResSameDay"], @Localizer["ResMinDuration", BusinessLayer.Models.ReservationSettings.MinReservationMinutes]</small>
 			</div>
 
 			<hr class="my-4" />
@@ -109,7 +109,7 @@
 				const fromDate = new Date(fromInput.value);
 				if (isNaN(fromDate.getTime())) return;
 
-				const minToDate = new Date(fromDate.getTime() + 60 * 60 * 1000);
+				const minToDate = new Date(fromDate.getTime() + @BusinessLayer.Models.ReservationSettings.MinReservationMinutes * 60 * 1000);
 				const formattedMin = formatDateTimeLocal(minToDate);
 				toInput.min = formattedMin;
 

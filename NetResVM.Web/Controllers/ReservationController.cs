@@ -118,7 +118,7 @@ namespace NetResVM.Web.Controllers
             }
             if (model.ReservationEnd == default || model.ReservationEnd <= model.ReservationStart)
             {
-                model.ReservationEnd = model.ReservationStart.AddMinutes(60);
+                model.ReservationEnd = model.ReservationStart.AddMinutes(ReservationSettings.MinReservationMinutes);
             }
             
             if (User.Identity != null && !User.Identity.IsAuthenticated)
@@ -145,12 +145,24 @@ namespace NetResVM.Web.Controllers
                     if (!User.IsInRole("Admin"))
                     {
                         int currentUserId = _userService.GetUserId(User.Identity?.Name ?? string.Empty);
-                        availableLabs = availableLabs.Where(lab =>
+                        var serverOwnerships = _userLabOwnershipService.GetAllUserLabsByServerId(selectedServer.Value);
+                        if (serverOwnerships == null)
                         {
-                            var ownership = _userLabOwnershipService.IsLabAlreadyOwned(currentUserId, selectedServer.Value, lab.Id);
-                            // Cannot reserve labs owned by someone else
-                            return !ownership.owned || ownership.userOwns;
-                        }).ToList();
+                            availableLabs = new List<LabDTO>();
+                        }
+                        else
+                        {
+                            var ownedLabsOnServer = serverOwnerships.Select(o => o.LabId).ToHashSet();
+                            var userOwnedLabsOnServer = serverOwnerships
+                                .Where(o => o.UserId == currentUserId)
+                                .Select(o => o.LabId)
+                                .ToHashSet();
+
+                            availableLabs = availableLabs.Where(lab =>
+                                // Cannot reserve labs owned by someone else
+                                !ownedLabsOnServer.Contains(lab.Id) || userOwnedLabsOnServer.Contains(lab.Id)
+                            ).ToList();
+                        }
                     }
                     ViewBag.Labs3 = new List<LabDTO>(availableLabs);
                 }
@@ -290,10 +302,11 @@ namespace NetResVM.Web.Controllers
                 _logger.LogWarning("Invalid reservation time, while creating reservation");
                 return RedirectToAction("Create", new { reserve, selectedServer });
             }
-            if(reserve.ReservationStart.AddHours(1) > reserve.ReservationEnd)
+            var minReservationMinutes = ReservationSettings.MinReservationMinutes;
+            if(reserve.ReservationStart.AddMinutes(minReservationMinutes) > reserve.ReservationEnd)
             {
-                TempData["ErrorMessage"] = _localizer["ResOneHour"].Value;
-                _logger.LogWarning("Reservation must be at least 1 hour, while creating reservation");
+                TempData["ErrorMessage"] = _localizer["ResMinDuration", minReservationMinutes].Value;
+                _logger.LogWarning($"Reservation must be at least {minReservationMinutes} minutes, while creating reservation");
                 return RedirectToAction("Create", new { reserve, selectedServer });
             }
             //reservation only that day

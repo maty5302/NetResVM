@@ -110,6 +110,30 @@ public class UserLabOwnershipServiceTests
 
     #endregion
 
+    #region GetAllUserLabsByServerId Tests
+
+    [Fact]
+    public void GetUserLabsByServerId_WithValidServer_ShouldReturnAllServerLabs()
+    {
+        var datatable = new DataTable();
+        datatable.Columns.Add("UserID", typeof(int));
+        datatable.Columns.Add("LabID", typeof(string));
+        datatable.Columns.Add("ServerID", typeof(int));
+        datatable.Rows.Add(1, "LabA", 101);
+        datatable.Rows.Add(2, "LabB", 101);
+
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByServerId(101)).Returns(datatable);
+
+        var result = _labOwnershipService.GetAllUserLabsByServerId(101);
+        Assert.NotNull(result);
+        Assert.IsType<List<UserLabOwnershipModel>>(result);
+        Assert.Equal(2, result.Count);
+        Assert.Contains(result, r => r.LabId == "LabA" && r.ServerId == 101 && r.UserId == 1);
+        Assert.Contains(result, r => r.LabId == "LabB" && r.ServerId == 101 && r.UserId == 2);
+    }
+
+    #endregion
+
     #region IsMainOwner Tests
 
     [Fact]
@@ -121,9 +145,9 @@ public class UserLabOwnershipServiceTests
         datatable.Columns.Add("ServerID", typeof(int));
         datatable.Rows.Add(1, "LabA", 101);
         datatable.Rows.Add(2, "LabA", 101);
-        _mockDataGateway.Setup(d => d.GetAllUserLabsByLabId("LabA")).Returns(datatable);
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByServerAndLabId(101, "LabA")).Returns(datatable);
 
-        Assert.True(_labOwnershipService.IsMainOwner(1, "LabA"));
+        Assert.True(_labOwnershipService.IsMainOwner(1, 101, "LabA"));
     }
 
     [Fact]
@@ -135,9 +159,9 @@ public class UserLabOwnershipServiceTests
         datatable.Columns.Add("ServerID", typeof(int));
         datatable.Rows.Add(1, "LabA", 101);
         datatable.Rows.Add(2, "LabA", 101);
-        _mockDataGateway.Setup(d => d.GetAllUserLabsByLabId("LabA")).Returns(datatable);
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByServerAndLabId(101, "LabA")).Returns(datatable);
 
-        Assert.False(_labOwnershipService.IsMainOwner(2, "LabA"));
+        Assert.False(_labOwnershipService.IsMainOwner(2, 101, "LabA"));
     }
 
     [Fact]
@@ -147,9 +171,9 @@ public class UserLabOwnershipServiceTests
         datatable.Columns.Add("UserID", typeof(int));
         datatable.Columns.Add("LabID", typeof(string));
         datatable.Columns.Add("ServerID", typeof(int));
-        _mockDataGateway.Setup(d => d.GetAllUserLabsByLabId("LabA")).Returns(datatable);
+        _mockDataGateway.Setup(d => d.GetAllUserLabsByServerAndLabId(101, "LabA")).Returns(datatable);
 
-        Assert.False(_labOwnershipService.IsMainOwner(1, "LabA"));
+        Assert.False(_labOwnershipService.IsMainOwner(1, 101, "LabA"));
     }
 
     #endregion

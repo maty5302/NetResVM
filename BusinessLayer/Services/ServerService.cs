@@ -1,4 +1,4 @@
-﻿using System.Net.NetworkInformation;
+using System.Net.NetworkInformation;
 using DataLayer;
 using BusinessLayer.Models;
 using BusinessLayer.MapperDT;
@@ -272,13 +272,58 @@ namespace BusinessLayer.Services
         {
             if (string.IsNullOrWhiteSpace(ipAddress)) return false;
 
+            string host;
+            int? customPort = null;
             try
             {
-                string host = ipAddress.Contains("://") ? new Uri(ipAddress).Host : ipAddress;
+                if (ipAddress.Contains("://"))
+                {
+                    var uri = new Uri(ipAddress);
+                    host = uri.Host;
+                    if (!uri.IsDefaultPort && uri.Port > 0)
+                        customPort = uri.Port;
+                }
+                else
+                {
+                    host = ipAddress;
+                }
+            }
+            catch
+            {
+                return false;
+            }
 
+            try
+            {
                 using var pinger = new Ping();
                 var reply = await pinger.SendPingAsync(host, 1000);
-                return reply.Status == IPStatus.Success;
+                if (reply.Status == IPStatus.Success)
+                    return true;
+            }
+            catch
+            {
+                // ICMP ping may fail in unprivileged Docker containers or when ICMP is blocked by a firewall;
+                // fall back to TCP connectivity check below.
+            }
+
+            int[] portsToProbe = customPort.HasValue ? new[] { customPort.Value, 443, 80 } : new[] { 443, 80 };
+            foreach (var port in portsToProbe.Distinct())
+            {
+                if (await IsTcpPortOpenAsync(host, port, 1000))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static async Task<bool> IsTcpPortOpenAsync(string host, int port, int timeoutMs)
+        {
+            try
+            {
+                using var tcpClient = new System.Net.Sockets.TcpClient();
+                using var cts = new CancellationTokenSource(timeoutMs);
+                await tcpClient.ConnectAsync(host, port, cts.Token);
+                return tcpClient.Connected;
             }
             catch
             {

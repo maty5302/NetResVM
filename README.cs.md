@@ -24,7 +24,7 @@ Tento projekt je dostupný pod licencí [GNU GPL v3](LICENSE).
 > Poznámka: Pro instalaci v Dockeru nepotřebujete výše uvedené požadavky kromě Dockeru.
 
 #### 1. Stáhněte a nainstalujte Docker
-#### 2. Stáhněte soubor [docker-compose.yml](docker/docker-compose.yml) ze složky `docker` (případně z [GitHub Releases](https://github.com/maty5302/NetResVM/releases))
+#### 2. Stáhněte soubor [docker-compose.yml](docker/docker-compose.yml) (výchozí s **HTTPS** na portech `443`/`80`) nebo [docker-compose.http.yml](docker/docker-compose.http.yml) (**HTTP-only** na portu `8080`, např. pro lokální testování či za reverzní proxy) ze složky `docker` (případně z [GitHub Releases](https://github.com/maty5302/NetResVM/releases))
 #### 3. Vytvořte soubor [.env](docker/.env.example) s následujícím obsahem
 > Zvolte si vlastní silné heslo pro databázi
 
@@ -33,16 +33,18 @@ DB_USER=sa
 DB_PASSWORD=vase_silne_heslo
 ```
 
-#### 4. Spusťte docker-compose.yml na pozadí a počkejte cca 1-2 minuty.
+#### 4. Spusťte docker-compose.yml na pozadí a počkejte cca 1 minutu.
 ```bash
 docker compose pull && docker compose up -d
+# případně pro HTTP-only variantu:
+# docker compose -f docker-compose.http.yml pull && docker compose -f docker-compose.http.yml up -d
 ```
 > **Automatické spuštění po restartu PC:**
 > Kontejnery mají nastavenou politiku `restart: always`, takže se po restartu počítače automaticky znovu spustí na pozadí. Aby to fungovalo, ujistěte se, že samotná služba Dockeru je povolena pro start při bootu systému:
 > - **Linux:** `sudo systemctl enable --now docker` (a případně `sudo systemctl enable --now containerd`)
 > - **Windows:** V nastavení Docker Desktop (*Settings -> General*) zaškrtněte volbu *Start Docker Desktop when you sign in*.
 
-#### 5. Aplikace bude obvykle dostupná na adrese http://localhost:8080/ a můžete se přihlásit pomocí výchozího loginu admin a hesla Password123.
+#### 5. Aplikace bude dostupná na adrese https://localhost/ (nebo http://localhost:8080/ u HTTP-only varianty) a můžete se přihlásit pomocí výchozího loginu admin a hesla Password123.
 
 > Poznámka: Po prvním přihlášení byste měli změnit heslo za silnější!!!
 
@@ -56,7 +58,8 @@ docker compose pull && docker compose up -d
 > **Varování:** Vystavení portu `1433` do veřejné sítě nebo na serveru bez dodatečné ochrany firewallem představuje bezpečnostní riziko. Vždy se ujistěte, že používáte dostatečně silné heslo (`DB_PASSWORD`).
 
 > [!NOTE]
-> **Provoz v Dockeru a Reverzní Proxy:**
+> **Provoz v Dockeru, HTTPS a Reverzní Proxy:**
+> - **Automatický HTTPS certifikát:** Pokud nepředáte vlastní certifikát (např. přes `ASPNETCORE_Kestrel__Certificates__Default__Path`), kontejner při prvním startu automaticky vygeneruje self-signed certifikát a uloží jej do perzistentního svazku `dp-keys` (`/app/keys/aspnetapp.pfx`).
 > - **Oprávnění a bezpečnost:** Aplikace v kontejneru běží pod neprivilegovaným uživatelem `app` (UID 1654). Pomocná služba `init-permissions` automaticky nastavuje správná oprávnění pro složky záloh (`./backups`), logů (`./logs`) a šifrovací klíče relací (`dp-keys`).
 > - **Telnet:** Port `2323` je z bezpečnostních důvodů dostupný pouze z lokálního hostitele (`127.0.0.1:2323`).
 > - **Reverzní proxy (HTTPS):** Pokud provozujete aplikaci za reverzní proxy (např. Nginx, Caddy, Traefik, Cloudflare), nakonfigurujte v sekci `environment` u služby `netresvm` IP adresu nebo podsíť proxy, např. `- ReverseProxy__KnownNetworks__0=172.16.0.0/12`. Bez této konfigurace jsou hlavičky `X-Forwarded-For` ignorovány a ochrana proti brute-force útokům či rate limiting by zablokovaly IP adresu proxy serveru.

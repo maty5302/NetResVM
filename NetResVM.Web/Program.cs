@@ -1,6 +1,7 @@
 using ApiCisco;
 using ApiEVE;
 using BusinessLayer.Interface;
+using BusinessLayer.Models;
 using BusinessLayer.Services;
 using DataLayer;
 using DataLayer.Interface;
@@ -92,6 +93,19 @@ namespace NetResVM.Web
             // Failed login attempts per username + IP (in-memory, shared across requests)
             builder.Services.AddSingleton(new LoginAttemptTracker());
 
+			//TEMPORARY:
+            // Maximum number of simultaneously running labs on one server.
+            // Configurable in appsettings.json (LabSettings:MaxRunningLabsPerServer)
+            // or via environment variable LabSettings__MaxRunningLabsPerServer (Docker .env: MAX_RUNNING_LABS_PER_SERVER).
+            LabSettings.MaxRunningLabsPerServer = builder.Configuration.GetValue(
+                "LabSettings:MaxRunningLabsPerServer", LabSettings.DefaultMaxRunningLabsPerServer);
+
+            //TEMPORARY:
+            // Minimum length of a reservation in minutes.
+            // Configurable in appsettings.json (ReservationSettings:MinReservationMinutes)
+            // or via environment variable ReservationSettings__MinReservationMinutes (Docker .env: MIN_RESERVATION_MINUTES).
+            ReservationSettings.MinReservationMinutes = builder.Configuration.GetValue(
+                "ReservationSettings:MinReservationMinutes", ReservationSettings.DefaultMinReservationMinutes);
 
             builder.Services.AddScoped<IPlatformManager, PlatformManager>();
             builder.Services.AddScoped<IVirtualizationAdapter, CiscoCmlAdapter>();

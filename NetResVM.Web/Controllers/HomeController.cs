@@ -82,22 +82,9 @@ namespace NetResVM.Web.Controllers
 		/// characters.</param>
 		/// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if the server
 		/// responds to the ping request within the timeout period; otherwise, <see langword="false"/>.</returns>
-		private async Task<bool> PingServerAsync(string ipAddressOrHostname)
+		private Task<bool> PingServerAsync(string ipAddressOrHostname)
 		{
-			if (string.IsNullOrWhiteSpace(ipAddressOrHostname)) return false;
-
-			try
-			{
-				using var pinger = new Ping();
-				// 1000ms timeout so the page doesn't hang forever on dead servers
-				PingReply reply = await pinger.SendPingAsync(ipAddressOrHostname, 1000);
-				return reply.Status == IPStatus.Success;
-			}
-			catch
-			{
-				// If DNS fails or network is unreachable, it throws an exception. Treat as offline.
-				return false;
-			}
+			return _serverService.IsServerOnlineAsync(ipAddressOrHostname);
 		}
 
 		//needs to be removed

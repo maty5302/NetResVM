@@ -26,17 +26,22 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 RUN apt-get update && \
-    apt-get install -y libldap-common libldap2-dev && \
+    apt-get install -y libldap-common libldap2-dev openssl iputils-ping && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/publish .
+COPY ["docker/entrypoint.sh", "/app/entrypoint.sh"]
 
 RUN mkdir -p /app/keys /app/logs /app/backups && \
+    sed -i 's/\r$//' /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh && \
     chown -R app:app /app
 
 USER app
 
-EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080 8443
+ENV ASPNETCORE_URLS=https://+:8443;http://+:8080
+ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/app/keys/aspnetapp.pfx
+ENV ASPNETCORE_Kestrel__Certificates__Default__Password=NetResVMSelfSigned
 
-ENTRYPOINT ["dotnet", "NetResVM.Web.dll"]
+ENTRYPOINT ["/app/entrypoint.sh"]
