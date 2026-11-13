@@ -223,7 +223,7 @@ namespace NetResVM.Web
 					"script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
 					"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
 					"font-src 'self' data: https://cdn.jsdelivr.net; " +
-					"img-src 'self' data:; connect-src 'self'; object-src 'none'; " +
+					"img-src 'self' data:; connect-src 'self' ws: wss:; object-src 'none'; " +
 					"base-uri 'self'; form-action 'self'; frame-ancestors 'self'";
 				await next();
 			});
@@ -232,6 +232,11 @@ namespace NetResVM.Web
 			app.UseRequestLocalization(localizationOptions);
 			app.UseSession();
 			app.UseHttpsRedirection();
+
+			app.UseWebSockets(new WebSocketOptions
+			{
+				KeepAliveInterval = TimeSpan.FromSeconds(30)
+			});
 
 			app.UseRouting();
 			app.UseRateLimiter();
