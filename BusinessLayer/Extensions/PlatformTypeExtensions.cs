@@ -33,6 +33,11 @@ namespace BusinessLayer.Extensions
                     DefaultProtocol = "http://",
                     FileExtension = ".zip" // Or ".unl" depending on what your adapter expects
                 },
+                PlatformType.PNETLab => new PlatformSettings() //TO-DO ověřit, zda je to správně, nebo jestli to má být .zip
+                {
+                    DefaultProtocol = "https://",
+                    FileExtension = ".zip" 
+                },
                 // Add new platforms here in the future (e.g., GNS3)
 
                 // Default fallback

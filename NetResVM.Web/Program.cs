@@ -1,5 +1,6 @@
 using ApiCisco;
 using ApiEVE;
+using ApiPNETLab;
 using BusinessLayer.Interface;
 using BusinessLayer.Models;
 using BusinessLayer.Services;
@@ -12,7 +13,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using Microsoft.AspNetCore.RateLimiting;
 using SimpleLogger;
 using System.Globalization;
 using System.Threading.RateLimiting;
@@ -110,6 +110,7 @@ namespace NetResVM.Web
             builder.Services.AddScoped<IPlatformManager, PlatformManager>();
             builder.Services.AddScoped<IVirtualizationAdapter, CiscoCmlAdapter>();
             builder.Services.AddScoped<IVirtualizationAdapter, EveNGAdapter>();
+            builder.Services.AddScoped<IVirtualizationAdapter, PnetLabAdapter>();
 
             builder.Services.AddSingleton<BackgroundTask>();
 

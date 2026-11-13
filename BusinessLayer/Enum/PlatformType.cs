@@ -9,6 +9,7 @@
     {
         Unknown,
         CML,
-        EVE
+        EVE,
+        PNETLab
     }
 }
