@@ -849,6 +849,12 @@ namespace NetResVM.Web.Resources {
             }
         }
         
+        internal static string ResMinDuration {
+            get {
+                return ResourceManager.GetString("ResMinDuration", resourceCulture);
+            }
+        }
+        
         internal static string ResSameDay {
             get {
                 return ResourceManager.GetString("ResSameDay", resourceCulture);
@@ -1284,6 +1290,114 @@ namespace NetResVM.Web.Resources {
         internal static string Back {
             get {
                 return ResourceManager.GetString("Back", resourceCulture);
+            }
+        }
+        
+        internal static string RestoreBackup {
+            get {
+                return ResourceManager.GetString("RestoreBackup", resourceCulture);
+            }
+        }
+        
+        internal static string DownloadBackup {
+            get {
+                return ResourceManager.GetString("DownloadBackup", resourceCulture);
+            }
+        }
+        
+        internal static string DeleteBackup {
+            get {
+                return ResourceManager.GetString("DeleteBackup", resourceCulture);
+            }
+        }
+        
+        internal static string ConfirmRemoveOwnership {
+            get {
+                return ResourceManager.GetString("ConfirmRemoveOwnership", resourceCulture);
+            }
+        }
+        
+        internal static string ImportMissingPasswords {
+            get {
+                return ResourceManager.GetString("ImportMissingPasswords", resourceCulture);
+            }
+        }
+        
+        internal static string ImportPasswordHelp {
+            get {
+                return ResourceManager.GetString("ImportPasswordHelp", resourceCulture);
+            }
+        }
+        
+        internal static string ImportFailedMessage {
+            get {
+                return ResourceManager.GetString("ImportFailedMessage", resourceCulture);
+            }
+        }
+        
+        internal static string ImportInvalidAuthType {
+            get {
+                return ResourceManager.GetString("ImportInvalidAuthType", resourceCulture);
+            }
+        }
+        
+        internal static string TooManyLoginAttempts {
+            get {
+                return ResourceManager.GetString("TooManyLoginAttempts", resourceCulture);
+            }
+        }
+        
+        internal static string OpenConsole {
+            get {
+                return ResourceManager.GetString("OpenConsole", resourceCulture);
+            }
+        }
+        
+        internal static string OpenInNewWindow {
+            get {
+                return ResourceManager.GetString("OpenInNewWindow", resourceCulture);
+            }
+        }
+        
+        internal static string ReconnectConsole {
+            get {
+                return ResourceManager.GetString("ReconnectConsole", resourceCulture);
+            }
+        }
+        
+        internal static string ConsoleTitle {
+            get {
+                return ResourceManager.GetString("ConsoleTitle", resourceCulture);
+            }
+        }
+        
+        internal static string ConsoleConnecting {
+            get {
+                return ResourceManager.GetString("ConsoleConnecting", resourceCulture);
+            }
+        }
+        
+        internal static string ConsoleConnected {
+            get {
+                return ResourceManager.GetString("ConsoleConnected", resourceCulture);
+            }
+        }
+        
+        internal static string ConsoleDisconnected {
+            get {
+                return ResourceManager.GetString("ConsoleDisconnected", resourceCulture);
+            }
+        }
+        
+        internal static string ConsoleNodeStoppedHint {
+            get {
+                return ResourceManager.GetString("ConsoleNodeStoppedHint", resourceCulture);
+            }
+        }
+        
+        internal static string ConsoleNoAccessHint {
+            get {
+                return ResourceManager.GetString("ConsoleNoAccessHint", resourceCulture);
             }
         }
     }
