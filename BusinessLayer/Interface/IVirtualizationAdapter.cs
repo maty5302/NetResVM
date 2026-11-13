@@ -1,3 +1,4 @@
+using System.Net.WebSockets;
 using BusinessLayer.DTOs;
 using BusinessLayer.Enum;
 using Microsoft.AspNetCore.Http;
@@ -131,4 +132,26 @@ public interface IVirtualizationAdapter
     /// objects if found, and a message describing the outcome. The list is null if no nodes are found.</returns>
     Task<(List<NodeDTO>? Nodes, string Message)> GetAllNodes(int serverId, string labId);
 
+    /// <summary>
+    /// Asynchronously establishes a bidirectional console session between the user's browser WebSocket (<c>xterm.js</c>)
+    /// and the specified virtual node's serial console on the virtualization platform.
+    /// </summary>
+    /// <param name="serverId">The unique identifier of the server hosting the lab.</param>
+    /// <param name="labId">The unique identifier of the lab containing the node.</param>
+    /// <param name="nodeId">The unique identifier of the node whose console should be opened.</param>
+    /// <param name="browserWs">The open WebSocket connection to the user's browser terminal.</param>
+    /// <param name="line">The serial console line index (default is 0).</param>
+    /// <param name="cols">The terminal width in columns for PTY allocation.</param>
+    /// <param name="rows">The terminal height in rows for PTY allocation.</param>
+    /// <param name="cancellationToken">A cancellation token that signals when the console session should terminate.</param>
+    /// <returns>A task that represents the active console session for its entire lifetime.</returns>
+    Task ConnectNodeConsoleAsync(
+        int serverId,
+        string labId,
+        string nodeId,
+        WebSocket browserWs,
+        int line = 0,
+        uint cols = 120,
+        uint rows = 32,
+        CancellationToken cancellationToken = default);
 }

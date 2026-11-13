@@ -9,6 +9,7 @@ using BusinessLayer.Services;
 using Microsoft.AspNetCore.Http;
 using SimpleLogger;
 using System.Net;
+using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 
@@ -36,6 +37,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
     private bool IsAuthenticatedFor(int serverId) => _httpClient != null && _authenticatedServerId == serverId;
     private readonly ApiCiscoLab _ciscoLab;
     private readonly ApiCiscoNode _node;
+    private readonly ApiCiscoConsole _console;
 
     private readonly ILogger _logger = FileLogger.Instance;
 
@@ -56,6 +58,7 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
         _httpClient = null;
         _ciscoLab = new ApiCiscoLab();
         _node = new ApiCiscoNode();
+        _console = new ApiCiscoConsole(_node);
     }
     /// <summary>
     /// Asynchronously tests the connection and authentication credentials against a Cisco CML server.
@@ -627,5 +630,48 @@ public class CiscoCmlAdapter : IVirtualizationAdapter
             _logger.LogError($"CiscoCmlAdapter - StateOfLab - Error: {e.Message}");
             return null;
         }
+    }
+
+    /// <summary>
+    /// Asynchronously establishes a bidirectional console session between the user's browser WebSocket (<c>xterm.js</c>)
+    /// and the specified virtual node's serial console on the Cisco CML server.
+    /// </summary>
+    public async Task ConnectNodeConsoleAsync(
+        int serverId,
+        string labId,
+        string nodeId,
+        WebSocket browserWs,
+        int line = 0,
+        uint cols = 120,
+        uint rows = 32,
+        CancellationToken cancellationToken = default)
+    {
+        var credentials = new ServerService().GetServerCredentials(serverId);
+        if (credentials == null)
+        {
+            throw new InvalidOperationException($"No credentials found for server with ID {serverId}.");
+        }
+
+        if (!IsAuthenticatedFor(serverId))
+        {
+            var authResult = await AuthenticateAsync(serverId);
+            if (!authResult.Valid || _httpClient == null)
+            {
+                throw new InvalidOperationException($"Authentication to Cisco CML server failed: {authResult.Message}");
+            }
+        }
+
+        await _console.ConnectConsoleAsync(
+            _httpClient!,
+            credentials.Value.Url,
+            credentials.Value.Username,
+            credentials.Value.Password,
+            labId,
+            nodeId,
+            browserWs,
+            line,
+            cols,
+            rows,
+            cancellationToken);
     }
 }
