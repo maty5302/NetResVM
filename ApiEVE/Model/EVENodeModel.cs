@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace ApiEVE.Models
 {
@@ -46,6 +46,6 @@ namespace ApiEVE.Models
         /// Gets or sets the URL used to connect to the node.
         /// </summary>
         [JsonPropertyName("url")]
-        public required string UrlConnect { get; set; }
+        public string? UrlConnect { get; set; } = string.Empty;
     }
 }
