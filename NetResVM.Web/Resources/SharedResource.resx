@@ -669,4 +669,31 @@
     <data name="TooManyLoginAttempts" xml:space="preserve">
         <value>Příliš mnoho neúspěšných pokusů o přihlášení. Zkuste to prosím znovu za 5 minut.</value>
     </data>
+    <data name="OpenConsole" xml:space="preserve">
+        <value>Open console</value>
+    </data>
+    <data name="OpenInNewWindow" xml:space="preserve">
+        <value>Open in new window</value>
+    </data>
+    <data name="ReconnectConsole" xml:space="preserve">
+        <value>Reconnect</value>
+    </data>
+    <data name="ConsoleTitle" xml:space="preserve">
+        <value>Node Console</value>
+    </data>
+    <data name="ConsoleConnecting" xml:space="preserve">
+        <value>Connecting...</value>
+    </data>
+    <data name="ConsoleConnected" xml:space="preserve">
+        <value>Connected</value>
+    </data>
+    <data name="ConsoleDisconnected" xml:space="preserve">
+        <value>Disconnected</value>
+    </data>
+    <data name="ConsoleNodeStoppedHint" xml:space="preserve">
+        <value>Console is available only when the node is running</value>
+    </data>
+    <data name="ConsoleNoAccessHint" xml:space="preserve">
+        <value>You must own the lab or have an active reservation to access the console</value>
+    </data>
 </root>

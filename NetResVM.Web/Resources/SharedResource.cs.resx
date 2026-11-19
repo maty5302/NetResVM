@@ -669,4 +669,31 @@
     <data name="TooManyLoginAttempts" xml:space="preserve">
         <value>Příliš mnoho neúspěšných pokusů o přihlášení. Zkuste to prosím znovu za 5 minut.</value>
     </data>
+    <data name="OpenConsole" xml:space="preserve">
+        <value>Otevřít konzoli</value>
+    </data>
+    <data name="OpenInNewWindow" xml:space="preserve">
+        <value>Otevřít v novém okně</value>
+    </data>
+    <data name="ReconnectConsole" xml:space="preserve">
+        <value>Znovu připojit</value>
+    </data>
+    <data name="ConsoleTitle" xml:space="preserve">
+        <value>Konzole prvku</value>
+    </data>
+    <data name="ConsoleConnecting" xml:space="preserve">
+        <value>Připojování...</value>
+    </data>
+    <data name="ConsoleConnected" xml:space="preserve">
+        <value>Připojeno</value>
+    </data>
+    <data name="ConsoleDisconnected" xml:space="preserve">
+        <value>Odpojeno</value>
+    </data>
+    <data name="ConsoleNodeStoppedHint" xml:space="preserve">
+        <value>Konzole je dostupná pouze u spuštěného prvku</value>
+    </data>
+    <data name="ConsoleNoAccessHint" xml:space="preserve">
+        <value>Pro přístup ke konzoli musíte vlastnit laboratoř nebo mít aktivní rezervaci</value>
+    </data>
 </root>
