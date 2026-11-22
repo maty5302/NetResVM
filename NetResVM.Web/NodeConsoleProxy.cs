@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
 using BusinessLayer.DTOs;
@@ -39,6 +40,12 @@ namespace NetResVM.Web
     ///     (<c>NetResVM.Web</c>) pouze spravuje životní cyklus HTTP/WebSocket spojení s prohlížečem a samotnou komunikaci
     ///     s virtualizačním serverem deleguje přes <see cref="IVirtualizationAdapter.ConnectNodeConsoleAsync"/>.</description>
     ///   </item>
+    ///   <item>
+    ///     <description><strong>Okamžitá revokace relací při odhlášení (Session Revocation):</strong> Protože protokol WebSocket
+    ///     ověřuje HTTP cookie pouze při úvodním handshaku, udržuje tato třída registr aktivních konzolových spojení podle
+    ///     uživatelského jména a při odhlášení uživatele (<c>Logout</c>) nebo deaktivaci účtu okamžitě přeruší všechny jeho
+    ///     otevřené terminálové relace.</description>
+    ///   </item>
     /// </list>
     /// </para>
     /// <para>
@@ -71,12 +78,47 @@ namespace NetResVM.Web
         private static readonly SimpleLogger.ILogger Logger = FileLogger.Instance;
 
         /// <summary>
+        /// Vláknově bezpečný registr aktivních WebSocket konzolových relací mapovaný podle uživatelského jména.
+        /// Umožňuje při odhlášení uživatele (nebo deaktivaci jeho účtu) okamžitě zrušit (<c>Cancel</c>) všechna jeho
+        /// otevřená konzolová okna bez nutnosti čekat na akci v prohlížeči.
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<Guid, CancellationTokenSource>> ActiveUserSessions
+            = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Okamžitě ukončí všechny otevřené WebSocket konzolové relace daného uživatele.
+        /// Volá se při odhlášení uživatele (<c>LoginController.Logout</c>) nebo při deaktivaci/smazání jeho účtu.
+        /// </summary>
+        /// <param name="username">Uživatelské jméno, jehož konzolové relace mají být ukončeny.</param>
+        public static void TerminateUserSessions(string? username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                return;
+
+            if (ActiveUserSessions.TryRemove(username, out var sessions))
+            {
+                foreach (var kvp in sessions)
+                {
+                    try
+                    {
+                        kvp.Value.Cancel();
+                    }
+                    catch
+                    {
+                        // Ignorujeme chybu, pokud byl CancellationTokenSource již mezitím uvolněn
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Hlavní vstupní bod pro obsluhu interaktivní konzolové relace jednoho síťového prvku.
-        /// Metoda řídí životní cyklus WebSocket spojení, deleguje navázání relace na příslušný adaptér
-        /// virtualizační platformy (<see cref="IVirtualizationAdapter"/>) a zajišťuje korektní
-        /// uzavření WebSocketu při odpojení uživatele.
+        /// Metoda řídí životní cyklus WebSocket spojení, registruje relaci pod přihlášeným uživatelem,
+        /// deleguje navázání relace na příslušný adaptér virtualizační platformy (<see cref="IVirtualizationAdapter"/>)
+        /// a zajišťuje korektní uzavření WebSocketu při odpojení nebo odhlášení uživatele.
         /// </summary>
         /// <param name="browserWs">Aktivní WebSocket spojení mezi prohlížečem uživatele (<c>xterm.js</c>) a naším ASP.NET Core serverem.</param>
+        /// <param name="username">Uživatelské jméno přihlášeného uživatele (pro okamžité ukončení relace při odhlášení).</param>
         /// <param name="server">DTO objekt reprezentující cílový virtualizační server (obsahuje ID a typ platformy CML/EVE).</param>
         /// <param name="labId">Unikátní identifikátor laboratoře na virtualizačním serveru (např. UUID v CML nebo cesta k <c>.unl</c> v EVE-NG).</param>
         /// <param name="nodeId">Identifikátor konkrétního síťového prvku uvnitř laboratoře (např. UUID/<c>n0</c> v CML nebo číselné ID v EVE-NG).</param>
@@ -88,6 +130,7 @@ namespace NetResVM.Web
         /// <returns>Asynchronní úloha (<see cref="Task"/>), která trvá po celou dobu otevřené relace terminálu.</returns>
         public static async Task HandleConsoleSessionAsync(
             WebSocket browserWs,
+            string username,
             ServerDTO server,
             string labId,
             string nodeId,
@@ -97,6 +140,16 @@ namespace NetResVM.Web
             IVirtualizationAdapter adapter,
             CancellationToken cancellationToken)
         {
+            Guid sessionId = Guid.NewGuid();
+            using var userSessionCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            // Registrace aktivní relace pod jménem přihlášeného uživatele
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                var userSessions = ActiveUserSessions.GetOrAdd(username, _ => new ConcurrentDictionary<Guid, CancellationTokenSource>());
+                userSessions[sessionId] = userSessionCts;
+            }
+
             try
             {
                 // Delegování navázání konzolové relace do adaptéru příslušné virtualizační platformy (CiscoCmlAdapter / EveNGAdapter)
@@ -108,11 +161,11 @@ namespace NetResVM.Web
                     line,
                     cols,
                     rows,
-                    cancellationToken);
+                    userSessionCts.Token);
             }
             catch (OperationCanceledException)
             {
-                // Očekávané ukončení relace v okamžiku, kdy uživatel zavře okno terminálu nebo kartu prohlížeče.
+                // Očekávané ukončení relace v okamžiku, kdy uživatel zavře okno terminálu nebo se odhlásí ze systému.
             }
             catch (Exception ex)
             {
@@ -128,6 +181,16 @@ namespace NetResVM.Web
             }
             finally
             {
+                // Odregistrace relace ze seznamu aktivních relací uživatele
+                if (!string.IsNullOrWhiteSpace(username) && ActiveUserSessions.TryGetValue(username, out var userSessions))
+                {
+                    userSessions.TryRemove(sessionId, out _);
+                    if (userSessions.IsEmpty)
+                    {
+                        ActiveUserSessions.TryRemove(username, out _);
+                    }
+                }
+
                 // Korektní ukončení WebSocket handshake (odeslání Close rámce), pokud je spojení stále otevřené.
                 if (browserWs.State == WebSocketState.Open || browserWs.State == WebSocketState.CloseReceived)
                 {

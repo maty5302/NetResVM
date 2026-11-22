@@ -89,12 +89,13 @@ namespace NetResVM.Web.Controllers
         }
 
         /// <summary>
-        /// Handles the logout process.
+        /// Handles the logout process and immediately terminates any active web console WebSocket sessions of the user.
         /// </summary>
         /// <returns> An <see cref="Task{IActionResult}"/> that renders login page and signs out user</returns>
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
+            NodeConsoleProxy.TerminateUserSessions(User.Identity?.Name);
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index");
         }

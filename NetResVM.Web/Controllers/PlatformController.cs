@@ -717,6 +717,7 @@ namespace NetResVM.Web.Controllers
             using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             await NodeConsoleProxy.HandleConsoleSessionAsync(
                 webSocket,
+                User.Identity.Name ?? string.Empty,
                 server,
                 labId,
                 nodeId,
