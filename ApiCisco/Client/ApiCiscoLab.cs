@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Text;
 
 namespace ApiCisco.Client
@@ -62,6 +62,47 @@ namespace ApiCisco.Client
             }
             else
                 return null;
+        }
+
+        /// <summary>
+        /// Asynchronously retrieves the full visual topology definition (nodes with coordinates, interfaces, links, and annotations)
+        /// for a specified lab in JSON format from the Cisco CML server.
+        /// </summary>
+        /// <param name="client">The <see cref="ApiCiscoHttpClient"/> used to send the request.</param>
+        /// <param name="labId">The unique identifier of the lab whose topology is to be retrieved.</param>
+        /// <returns>
+        /// A <see cref="string"/> containing the topology JSON payload, or <c>null</c> if the request fails.
+        /// </returns>
+        public async Task<string?> GetLabTopology(ApiCiscoHttpClient client, string labId)
+        {
+            string cleanId = Uri.EscapeDataString(labId.Trim());
+            string[] candidateUrls =
+            {
+                $"{client.Url}labs/{cleanId}/topology?exclude_configurations=true",
+                $"{client.Url}labs/{cleanId}/topology"
+            };
+
+            foreach (string candidateUrl in candidateUrls)
+            {
+                try
+                {
+                    using var request = new HttpRequestMessage(HttpMethod.Get, candidateUrl);
+                    request.Headers.TryAddWithoutValidation("Accept", "application/json");
+                    using var response = await client.Client.SendAsync(request);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string content = await response.Content.ReadAsStringAsync();
+                        if (!string.IsNullOrWhiteSpace(content))
+                            return content;
+                    }
+                }
+                catch
+                {
+                    // Try fallback endpoint
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
