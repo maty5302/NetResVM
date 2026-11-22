@@ -628,10 +628,128 @@ namespace NetResVM.Web.Controllers
                 TempData["ErrorMessage"] = result.Message ?? _localizer["LabNodesError"].Value;
                 return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
             }
+
+            ViewBag.ServerId = serverId;
+            ViewBag.LabId = labId;
+            ViewBag.ServerName = server.Name;
+            ViewBag.PlatformName = server.Platform.ToString();
+            ViewBag.CanAccessConsole = CanUserAccessLabConsole(serverId, labId);
+
             return View(result.Nodes);
         }
 
-        
+        /// <summary>
+        /// Vykreslí samostatné plovoucí okno prohlížeče s webovým terminálem (<c>xterm.js</c>) pro vybraný síťový prvek.
+        /// Umožňuje uživateli otevřít více konzolí různých prvků (např. Router1 a Switch1) současně vedle sebe.
+        /// </summary>
+        /// <param name="serverId">Unikátní identifikátor virtualizačního serveru.</param>
+        /// <param name="labId">Identifikátor laboratoře na virtualizačním serveru.</param>
+        /// <param name="nodeId">Identifikátor cílového prvku v laboratoři (např. <c>n0</c>).</param>
+        /// <param name="nodeName">Zobrazovaný název prvku (např. <c>Router1</c>) pro titulek okna.</param>
+        /// <returns>Pohled <c>NodeConsole.cshtml</c> při platném oprávnění, jinak přesměrování s chybovou hláškou.</returns>
+        [HttpGet]
+        public IActionResult NodeConsole(int serverId, string labId, string nodeId, string? nodeName = null)
+        {
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "Login");
+
+            if (!CanUserAccessLabConsole(serverId, labId))
+            {
+                TempData["ErrorMessage"] = _localizer["AccessDenied"].Value ?? "Access Denied.";
+                return RedirectToAction("LabInfo", "Platform", new { serverId = serverId, labId = labId });
+            }
+
+            var server = _serverService.GetServerById(serverId);
+            if (server == null)
+            {
+                TempData["ErrorMessage"] = _localizer["ServerNotFound"].Value;
+                return RedirectToAction("Index", "Home");
+            }
+
+            ViewBag.ServerId = serverId;
+            ViewBag.LabId = labId;
+            ViewBag.NodeId = nodeId;
+            ViewBag.NodeName = string.IsNullOrWhiteSpace(nodeName) ? nodeId : nodeName;
+            ViewBag.ServerName = server.Name;
+            ViewBag.PlatformName = server.Platform.ToString();
+
+            return View();
+        }
+
+        /// <summary>
+        /// WebSocket koncový bod (Endpoint), který přijímá spojení z klientského terminálu <c>xterm.js</c>,
+        /// ověří oprávnění přihlášeného uživatele k dané laboratoři a předá řízení třídě <see cref="NodeConsoleProxy"/>
+        /// pro obousměrný přenos CLI komunikace mezi prohlížečem a virtualizačním serverem (Cisco CML / EVE-NG).
+        /// </summary>
+        /// <param name="serverId">ID virtualizačního serveru v databázi.</param>
+        /// <param name="labId">ID laboratoře na virtualizačním serveru.</param>
+        /// <param name="nodeId">ID konkrétního síťového prvku (uzlu).</param>
+        /// <param name="line">Číslo sériové linky prvku (výchozí 0).</param>
+        /// <param name="cols">Počet sloupců terminálu v prohlížeči (pro nastavení PTY).</param>
+        /// <param name="rows">Počet řádků terminálu v prohlížeči (pro nastavení PTY).</param>
+        [IgnoreAntiforgeryToken]
+        public async Task ConsoleWs(int serverId, string labId, string nodeId, int line = 0, int cols = 120, int rows = 32)
+        {
+            if (!HttpContext.WebSockets.IsWebSocketRequest)
+            {
+                HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+                return;
+            }
+
+            // Bezpečnostní kontrola: Uživatel musí být přihlášen a mít oprávnění k manipulaci s danou laboratoří
+            if (User.Identity == null || !User.Identity.IsAuthenticated || !CanUserAccessLabConsole(serverId, labId))
+            {
+                HttpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return;
+            }
+
+            var server = _serverService.GetServerById(serverId);
+            if (server == null || server.Platform == PlatformType.Unknown)
+            {
+                HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+                return;
+            }
+
+            uint safeCols = cols >= 20 && cols <= 500 ? (uint)cols : 120;
+            uint safeRows = rows >= 10 && rows <= 200 ? (uint)rows : 32;
+
+            IVirtualizationAdapter adapter = _platformManager.GetAdapter(server.Platform);
+            using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            await NodeConsoleProxy.HandleConsoleSessionAsync(
+                webSocket,
+                User.Identity.Name ?? string.Empty,
+                server,
+                labId,
+                nodeId,
+                line,
+                safeCols,
+                safeRows,
+                adapter,
+                HttpContext.RequestAborted);
+        }
+
+        /// <summary>
+        /// Ověří, zda má aktuálně přihlášený uživatel oprávnění otevřít sériovou konzoli prvku v dané laboratoři.
+        /// Přístup je povolen administrátorovi, vlastníkovi/spoluvlastníkovi laboratoře nebo uživateli s právě aktivní rezervací.
+        /// </summary>
+        /// <param name="serverId">ID serveru, na němž laboratoř běží.</param>
+        /// <param name="labId">ID laboratoře.</param>
+        /// <returns><see langword="true"/>, pokud má uživatel oprávnění ke konzoli; jinak <see langword="false"/>.</returns>
+        private bool CanUserAccessLabConsole(int serverId, string labId)
+        {
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+                return false;
+            if (User.IsInRole("Admin"))
+                return true;
+
+            int currentUserId = _userService.GetUserId(User.Identity.Name ?? string.Empty);
+            if (currentUserId < 0)
+                return false;
+
+            var ownership = _userLabOwnership.IsLabAlreadyOwned(currentUserId, serverId, labId);
+            return ownership.userOwns || HasActiveReservationForLab(serverId, labId, currentUserId);
+        }
+
         /// <summary>
         /// Returns true when the user has a reservation for this lab that is active right now.
         /// </summary>

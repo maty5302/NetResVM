@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using SimpleLogger;
 using System.IO.Compression;
 using System.Net;
+using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 namespace ApiEVE;
@@ -27,6 +28,7 @@ public class EveNGAdapter : IVirtualizationAdapter
     private readonly ApiEVEAuthentication _authentication;
     private readonly ApiEVELab _apiLab;
     private readonly ApiEVENode _apiLabNode;
+    private readonly ApiEVEConsole _apiConsole;
     private ApiEVEHttpClient? _httpClient;
 
     /// <summary>
@@ -52,6 +54,7 @@ public class EveNGAdapter : IVirtualizationAdapter
         _authentication = new ApiEVEAuthentication();
         _apiLab = new ApiEVELab();
         _apiLabNode = new ApiEVENode();
+        _apiConsole = new ApiEVEConsole();
     }
 
     /// <summary>
@@ -248,7 +251,7 @@ public class EveNGAdapter : IVirtualizationAdapter
                 Metadata = new Dictionary<string, string>
                 {
                     { "NumberOfEthernet", res.NumberOfEthernet.ToString() },
-                    { "UrlConnect", res.UrlConnect }
+                    { "UrlConnect", res.UrlConnect ?? string.Empty }
                 }
             };
 
@@ -658,5 +661,41 @@ public class EveNGAdapter : IVirtualizationAdapter
         }
         // All nodes are stopped
         return "STOPPED";
+    }
+
+    /// <summary>
+    /// Asynchronously establishes a bidirectional console session between the user's browser WebSocket (<c>xterm.js</c>)
+    /// and the specified virtual node's Telnet console on the EVE-NG server.
+    /// </summary>
+    public async Task ConnectNodeConsoleAsync(
+        int serverId,
+        string labId,
+        string nodeId,
+        WebSocket browserWs,
+        int line = 0,
+        uint cols = 120,
+        uint rows = 32,
+        CancellationToken cancellationToken = default)
+    {
+        var credentials = new ServerService().GetServerCredentials(serverId);
+        if (credentials == null)
+        {
+            throw new InvalidOperationException($"No credentials found for server with ID {serverId}.");
+        }
+
+        var nodesResult = await GetAllNodes(serverId, labId);
+        var targetNode = nodesResult.Nodes?.FirstOrDefault(
+            n => string.Equals(n.Id, nodeId, StringComparison.OrdinalIgnoreCase));
+
+        string nodeName = targetNode?.Name ?? nodeId;
+        string? urlConnect = null;
+        targetNode?.Metadata.TryGetValue("UrlConnect", out urlConnect);
+
+        await _apiConsole.ConnectConsoleAsync(
+            credentials.Value.Url,
+            nodeName,
+            urlConnect,
+            browserWs,
+            cancellationToken);
     }
 }

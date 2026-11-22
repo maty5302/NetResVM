@@ -411,8 +411,10 @@ namespace NetResVM.Web.Controllers
                 TempData["ErrorMessage"] = _localizer["AccessDeniedAdmin"].Value;
                 return RedirectToAction("Index", "Home");
             }
+            string targetUsername = _userService.GetUsername(UserId);
             if (_userService.UpdateUser(UserId,false))
             {
+                NodeConsoleProxy.TerminateUserSessions(targetUsername);
                 TempData["SuccessMessage"] = _localizer["UserDeactivated"].Value;
                 return RedirectToAction("ManageUser", "User");
             }
@@ -467,8 +469,10 @@ namespace NetResVM.Web.Controllers
                 TempData["ErrorMessage"] = _localizer["AccessDeniedAdmin"].Value;
                 return RedirectToAction("Index", "Home");
             }
+            string targetUsername = _userService.GetUsername(UserId);
             if (_userService.RemoveUser(UserId))
             {
+                NodeConsoleProxy.TerminateUserSessions(targetUsername);
                 TempData["SuccessMessage"] = _localizer["UserRemoved"].Value;
                 return RedirectToAction("ManageUser", "User");
             }
