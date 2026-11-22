@@ -1,22 +1,22 @@
-﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+function updateThemeIcon(theme) {
+    var icon = document.getElementById("themeIcon");
+    if (!icon) return;
+    icon.className = theme === "dark" ? "bi bi-moon-stars-fill fs-5" : "bi bi-sun-fill fs-5";
+}
 
-// Write your JavaScript code.
-// Check and apply the stored theme on page load
 document.addEventListener("DOMContentLoaded", function () {
-    var storedTheme = localStorage.getItem("theme");
-    if (storedTheme) {
-        document.documentElement.setAttribute("data-bs-theme", storedTheme);
-        document.getElementById("flexSwitchCheckDefault").checked = storedTheme === "dark";
+    var currentTheme = localStorage.getItem("theme") || document.documentElement.getAttribute("data-bs-theme") || "light";
+    document.documentElement.setAttribute("data-bs-theme", currentTheme);
+    updateThemeIcon(currentTheme);
+
+    var btnSwitch = document.getElementById("btnSwitch");
+    if (btnSwitch) {
+        btnSwitch.addEventListener("click", function () {
+            var activeTheme = document.documentElement.getAttribute("data-bs-theme");
+            var newTheme = activeTheme === "light" ? "dark" : "light";
+            document.documentElement.setAttribute("data-bs-theme", newTheme);
+            localStorage.setItem("theme", newTheme);
+            updateThemeIcon(newTheme);
+        });
     }
-});
-
-// Add an event listener for the theme toggle switch
-document.getElementById("btnSwitch").addEventListener("click", function () {
-    var currentTheme = document.documentElement.getAttribute("data-bs-theme");
-    var newTheme = currentTheme === "light" ? "dark" : "light";
-    document.documentElement.setAttribute("data-bs-theme", newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.getElementById("flexSwitchCheckDefault").checked = newTheme === "dark";
-
 });

@@ -9,15 +9,24 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/NetResVM.Web.styles.css" asp-append-version="true" />
-    
+    <script>
+        (function () {
+            var storedTheme = localStorage.getItem("theme");
+            if (storedTheme) {
+                document.documentElement.setAttribute("data-bs-theme", storedTheme);
+            }
+        })();
+    </script>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm bg-body text-body border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">NetResVM</a>
+                <a class="navbar-brand fw-semibold" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-hdd-network text-primary me-1"></i>NetResVM
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                aria-expanded="false" aria-label="Toggle navigation">
+                        aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
@@ -25,82 +34,113 @@
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-body" asp-area="" asp-controller="Home" asp-action="Index"> <i class="bi bi-house-door"></i>  @Localizer["Home"]</a>
+                                <a class="nav-link text-body" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-house-door me-1"></i>@Localizer["Home"]</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-body" asp-area="" asp-controller="Reservation" asp-action="Index"> <i class="bi bi-calendar"></i> @Localizer["ReservationLayout"]</a>
+                                <a class="nav-link text-body" asp-area="" asp-controller="Reservation" asp-action="Index"><i class="bi bi-calendar me-1"></i>@Localizer["ReservationLayout"]</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-body" asp-area="" asp-controller="User" asp-action="UserLab"> <i class="bi bi-diagram-3"></i> @Localizer["MyLabLayout"]</a>
+                                <a class="nav-link text-body" asp-area="" asp-controller="User" asp-action="UserLab"><i class="bi bi-diagram-3 me-1"></i>@Localizer["MyLabLayout"]</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-body" asp-area="" asp-controller="Backup" asp-action="Index">   <i class="bi bi-database-gear"></i> @Localizer["BackupsLayout"]</a>
+                                <a class="nav-link text-body" asp-area="" asp-controller="Backup" asp-action="Index"><i class="bi bi-database-gear me-1"></i>@Localizer["BackupsLayout"]</a>
                             </li>
-                            
                         }
                     </ul>
-                    
-                    
-                    
-                    <div class="nav-item me-3">
-                        @if(User.Identity != null && User.Identity.IsAuthenticated)
+
+                    @{
+                        var currentCulture = Context.Features.Get<Microsoft.AspNetCore.Localization.IRequestCultureFeature>()?.RequestCulture.UICulture.Name ?? "en-US";
+                        var nextCulture = currentCulture == "cs-CZ" ? "en-US" : "cs-CZ";
+                        var currentFlag = currentCulture == "cs-CZ" ? "🇨🇿" : "🇬🇧";
+                        var currentLangLabel = currentCulture == "cs-CZ" ? "Čeština (kliknutím přepnout na English)" : "English (click to switch to Čeština)";
+                    }
+
+                    @* Pravá část horní lišty – ikony oddělené svislou čarou *@
+                    <div class="d-flex align-items-center">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
-                            <div class="text-body">
-                                <a href="@Url.Action("Settings","User")" class="card-link">
-                                   @User.Identity.Name
-                                   <i class="bi bi-person"></i>
-                               </a>
-                            </div>
-                        }</div>
-                    <div class="nav-item me-3">
-                        <div class="form-check form-switch" id="btnSwitch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
-                            <label class="form-check-label" for="flexSwitchCheckDefault">
-                                <i class="bi bi-sun"></i> /
-                                <i class="bi bi-moon"></i>
-                            </label>
-                        </div>
-                    </div>
-                    @{ var currentCulture = Context.Features.Get<Microsoft.AspNetCore.Localization.IRequestCultureFeature>()?.RequestCulture.UICulture.Name ?? "en-US"; }
-                    <form asp-controller="Culture" asp-action="SetLanguage" method="post" id="languageForm">
-                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
-                        <select name="culture" onchange="document.getElementById('languageForm').submit();" class="form-select">
-                            <option value="en-US" selected="@(currentCulture == "en-US" ? "selected" : null)">English 🇬🇧</option>
-                            <option value="cs-CZ" selected="@(currentCulture == "cs-CZ" ? "selected" : null)">Čeština 🇨🇿</option>
-                        </select>
-                    </form>
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <form method="post">
-                                @if (User.Identity != null && User.Identity.IsAuthenticated)
-                                {
-                                    <button class="btn btn-danger" type="submit" formaction="@Url.Action("Logout","Login")">@Localizer["LogoutLayout"]<i class="bi bi-box-arrow-in-right"></i></button>
-                                }
+                            <a href="@Url.Action("Settings", "User")"
+                               class="btn btn-sm btn-link text-body text-decoration-none px-2 d-flex align-items-center gap-1"
+                               title="@Localizer["SettingsTitle"]">
+                                <i class="bi bi-person-circle fs-5"></i>
+                                <span>@User.Identity.Name</span>
+                            </a>
+
+                            <div class="vr mx-1 my-auto" style="height: 22px;"></div>
+                        }
+
+                        @* Tlačítko pro AI *@
+                        <button type="button"
+                                class="btn btn-sm btn-link text-body text-decoration-none px-2"
+                                id="btnAiAssistant"
+                                title="AI Assistant">
+                            <i class="bi bi-stars fs-5 text-primary"></i>
+                        </button>
+
+                        <div class="vr mx-1 my-auto" style="height: 22px;"></div>
+
+                        @* Přepínač Dark / Light theme (jedna měnící se ikona) *@
+                        <button type="button"
+                                class="btn btn-sm btn-link text-body text-decoration-none px-2"
+                                id="btnSwitch"
+                                title="Dark / Light theme">
+                            <i id="themeIcon" class="bi bi-sun-fill fs-5"></i>
+                        </button>
+
+                        <div class="vr mx-1 my-auto" style="height: 22px;"></div>
+
+                        @* Přepínač jazyka (zobrazuje symbol aktuálně vybraného jazyka, kliknutím přepne) *@
+                        <form asp-controller="Culture" asp-action="SetLanguage" method="post" class="d-inline mb-0">
+                            <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                            <input type="hidden" name="culture" value="@nextCulture" />
+                            <button type="submit"
+                                    class="btn btn-sm btn-link text-body text-decoration-none px-2 fs-5 lh-1"
+                                    title="@currentLangLabel">
+                                @currentFlag
+                            </button>
+                        </form>
+
+                        <div class="vr mx-1 my-auto" style="height: 22px;"></div>
+
+                        @* Symbol pro Odhlášení / Přihlášení *@
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <form method="post" class="d-inline mb-0">
+                                <button class="btn btn-sm btn-link text-danger text-decoration-none px-2"
+                                        type="submit"
+                                        formaction="@Url.Action("Logout", "Login")"
+                                        title="@Localizer["LogoutLayout"]">
+                                    <i class="bi bi-box-arrow-right fs-5"></i>
+                                </button>
                             </form>
-                        </li>
-                        
-                        
-                    </ul>
-                    
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("Index", "Login")"
+                               class="btn btn-sm btn-link text-body text-decoration-none px-2"
+                               title="@Localizer["Login"]">
+                                <i class="bi bi-box-arrow-in-right fs-5"></i>
+                            </a>
+                        }
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
     <div class="container">
         <div class="text-center">
-        <!--Displaying error or success messages-->
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger" role="alert">
-                @TempData["ErrorMessage"]
-            </div>
-        }
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success" role="alert">
-                @TempData["SuccessMessage"]
-            </div>
-        }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success" role="alert">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
         </div>
         <main role="main" class="pb-3">
             @RenderBody()
