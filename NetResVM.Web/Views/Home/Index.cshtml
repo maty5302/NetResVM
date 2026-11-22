@@ -30,13 +30,13 @@
                         <hr class="my-2" />
 
                         @* Informace o platformě a stavu *@
-                        <div class="my-2 d-flex flex-column gap-2 text-muted small">
+                        <div class="my-1 d-flex flex-column gap-1 text-muted small">
                             <div class="d-flex justify-content-between align-items-center">
-                                <span><i class="bi bi-layers me-1"></i>@Localizer["ServerType"]:</span>
+                                <span>@Localizer["ServerType"]:</span>
                                 <span class="badge bg-secondary">@server.Platform</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <span><i class="bi bi-activity me-1"></i>@Localizer["State"]:</span>
+                                <span>@Localizer["State"]:</span>
                                 @if (server.IsOnline)
                                 {
                                     <span class="badge bg-success">Online</span>

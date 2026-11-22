@@ -4,17 +4,15 @@
 }
 
 <div id="list-view" @(ViewBag.ActiveView == "month" ? "hidden" : "")>
-	<div class="card shadow-sm border-0">
-		<div class="card-header bg-body-tertiary d-flex flex-wrap justify-content-between align-items-center gap-3 py-3">
+	<div class="card shadow-sm">
+		<div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-3 py-2">
 			<div class="d-flex align-items-center gap-2">
-				<h5 class="mb-0 fw-semibold text-body">
-					<i class="bi bi-clock-history text-primary me-2"></i>@Localizer["PlannedReservations"]
-				</h5>
-				<span class="badge bg-primary rounded-pill" id="plannedReservationsCount">@plannedReservations.Count</span>
+				<h5 class="card-title mb-0">@Localizer["PlannedReservations"]</h5>
+				<span class="badge bg-secondary" id="plannedReservationsCount">@plannedReservations.Count</span>
 			</div>
 			@if (plannedReservations.Count > 0)
 			{
-				<div class="input-group" style="max-width: 320px;">
+				<div class="input-group input-group-sm" style="max-width: 320px;">
 					<span class="input-group-text bg-body border-end-0 text-muted">
 						<i class="bi bi-search"></i>
 					</span>
@@ -27,7 +25,7 @@
 		{
 			<div class="table-responsive">
 				<table class="table table-hover align-middle mb-0" id="plannedReservationsTable">
-					<thead class="table-light">
+					<thead class="bg-body-tertiary">
 						<tr>
 							<th scope="col">@Localizer["Server"]</th>
 							<th scope="col">@Localizer["Lab"]</th>

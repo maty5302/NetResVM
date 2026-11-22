@@ -4,8 +4,10 @@
     var backups = ViewBag.Backups as List<BusinessLayer.DTOs.BackupDTO>;
 }
 
-<h1 class="mb-0">@ViewData["Title"]</h1>
-<hr class="mt-2 mb-4" />
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2 mb-3">
+    <h1 class="mb-0">@ViewData["Title"]</h1>
+</div>
+<hr class="mb-4" />
 
 @if (backups == null || backups.Count == 0)
 {
@@ -21,7 +23,7 @@ else
     <div class="card shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+                <thead class="bg-body-tertiary">
                     <tr>
                         <th scope="col">@Localizer["ServerName"]</th>
                         <th scope="col">@Localizer["ServerType"]</th>
