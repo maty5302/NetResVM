@@ -696,4 +696,22 @@
     <data name="ConsoleNoAccessHint" xml:space="preserve">
         <value>You must own the lab or have an active reservation to access the console</value>
     </data>
+    <data name="TopologyPreview" xml:space="preserve">
+        <value>Topology Preview</value>
+    </data>
+    <data name="ResetView" xml:space="preserve">
+        <value>Reset view</value>
+    </data>
+    <data name="AiAssistantTitle" xml:space="preserve">
+        <value>AI Assistant</value>
+    </data>
+    <data name="AiAssistantUnavailable" xml:space="preserve">
+        <value>AI assistant is not available yet.</value>
+    </data>
+    <data name="AiAssistantInputPlaceholder" xml:space="preserve">
+        <value>Enter your question...</value>
+    </data>
+    <data name="AiAssistantSend" xml:space="preserve">
+        <value>Send</value>
+    </data>
 </root>

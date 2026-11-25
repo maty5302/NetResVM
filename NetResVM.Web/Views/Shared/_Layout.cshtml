@@ -18,7 +18,7 @@
         })();
     </script>
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm bg-body text-body border-bottom box-shadow mb-3">
             <div class="container-fluid">
@@ -55,7 +55,7 @@
                         var currentLangLabel = currentCulture == "cs-CZ" ? "Čeština (kliknutím přepnout na English)" : "English (click to switch to Čeština)";
                     }
 
-                    @* Pravá část horní lišty – ikony oddělené svislou čarou *@
+                    @* User settings *@
                     <div class="d-flex align-items-center">
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
@@ -69,17 +69,22 @@
                             <div class="vr mx-1 my-auto" style="height: 22px;"></div>
                         }
 
-                        @* Tlačítko pro AI *@
-                        <button type="button"
-                                class="btn btn-sm btn-link text-body text-decoration-none px-2"
-                                id="btnAiAssistant"
-                                title="AI Assistant">
-                            <i class="bi bi-stars fs-5 text-primary"></i>
-                        </button>
+                        @* AI Assistant *@
+                        @if(User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <input type="checkbox" id="aiPanelToggle" class="d-none" />
+                            <label for="aiPanelToggle"
+                                   class="btn btn-sm btn-link text-body text-decoration-none px-2 mb-0"
+                                   id="btnAiAssistant"
+                                   role="button"
+                                   title="@Localizer["AiAssistantTitle"]">
+                                <i class="bi bi-stars fs-5 text-primary"></i>
+                            </label>
+                            
 
-                        <div class="vr mx-1 my-auto" style="height: 22px;"></div>
-
-                        @* Přepínač Dark / Light theme (jedna měnící se ikona) *@
+                            <div class="vr mx-1 my-auto" style="height: 22px;"></div>
+                        }
+                        @* Dark / Light theme *@
                         <button type="button"
                                 class="btn btn-sm btn-link text-body text-decoration-none px-2"
                                 id="btnSwitch"
@@ -89,7 +94,7 @@
 
                         <div class="vr mx-1 my-auto" style="height: 22px;"></div>
 
-                        @* Přepínač jazyka (zobrazuje symbol aktuálně vybraného jazyka, kliknutím přepne) *@
+                        @* Language switcher *@
                         <form asp-controller="Culture" asp-action="SetLanguage" method="post" class="d-inline mb-0">
                             <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
                             <input type="hidden" name="culture" value="@nextCulture" />
@@ -102,7 +107,7 @@
 
                         <div class="vr mx-1 my-auto" style="height: 22px;"></div>
 
-                        @* Symbol pro Odhlášení / Přihlášení *@
+                        @* Log in / Log out *@
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
                             <form method="post" class="d-inline mb-0">
@@ -127,7 +132,7 @@
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container flex-grow-1">
         <div class="text-center">
             @if (TempData["ErrorMessage"] != null)
             {
@@ -147,11 +152,44 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="border-top footer text-muted mt-auto py-3">
         <div class="container">
             &copy; 2026 - NetResVm
         </div>
     </footer>
+
+    @* Pravý vysouvací AI panel (ovládaný přes #aiPanelToggle bez JS) *@
+    <aside class="ai-side-panel bg-body text-body border-start shadow-sm d-flex flex-column" aria-label="@Localizer["AiAssistantTitle"]">
+        <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
+            <h6 class="mb-0 fw-semibold d-flex align-items-center gap-2">
+                <i class="bi bi-stars text-primary"></i>
+                @Localizer["AiAssistantTitle"]
+            </h6>
+            <label for="aiPanelToggle" class="btn-close" role="button" aria-label="@Localizer["Close"]" title="@Localizer["Close"]"></label>
+        </div>
+
+        <div class="flex-grow-1 p-3 overflow-auto d-flex flex-column gap-2">
+            <div class="p-3 rounded-3 bg-body-secondary text-body small border">
+                <div class="fw-semibold mb-1 d-flex align-items-center gap-1 text-primary">
+                    <i class="bi bi-robot"></i> @Localizer["AiAssistantTitle"]
+                </div>
+                <div>@Localizer["AiAssistantUnavailable"]</div>
+            </div>
+        </div>
+
+        <div class="p-3 border-top bg-body-tertiary">
+            <div class="input-group input-group-sm">
+                <input type="text"
+                       class="form-control"
+                       placeholder="@Localizer["AiAssistantInputPlaceholder"]"
+                       aria-label="@Localizer["AiAssistantInputPlaceholder"]"
+                       disabled />
+                <button class="btn btn-primary" type="button" title="@Localizer["AiAssistantSend"]" disabled>
+                    <i class="bi bi-send"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

@@ -696,4 +696,22 @@
     <data name="ConsoleNoAccessHint" xml:space="preserve">
         <value>Pro přístup ke konzoli musíte vlastnit laboratoř nebo mít aktivní rezervaci</value>
     </data>
+    <data name="TopologyPreview" xml:space="preserve">
+        <value>Náhled topologie</value>
+    </data>
+    <data name="ResetView" xml:space="preserve">
+        <value>Vycentrovat</value>
+    </data>
+    <data name="AiAssistantTitle" xml:space="preserve">
+        <value>AI Asistent</value>
+    </data>
+    <data name="AiAssistantUnavailable" xml:space="preserve">
+        <value>AI asistent zatím není k dispozici.</value>
+    </data>
+    <data name="AiAssistantInputPlaceholder" xml:space="preserve">
+        <value>Zadejte svůj dotaz...</value>
+    </data>
+    <data name="AiAssistantSend" xml:space="preserve">
+        <value>Odeslat</value>
+    </data>
 </root>
